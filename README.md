@@ -6,6 +6,8 @@ Basic Expo React Native app for a job and profile onboarding flow. The app inclu
 
 https://www.figma.com/design/CVwIhr6rSFajjV8DZv7U4A/Untitled?node-id=3-143&t=BxoDOjgn66cKADA5-1
 
+
+
 ## Project Structure
 
 - `my-app/` - Expo application source
