@@ -81,7 +81,7 @@ export default () => {
           {/* LOGIN BUTTON */}
           <TouchableOpacity 
             style={styles.loginBtn}
-            onPress={() => console.log("Login Attempt")}
+            onPress={() => navigation.navigate("ProfileScreen")}
           >
             <Text style={styles.loginBtnText}>Log in</Text>
           </TouchableOpacity>
