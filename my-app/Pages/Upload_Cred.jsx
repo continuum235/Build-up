@@ -95,7 +95,10 @@ export default (props) => {
                 </View>
 
                 {/* NEXT BUTTON */}
-                <TouchableOpacity style={styles.nextButton} onPress={() => alert('Next Step!')}>
+                <TouchableOpacity
+                    style={styles.nextButton}
+                    onPress={() => navigation.navigate("Choose_Job")}
+                >
                     <Text style={styles.nextButtonText}>Next</Text>
                 </TouchableOpacity>
 
@@ -197,7 +200,7 @@ const styles = StyleSheet.create({
     },
     nextButton: {
         alignItems: "center",
-        backgroundColor: "#A4A9B680", // Using your provided disabled/inactive color
+        backgroundColor: "#965541",
         borderRadius: wp('4%'),
         paddingVertical: hp('2%'),
         width: '100%',
