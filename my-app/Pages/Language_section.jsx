@@ -109,7 +109,7 @@ export default (props) => {
                 {/* ADD LANGUAGES BUTTON */}
                 <TouchableOpacity 
                     style={styles.addButton} 
-                    onPress={() => alert('Languages Added!')}
+                    onPress={() => navigation.navigate('AddSkill')}
                 >
                     <Text style={styles.addButtonText}>Add Languages</Text>
                 </TouchableOpacity>
@@ -120,6 +120,50 @@ export default (props) => {
             <View style={styles.progressContainer}>
                 <View style={styles.progressTrack}>
                     <View style={styles.progressFill} />
+                </View>
+            </View>
+
+            {/* BOTTOM NAVIGATION */}
+            <View style={styles.bottomNav}>
+                <Text style={styles.stepText}>3/4</Text>
+                
+                {/* Arrow Navigation (Left & Right) */}
+                <View style={{ flexDirection: 'row' }}>
+                    <TouchableOpacity 
+                        style={{
+                            backgroundColor: "#965541",
+                            width: wp('12%'),
+                            height: wp('10%'),
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            borderRadius: wp('2%'),
+                            marginRight: wp('2%')
+                        }} 
+                        onPress={() => navigation.goBack()}
+                    >
+                        <Image
+                            source={require("../assets/Back-button.png")}
+                            style={{ width: wp('6%'), height: wp('6%'), tintColor: "#FFFFFF" }}
+                            resizeMode="contain"
+                        />
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={{
+                            backgroundColor: "#965541",
+                            width: wp('12%'),
+                            height: wp('10%'),
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            borderRadius: wp('2%')
+                        }} 
+                        onPress={() => navigation.navigate('AddSkill')}
+                    >
+                        <Image
+                            source={require("../assets/Next-page-logo.png")}
+                            style={{ width: wp('6%'), height: wp('6%'), tintColor: "#FFFFFF" }}
+                            resizeMode="contain"
+                        />
+                    </TouchableOpacity>
                 </View>
             </View>
 

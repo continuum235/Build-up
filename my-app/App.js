@@ -8,6 +8,7 @@ import signup from "./Pages/signup";
 import UploadCred from "./Pages/Upload_Cred";
 import ChooseJob from "./Pages/Choose_Job";
 import LanguageSection from "./Pages/Language_section";
+import AddSkill from "./Pages/AddSkill";
 
 const Stack = createNativeStackNavigator();
 
@@ -21,6 +22,7 @@ const App = () => {
         <Stack.Screen name="Upload_Cred" component={UploadCred} />
         <Stack.Screen name="Choose_Job" component={ChooseJob} />
         <Stack.Screen name="Language_section" component={LanguageSection} />
+        <Stack.Screen name="AddSkill" component={AddSkill} />
         <Stack.Screen name="signup" component={signup} />
       </Stack.Navigator>
     </NavigationContainer>

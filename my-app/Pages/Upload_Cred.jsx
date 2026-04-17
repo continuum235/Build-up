@@ -111,7 +111,42 @@ export default (props) => {
                 </View>
             </View>
 
-    
+            {/* BOTTOM NAVIGATION */}
+            <View style={styles.bottomNav}>
+                <Text style={styles.stepText}>1/4</Text>
+                
+                {/* Arrow Navigation (Left & Right) */}
+                <View style={{ flexDirection: 'row' }}>
+                    <TouchableOpacity 
+                        style={{
+                            backgroundColor: "#965541",
+                            width: wp('12%'),
+                            height: wp('10%'),
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            borderRadius: wp('2%'),
+                            marginRight: wp('2%')
+                        }} 
+                        onPress={() => navigation.goBack()}
+                    >
+                        <Text style={{ color: "#FFFFFF", fontSize: wp('5%'), fontWeight: "bold" }}>{'<'}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={{
+                            backgroundColor: "#965541",
+                            width: wp('12%'),
+                            height: wp('10%'),
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            borderRadius: wp('2%')
+                        }} 
+                        onPress={() => navigation.navigate('Choose_Job')}
+                    >
+                        <Text style={{ color: "#FFFFFF", fontSize: wp('5%'), fontWeight: "bold" }}>{'>'}</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+
         </SafeAreaView>
     )
 }
