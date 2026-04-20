@@ -118,7 +118,7 @@ export default () => {
                     style={styles.addButton} 
                     onPress={() => {
                         console.log('Skills saved:', selectedSkills);
-                        navigation.navigate('first');
+                        navigation.navigate('Bio_Jobseeker');
                     }}
                 >
                     <Text style={styles.addButtonText}>Add Skills</Text>
@@ -151,7 +151,7 @@ export default () => {
                     </TouchableOpacity>
                     <TouchableOpacity 
                         style={styles.arrowButton} 
-                        onPress={() => navigation.navigate('first')}
+                        onPress={() => navigation.navigate('Bio_Jobseeker')}
                     >
                         <Image
                             source={require("../assets/Next-page-logo.png")}
