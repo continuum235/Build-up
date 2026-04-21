@@ -104,13 +104,15 @@ export default () => {
           </View>
 
           {/* FOOTER */}
+          {/* Using TouchableOpacity for the entire footer to make it more tappable */}
           <TouchableOpacity 
             style={styles.footerBtn}
             onPress={() => navigation.navigate("signup")}
           >
             <Text style={styles.footerText}>
-              Don't have an account? <Text style={styles.signupLink}>Sign up</Text>
+              Don't have an account ??  <Text style={styles.signupLink}>Sign up</Text>
             </Text>
+
           </TouchableOpacity>
 
         </View>
