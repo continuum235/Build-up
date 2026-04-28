@@ -29,7 +29,7 @@ export default (props) => {
                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                     <Image
-                        source={require ("../assets/Profile-logo.png")} 
+                        source={require ("../assets/Back-button.png")} 
                         resizeMode={"contain"}
                         style={styles.backIcon}
                     />
