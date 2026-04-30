@@ -1,0 +1,16 @@
+const routes = {
+    welcome: "welcome",
+    languageSelection: "languageSelection",
+    login: "login",
+    signup: "signup",
+    roleType: "roleType",
+    upload: "upload",
+    roleTitle: "roleTitle",
+    languages: "languages",
+    skills: "skills",
+    bio: "bio",
+    hourlyRate: "hourlyRate",
+    enterDetails: "enterDetails",
+};
+
+export default routes;

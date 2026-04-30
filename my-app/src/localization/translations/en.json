@@ -1,0 +1,127 @@
+{
+  "common": {
+    "continue": "Continue",
+    "next": "Next",
+    "back": "Back",
+    "setRate": "Set Rate",
+    "setBio": "Set this Bio",
+    "addLanguages": "Add Languages",
+    "addSkills": "Add Skills",
+    "addExpertise": "Add Expertise",
+    "upload": "Upload",
+    "uploaded": "Uploaded",
+    "saveDetails": "Save Details"
+  },
+  "profile": {
+    "headerTitle": "Create Your Profile"
+  },
+  "welcome": {
+    "headline": "A good headline",
+    "subheadline": "A simple app introduction \n greeting audience.",
+    "login": "Log in",
+    "signupPrompt": "New to Buildup?",
+    "signupLink": "Sign up"
+  },
+  "languageSelection": {
+    "title": "Choose your language",
+    "subtitle": "Pick a language to continue. You can change it later.",
+    "english": "English",
+    "hindi": "Hindi",
+    "continue": "Continue"
+  },
+  "auth": {
+    "welcomeBack": "Welcome Back!",
+    "loginSubtitle": "Log in to continue your journey",
+    "emailPlaceholder": "Email Address",
+    "passwordPlaceholder": "Password",
+    "passwordPlaceholderSignup": "Password (8 or more characters)",
+    "forgotPassword": "Forgot Password?",
+    "loginButton": "Log in",
+    "orLoginWith": "or login with",
+    "noAccount": "Don't have an account ??",
+    "signupLink": "Sign up",
+    "signupHeadline": "Sign up to find work you\nwant",
+    "signupWithGoogle": "Sign up with Google",
+    "or": "or",
+    "fullName": "Full Name",
+    "location": "Select Location",
+    "createAccount": "Create my account",
+    "termsPrefix": "By creating an account or signing you agree to our",
+    "termsBold": "Terms and Conditions"
+  },
+  "roleType": {
+    "question": "A few quick questions: Who are you?",
+    "subtitle": "This will let us know what you expect from our platform and match you with your desired fellow users.",
+    "jobSeekerTitle": "I am looking for jobs",
+    "jobSeekerDesc": "Plumbers, labourers, etc...",
+    "employerTitle": "I want to hire",
+    "employerDesc": "Plumbers, labourers, etc..."
+  },
+  "upload": {
+    "title": "Upload Profile",
+    "heroTitle": "Looking for jobs",
+    "heroSubtitle": "Add your details and upload your profile so employers can find you faster.",
+    "aadhaar": "Aadhaar Card*",
+    "otherDoc": "Other Document",
+    "continue": "Continue"
+  },
+  "roleTitle": {
+    "heading": "Got it. Now, add a title\nto tell the world what you do.",
+    "subtitle": "It's the first thing that someone sees while connecting. Make sure to describe your expertise in a role.",
+    "label": "Your professional role",
+    "placeholder": "Plumber | Carpenter | Skilled Labour",
+    "button": "Add Expertise"
+  },
+  "languages": {
+    "heading": "Looking good. Next,\ntell us which languages you speak.",
+    "subtitle": "Build up is used by people across the country. This helps us give you a better experience.",
+    "label": "Your languages",
+    "note": "*Choose max up to three languages",
+    "placeholder": "English...",
+    "button": "Add Languages"
+  },
+  "skills": {
+    "heading": "Nearly there! What\nwork are you here\nto do?",
+    "subtitle": "Your skills show clients what you can offer and help us recommend the right jobs.",
+    "label": "Your skills",
+    "note": "*Choose max up to three skills",
+    "placeholder": "Select skills from below...",
+    "button": "Add Skills"
+  },
+  "bio": {
+    "heading": "Great! Now write a bio\nto tell the world about\nyourself.",
+    "subtitle": "Help people get to know you at a glance. What work are you best at? Tell them clearly.",
+    "label": "Your overview",
+    "placeholder": "Enter your top skills, experiences, and interests. At least 100 characters",
+    "button": "Set this Bio"
+  },
+  "hourlyRate": {
+    "heading": "Now, let's set your\nhourly rate",
+    "subtitle": "Clients will see this rate on your profile and in search results once you publish your profile.",
+    "label": "Hourly Rate",
+    "note": "Total amount the client will see",
+    "button": "Set Rate"
+  },
+  "details": {
+    "title": "Enter your details",
+    "country": "Country*",
+    "address": "Address*",
+    "addressLine1": "Address line 1",
+    "addressLine2": "Address line 2",
+    "city": "City*",
+    "button": "Save Details"
+  },
+  "validation": {
+    "invalidLogin": "Enter a valid email and password.",
+    "invalidSignup": "Fill in name, email, password, and location.",
+    "uploadDoc": "Please upload at least one document.",
+    "enterRole": "Please enter a role first.",
+    "addLanguage": "Please add at least one language.",
+    "addSkill": "Please add at least one skill.",
+    "bioLength": "Your bio should be at least 100 characters.",
+    "validRate": "Enter a valid hourly rate.",
+    "requiredDetails": "Please complete all required fields.",
+    "maxLanguages": "You can only select up to 3 languages.",
+    "maxSkills": "You can only select up to 3 skills."
+  }
+}
