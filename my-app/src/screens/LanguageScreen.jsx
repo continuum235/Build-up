@@ -86,6 +86,21 @@ const LanguageScreen = () => {
               />
             )}
           </View>
+
+          {languages.length < 3 && (
+            <View style={styles.addLanguageRow}>
+              <TouchableOpacity
+                style={[
+                  styles.addLanguageButton,
+                  !inputText.trim() && styles.addLanguageButtonDisabled,
+                ]}
+                onPress={handleAddLanguage}
+                disabled={!inputText.trim()}
+              >
+                <Text style={styles.addLanguageButtonText}>{t("languages.addButton")}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         <View style={{ flex: 1 }} />
@@ -217,6 +232,25 @@ const styles = StyleSheet.create({
     fontSize: wp("4%"),
     paddingVertical: hp("1%"),
     marginBottom: hp("1%"),
+  },
+  addLanguageRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: hp("1%"),
+  },
+  addLanguageButton: {
+    backgroundColor: "#965541",
+    borderRadius: wp("3.5%"),
+    paddingVertical: hp("1.2%"),
+    paddingHorizontal: wp("5%"),
+  },
+  addLanguageButtonDisabled: {
+    opacity: 0.5,
+  },
+  addLanguageButtonText: {
+    color: "#FFFFFF",
+    fontSize: wp("3.6%"),
+    fontWeight: "600",
   },
   addButton: {
     alignItems: "center",

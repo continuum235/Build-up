@@ -57,7 +57,7 @@ const HourlyRateScreen = () => {
 
           <View style={styles.rateRow}>
             <View style={styles.rateInputWrapper}>
-              <Text style={styles.ratePrefix}>$</Text>
+              <Text style={styles.ratePrefix}>₹</Text>
               <TextInput
                 style={styles.rateInput}
                 value={rate}

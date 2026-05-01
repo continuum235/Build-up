@@ -78,7 +78,8 @@
     "label": "Your languages",
     "note": "*Choose max up to three languages",
     "placeholder": "English...",
-    "button": "Add Languages"
+    "button": "Add Languages",
+    "addButton": "Add"
   },
   "skills": {
     "heading": "Nearly there! What\nwork are you here\nto do?",
