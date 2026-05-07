@@ -11,6 +11,7 @@ const routes = {
     bio: "bio",
     hourlyRate: "hourlyRate",
     enterDetails: "enterDetails",
+    findJobs: "findJobs",
 };
 
 export default routes;

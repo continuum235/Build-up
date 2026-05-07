@@ -19,7 +19,7 @@ import KeyboardSafeWrapper from "../components/KeyboardSafeWrapper";
 
 const EnterDetailsScreen = () => {
   const navigation = useNavigation();
-  const { profile, setDetails, resetProfile } = useProfile();
+  const { profile, setDetails } = useProfile();
   const { t } = useLanguage();
   const [country, setCountry] = useState(profile.details.country);
   const [addressLine1, setAddressLine1] = useState(profile.details.addressLine1);
@@ -47,8 +47,10 @@ const EnterDetailsScreen = () => {
 
     console.log("Profile submit:", payload);
     alert("Profile saved. Check console for details.");
-    resetProfile();
-    navigation.navigate(routes.welcome);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: routes.findJobs }],
+    });
   };
 
   return (
