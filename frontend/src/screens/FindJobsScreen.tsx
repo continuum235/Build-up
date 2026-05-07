@@ -335,6 +335,8 @@ const styles = StyleSheet.create({
     paddingRight: wp(5),
   },
   categoryButton: {
+    minHeight: hp(5),
+    width: wp(28),
     paddingHorizontal: wp(4),
     paddingVertical: hp(1),
     marginRight: wp(2),
@@ -342,14 +344,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderWidth: 1.5,
     borderColor: "#A55A4C",
+    alignItems: "center",
+    justifyContent: "center",
   },
   categoryButtonActive: {
     backgroundColor: "#A55A4C",
+    borderColor: "#A55A4C",
   },
   categoryButtonText: {
     fontSize: wp(3.2),
     fontWeight: "500",
-    color: "#A55A4C",
+    color: "#7A3529",
+    textAlign: "center",
   },
   categoryButtonTextActive: {
     color: "#FFFFFF",
