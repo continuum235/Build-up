@@ -1,0 +1,209 @@
+{
+  "jobs": [
+    {
+      "id": 1,
+      "title": "Carpenter Required for Wooden Finishing Work",
+      "company": "Kalpataru",
+      "verified": true,
+      "location": "Ram Mandir, Thane",
+      "city": "Thane",
+      "coordinates": {
+        "lat": 19.2183,
+        "lng": 72.9781
+      },
+      "budget": 1000,
+      "experience": "Unskilled",
+      "tags": ["Tag 1", "Tag 2"],
+      "category": "Carpenter",
+      "liked": false,
+      "postedTime": "4 hrs ago"
+    },
+    {
+      "id": 2,
+      "title": "Carpenter Required for Wooden Finishing Work",
+      "company": "Kalpataru",
+      "verified": true,
+      "location": "Ram Mandir, Mumbai",
+      "city": "Mumbai",
+      "coordinates": {
+        "lat": 19.0176,
+        "lng": 72.8479
+      },
+      "budget": 1000,
+      "experience": "Skilled",
+      "tags": ["Tag 1", "Tag 2"],
+      "category": "Carpenter",
+      "liked": false,
+      "postedTime": "4 hrs ago"
+    },
+    {
+      "id": 3,
+      "title": "Painter Required for House Painting",
+      "company": "BuildCo",
+      "verified": true,
+      "location": "Dadar, Mumbai",
+      "city": "Mumbai",
+      "coordinates": {
+        "lat": 19.0176,
+        "lng": 72.8479
+      },
+      "budget": 1500,
+      "experience": "Unskilled",
+      "tags": ["Tag 1", "Tag 2"],
+      "category": "Painter",
+      "liked": false,
+      "postedTime": "6 hrs ago"
+    },
+    {
+      "id": 4,
+      "title": "Electrician Needed for Wiring Installation",
+      "company": "ElectroFix",
+      "verified": false,
+      "location": "Andheri, Mumbai",
+      "city": "Mumbai",
+      "coordinates": {
+        "lat": 19.1136,
+        "lng": 72.8697
+      },
+      "budget": 1200,
+      "experience": "Skilled",
+      "tags": ["Tag 1", "Tag 2"],
+      "category": "Electrician",
+      "liked": false,
+      "postedTime": "8 hrs ago"
+    },
+    {
+      "id": 5,
+      "title": "Plumber Required for Pipe Repair",
+      "company": "PlumbMaster",
+      "verified": true,
+      "location": "Bandra, Mumbai",
+      "city": "Mumbai",
+      "coordinates": {
+        "lat": 19.0596,
+        "lng": 72.8295
+      },
+      "budget": 800,
+      "experience": "Unskilled",
+      "tags": ["Tag 1", "Tag 2"],
+      "category": "Plumber",
+      "liked": false,
+      "postedTime": "10 hrs ago"
+    },
+    {
+      "id": 6,
+      "title": "Mason Needed for Bricklaying",
+      "company": "BuildStone",
+      "verified": true,
+      "location": "Goregaon, Mumbai",
+      "city": "Mumbai",
+      "coordinates": {
+        "lat": 19.1646,
+        "lng": 72.8493
+      },
+      "budget": 900,
+      "experience": "Skilled",
+      "tags": ["Tag 1", "Tag 2"],
+      "category": "Mason",
+      "liked": false,
+      "postedTime": "12 hrs ago"
+    },
+    {
+      "id": 7,
+      "title": "Cleaner Required for Office Cleaning",
+      "company": "CleanCorp",
+      "verified": false,
+      "location": "Lower Parel, Mumbai",
+      "city": "Mumbai",
+      "coordinates": {
+        "lat": 18.9956,
+        "lng": 72.8273
+      },
+      "budget": 500,
+      "experience": "Unskilled",
+      "tags": ["Tag 1", "Tag 2"],
+      "category": "Cleaner",
+      "liked": false,
+      "postedTime": "14 hrs ago"
+    },
+    {
+      "id": 8,
+      "title": "Gardener Needed for Lawn Maintenance",
+      "company": "GreenThumb",
+      "verified": true,
+      "location": "Powai, Mumbai",
+      "city": "Mumbai",
+      "coordinates": {
+        "lat": 19.1197,
+        "lng": 72.9051
+      },
+      "budget": 600,
+      "experience": "Unskilled",
+      "tags": ["Tag 1", "Tag 2"],
+      "category": "Gardener",
+      "liked": false,
+      "postedTime": "16 hrs ago"
+    },
+    {
+      "id": 9,
+      "title": "Welder Required for Metal Fabrication",
+      "company": "WeldTech",
+      "verified": true,
+      "location": "Vikhroli, Mumbai",
+      "city": "Mumbai",
+      "coordinates": {
+        "lat": 19.1116,
+        "lng": 72.9278
+      },
+      "budget": 1400,
+      "experience": "Skilled",
+      "tags": ["Tag 1", "Tag 2"],
+      "category": "Welder",
+      "liked": false,
+      "postedTime": "18 hrs ago"
+    },
+    {
+      "id": 10,
+      "title": "Driver Needed for Delivery Service",
+      "company": "QuickDeliver",
+      "verified": false,
+      "location": "Kurla, Mumbai",
+      "city": "Mumbai",
+      "coordinates": {
+        "lat": 19.0646,
+        "lng": 72.8806
+      },
+      "budget": 700,
+      "experience": "Unskilled",
+      "tags": ["Tag 1", "Tag 2"],
+      "category": "Driver",
+      "liked": false,
+      "postedTime": "20 hrs ago"
+    }
+  ],
+  "categories": [
+    "Carpenter",
+    "Painter",
+    "Electrician",
+    "Plumber",
+    "Mason",
+    "Cleaner",
+    "Gardener",
+    "Welder",
+    "Driver"
+  ],
+  "cityCoordinates": {
+    "Thane": {
+      "lat": 19.2183,
+      "lng": 72.9781
+    },
+    "Mumbai": {
+      "lat": 19.0760,
+      "lng": 72.8777
+    },
+    "Pune": {
+      "lat": 18.5204,
+      "lng": 73.8567
+    }
+  }
+}
