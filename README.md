@@ -43,3 +43,9 @@ npm run android
 npm run ios
 npm run web
 ```
+
+if using expo
+```bash
+cd my-app
+npx expo start
+```
