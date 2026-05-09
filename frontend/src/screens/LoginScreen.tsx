@@ -57,6 +57,8 @@ const LoginScreen: React.FC = () => {
             </View>
           </View>
 
+          
+
           <Text style={styles.welcomeText}>{t("auth.welcomeBack")}</Text>
           <Text style={styles.subText}>{t("auth.loginSubtitle")}</Text>
 
