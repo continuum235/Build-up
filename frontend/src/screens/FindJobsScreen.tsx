@@ -13,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import routes from "../navigation/routes";
 import jobsData from "../data/jobsSeedData.json";
+import JobDetails from "../components/JobDetails";
 
 interface FindJobsScreenProps {
     navigation: any;
@@ -163,56 +164,11 @@ export default ({ navigation }: FindJobsScreenProps) => {
                         </View>
                     )}
                     {displayedJobs.map((job) => (
-                        <TouchableOpacity 
+                        <JobDetails
                             key={job.id} 
-                            style={styles.jobCard}
+                            job={job}
                             onPress={() => navigation.navigate(routes.jobDetails, { jobId: job.id })}
-                            activeOpacity={0.7}
-                        >
-                            
-                            {/* Card Header & Heart Icon */}
-                            <View style={styles.cardHeaderRow}>
-                                <Text style={styles.jobTitle}>{job.title}</Text>
-                                <TouchableOpacity style={styles.heartButton}>
-                                    <Text style={styles.heartIcon}>♡</Text>
-                                </TouchableOpacity>
-                            </View>
-
-                            {/* Company & Verification */}
-                            <View style={styles.companyRow}>
-                                <Text style={styles.companyText}>{job.company} </Text>
-                                {job.verified && <Text style={styles.verifiedText}>✓ User Verified</Text>}
-                                <Text style={styles.postedText}> • Posted {job.posted}</Text>
-                            </View>
-
-                            {/* Location */}
-                            <View style={styles.locationRow}>
-                                <Text style={styles.locationIcon}>📍</Text>
-                                <Text style={styles.locationText}>{job.location}</Text>
-                            </View>
-
-                            {/* Budget & Experience */}
-                            <View style={styles.detailsRow}>
-                                <View style={styles.detailBlock}>
-                                    <Text style={styles.detailLabel}>Budget</Text>
-                                    <Text style={styles.detailValue}>{job.budget}</Text>
-                                </View>
-                                <View style={styles.detailBlock}>
-                                    <Text style={styles.detailLabel}>Experience</Text>
-                                    <Text style={styles.detailValue}>{job.experience}</Text>
-                                </View>
-                            </View>
-
-                            {/* Tags */}
-                            <View style={styles.tagsRow}>
-                                {job.tags.map((tag, index) => (
-                                    <View key={index} style={styles.tagPill}>
-                                        <Text style={styles.tagText}>{tag}</Text>
-                                    </View>
-                                ))}
-                            </View>
-
-                        </TouchableOpacity>
+                        />
                     ))}
                 </View>
             </ScrollView>
@@ -357,110 +313,6 @@ const styles = StyleSheet.create({
     cardsContainer: {
         paddingHorizontal: wp('6%'),
     },
-    jobCard: {
-        borderColor: "#D8DADC",
-        borderWidth: 1.5,
-        borderRadius: wp('5%'),
-        padding: wp('5%'),
-        marginBottom: hp('2.5%'),
-        backgroundColor: "#FFFFFF",
-    },
-    cardHeaderRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "flex-start",
-        marginBottom: hp('1%'),
-    },
-    jobTitle: {
-        color: "#965541",
-        fontSize: wp('5%'),
-        fontWeight: "bold",
-        width: '85%', // Prevents overlapping with the heart icon
-    },
-    heartButton: {
-        padding: wp('1%'),
-        borderColor: "#965541",
-        borderWidth: 1,
-        borderRadius: wp('4%'),
-        width: wp('8%'),
-        height: wp('8%'),
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    heartIcon: {
-        color: "#965541",
-        fontSize: wp('4%'),
-    },
-    companyRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: hp('1.5%'),
-        flexWrap: "wrap",
-    },
-    companyText: {
-        color: "#1E1E1E",
-        fontWeight: "600",
-        fontSize: wp('3.5%'),
-    },
-    verifiedText: {
-        color: "#007AFF", // Blue verification color
-        fontSize: wp('3.2%'),
-        fontWeight: "600",
-    },
-    postedText: {
-        color: "#888888",
-        fontSize: wp('3.2%'),
-    },
-    locationRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: hp('2%'),
-    },
-    locationIcon: {
-        fontSize: wp('4%'),
-        marginRight: wp('1.5%'),
-    },
-    locationText: {
-        color: "#666666",
-        fontSize: wp('3.8%'),
-        textDecorationLine: "underline",
-    },
-    detailsRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        marginBottom: hp('2%'),
-        paddingRight: wp('10%'), // Matches the visual alignment in the design
-    },
-    detailBlock: {
-        flexDirection: "column",
-    },
-    detailLabel: {
-        color: "#965541",
-        fontSize: wp('3.5%'),
-        marginBottom: hp('0.5%'),
-    },
-    detailValue: {
-        color: "#4A4A4A",
-        fontSize: wp('5%'),
-        fontWeight: "bold",
-    },
-    tagsRow: {
-        flexDirection: "row",
-        flexWrap: "wrap",
-    },
-    tagPill: {
-        borderColor: "#965541",
-        borderWidth: 1,
-        borderRadius: wp('4%'),
-        paddingVertical: hp('0.5%'),
-        paddingHorizontal: wp('4%'),
-        marginRight: wp('3%'),
-    },
-    tagText: {
-        color: "#965541",
-        fontSize: wp('3%'),
-    },
-    
     /* BROADCAST SECTION */
     broadcastMessageContainer: {
         alignItems: "center",
