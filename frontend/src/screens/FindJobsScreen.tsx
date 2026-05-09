@@ -33,8 +33,51 @@ export default ({ navigation }: FindJobsScreenProps) => {
         location: job.location,
         budget: `$${job.budget}`,
         experience: job.experience,
-        tags: job.tags
+        tags: job.tags,
+        isBroadcasted: false
     }));
+
+    // Broadcasted jobs data
+    const broadcastedJobListings = jobsData.jobs.slice(2, 4).map(job => ({
+        id: job.id,
+        title: job.title,
+        company: job.company,
+        verified: job.verified,
+        posted: job.postedTime,
+        location: job.location,
+        budget: `$${job.budget}`,
+        experience: job.experience,
+        tags: job.tags,
+        isBroadcasted: true
+    }));
+
+    // Liked jobs data
+    const likedJobListings = jobsData.jobs.slice(0, 1).map(job => ({
+        id: job.id,
+        title: job.title,
+        company: job.company,
+        verified: job.verified,
+        posted: job.postedTime,
+        location: job.location,
+        budget: `$${job.budget}`,
+        experience: job.experience,
+        tags: job.tags,
+        isBroadcasted: false
+    }));
+
+    // Get jobs based on active tab
+    const getJobsForTab = () => {
+        switch(activeTab) {
+            case "Broadcasted Jobs":
+                return broadcastedJobListings;
+            case "Liked Jobs":
+                return likedJobListings;
+            default:
+                return jobListings;
+        }
+    };
+
+    const displayedJobs = getJobsForTab();
 
     return (
         <SafeAreaView style={styles.container}>
@@ -106,7 +149,20 @@ export default ({ navigation }: FindJobsScreenProps) => {
 
                 {/* JOB CARDS LIST */}
                 <View style={styles.cardsContainer}>
-                    {jobListings.map((job) => (
+                    {activeTab === "Broadcasted Jobs" && (
+                        <View style={styles.broadcastMessageContainer}>
+                            <View style={styles.broadcastIconCircles}>
+                                <View style={styles.broadcastCircle1} />
+                                <View style={styles.broadcastCircle2} />
+                                <View style={styles.broadcastCircle3} />
+                                <Text style={styles.globeIcon}>🌐</Text>
+                            </View>
+                            <Text style={styles.broadcastMessageText}>
+                                Check here for real time jobs which will pop up here when recruiters will broadcast job opening.
+                            </Text>
+                        </View>
+                    )}
+                    {displayedJobs.map((job) => (
                         <TouchableOpacity 
                             key={job.id} 
                             style={styles.jobCard}
@@ -403,6 +459,57 @@ const styles = StyleSheet.create({
     tagText: {
         color: "#965541",
         fontSize: wp('3%'),
+    },
+    
+    /* BROADCAST SECTION */
+    broadcastMessageContainer: {
+        alignItems: "center",
+        justifyContent: "center",
+        paddingVertical: hp('6%'),
+        marginBottom: hp('3%'),
+    },
+    broadcastIconCircles: {
+        position: "relative",
+        width: wp('40%'),
+        height: wp('40%'),
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: hp('2%'),
+    },
+    broadcastCircle1: {
+        position: "absolute",
+        width: wp('40%'),
+        height: wp('40%'),
+        borderRadius: wp('20%'),
+        backgroundColor: "#D4A5A0",
+        opacity: 0.3,
+    },
+    broadcastCircle2: {
+        position: "absolute",
+        width: wp('28%'),
+        height: wp('28%'),
+        borderRadius: wp('14%'),
+        backgroundColor: "#C08B81",
+        opacity: 0.5,
+    },
+    broadcastCircle3: {
+        position: "absolute",
+        width: wp('16%'),
+        height: wp('16%'),
+        borderRadius: wp('8%'),
+        backgroundColor: "#A8714F",
+        opacity: 0.7,
+    },
+    globeIcon: {
+        fontSize: wp('10%'),
+        position: "absolute",
+    },
+    broadcastMessageText: {
+        fontSize: wp('3.8%'),
+        color: "#4A4A4A",
+        textAlign: "center",
+        lineHeight: hp('2.5%'),
+        paddingHorizontal: wp('6%'),
     },
     
     /* BOTTOM NAVIGATION BAR */
