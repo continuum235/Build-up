@@ -6,6 +6,7 @@ import {
   StyleSheet,
   StatusBar,
   TextInput,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
@@ -36,13 +37,12 @@ const BioScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" />
 
       <View style={styles.headerRow}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <View style={styles.backIconPlaceholder}>
-            <Text style={styles.backIconText}>U</Text>
-          </View>
+      <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+          <Image
+            source={require("../../assets/Back-button.png")}
+            style={styles.backIcon}
+            resizeMode="contain"
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("profile.headerTitle")}</Text>
         <View style={styles.headerSpacer} />
@@ -107,18 +107,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp("6%"),
     paddingVertical: hp("2%"),
   },
-  backIconPlaceholder: {
-    width: wp("10%"),
-    height: wp("10%"),
-    borderRadius: wp("5%"),
-    borderWidth: 2,
-    borderColor: "#000",
-    justifyContent: "center",
-    alignItems: "center",
+  backBtn: {
+    padding: wp("5%"),
+    width: wp("20%"),
   },
-  backIconText: {
-    fontSize: wp("5%"),
-    fontWeight: "bold",
+  backIcon: {
+    width: wp("8%"),
+    height: wp("8%"),
   },
   headerTitle: {
     color: "#1E1E1E",

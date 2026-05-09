@@ -123,6 +123,7 @@ const styles = StyleSheet.create({
   backBtn: {
     padding: wp("5%"),
     width: wp("20%"),
+    marginTop: hp("2%"), // moves button downward
   },
   backIcon: {
     width: wp("8%"),
