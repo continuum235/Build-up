@@ -12,15 +12,21 @@ export interface JobDetailsCardData {
     budget: string;
     experience: string;
     tags: string[];
+    isLiked?: boolean;
 }
 
 interface JobDetailsProps {
     job: JobDetailsCardData;
     onPress?: () => void;
     onLikePress?: () => void;
+    isLiked?: boolean;
 }
 
-export default function JobDetails({ job, onPress, onLikePress }: JobDetailsProps) {
+export default function JobDetails({ job, onPress, onLikePress, isLiked }: JobDetailsProps) {
+    const handleLikePress = () => {
+        onLikePress?.();
+    };
+
     return (
         <TouchableOpacity
             style={styles.jobCard}
@@ -29,8 +35,17 @@ export default function JobDetails({ job, onPress, onLikePress }: JobDetailsProp
         >
             <View style={styles.cardHeaderRow}>
                 <Text style={styles.jobTitle}>{job.title}</Text>
-                <TouchableOpacity style={styles.heartButton} onPress={onLikePress} activeOpacity={0.7}>
-                    <Text style={styles.heartIcon}>♡</Text>
+                <TouchableOpacity 
+                    style={styles.heartButton} 
+                    onPress={handleLikePress} 
+                    activeOpacity={0.7}
+                >
+                    <Text style={[
+                        styles.heartIcon,
+                        isLiked && styles.heartIconLiked
+                    ]}>
+                        {isLiked ? "♥" : "♡"}
+                    </Text>
                 </TouchableOpacity>
             </View>
 
@@ -101,6 +116,9 @@ const styles = StyleSheet.create({
     heartIcon: {
         color: "#965541",
         fontSize: wp("4%"),
+    },
+    heartIconLiked: {
+        color: "#E74C3C",
     },
     companyRow: {
         flexDirection: "row",

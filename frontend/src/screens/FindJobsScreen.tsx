@@ -24,6 +24,7 @@ export default ({ navigation }: FindJobsScreenProps) => {
     // Interactive states for UI tabs and filters
     const [activeTab, setActiveTab] = useState("Best Matches");
     const [activeFilter, setActiveFilter] = useState("Painter");
+    const [likedJobIds, setLikedJobIds] = useState<(string | number)[]>([]);
 
     // Use the first two jobs from the seed data
     const jobListings = jobsData.jobs.slice(0, 2).map(job => ({
@@ -36,7 +37,8 @@ export default ({ navigation }: FindJobsScreenProps) => {
         budget: `$${job.budget}`,
         experience: job.experience,
         tags: job.tags,
-        isBroadcasted: false
+        isBroadcasted: false,
+        isLiked: likedJobIds.includes(job.id)
     }));
 
     // Broadcasted jobs data
@@ -50,11 +52,12 @@ export default ({ navigation }: FindJobsScreenProps) => {
         budget: `$${job.budget}`,
         experience: job.experience,
         tags: job.tags,
-        isBroadcasted: true
+        isBroadcasted: true,
+        isLiked: likedJobIds.includes(job.id)
     }));
 
-    // Liked jobs data
-    const likedJobListings = jobsData.jobs.slice(0, 1).map(job => ({
+    // Get all liked jobs data
+    const allJobs = jobsData.jobs.map(job => ({
         id: job.id,
         title: job.title,
         company: job.company,
@@ -64,8 +67,20 @@ export default ({ navigation }: FindJobsScreenProps) => {
         budget: `$${job.budget}`,
         experience: job.experience,
         tags: job.tags,
-        isBroadcasted: false
+        isBroadcasted: false,
+        isLiked: likedJobIds.includes(job.id)
     }));
+
+    const likedJobListings = allJobs.filter(job => job.isLiked);
+
+    // Handle like button press
+    const handleLikePress = (jobId: string | number) => {
+        setLikedJobIds(prevLikedIds => 
+            prevLikedIds.includes(jobId) 
+                ? prevLikedIds.filter(id => id !== jobId)
+                : [...prevLikedIds, jobId]
+        );
+    };
 
     // Get jobs based on active tab
     const getJobsForTab = () => {
@@ -154,11 +169,18 @@ export default ({ navigation }: FindJobsScreenProps) => {
                     {activeTab === "Broadcasted Jobs" && (
                         <BroadcastJobsEmptyState />
                     )}
+                    {displayedJobs.length === 0 && activeTab === "Liked Jobs" && (
+                        <View style={styles.emptyLikedJobsContainer}>
+                            <Text style={styles.emptyLikedJobsText}>No liked jobs yet</Text>
+                        </View>
+                    )}
                     {displayedJobs.map((job) => (
                         <JobDetails
                             key={job.id} 
                             job={job}
+                            isLiked={job.isLiked}
                             onPress={() => navigation.navigate(routes.jobDetails, { jobId: job.id })}
+                            onLikePress={() => handleLikePress(job.id)}
                         />
                     ))}
                 </View>
@@ -352,5 +374,16 @@ const styles = StyleSheet.create({
         width: wp('7%'),
         height: wp('7%'),
         marginBottom: hp('0.5%'),
-    }
+    },
+    emptyLikedJobsContainer: {
+        alignItems: "center",
+        justifyContent: "center",
+        paddingVertical: hp('8%'),
+        marginBottom: hp('3%'),
+    },
+    emptyLikedJobsText: {
+        fontSize: wp('4%'),
+        color: "#A4A9B6",
+        fontWeight: "500",
+    },
 });
