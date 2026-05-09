@@ -5,7 +5,7 @@
       "title": "Carpenter Required for Wooden Finishing Work",
       "company": "Kalpataru",
       "verified": true,
-      "location": "Ram Mandir, Thane",
+      "location": "Ram Mandir, Thane, 410210",
       "city": "Thane",
       "coordinates": {
         "lat": 19.2183,
@@ -16,14 +16,18 @@
       "tags": ["Tag 1", "Tag 2"],
       "category": "Carpenter",
       "liked": false,
-      "postedTime": "4 hrs ago"
+      "postedTime": "4 hrs ago",
+      "description": "Something random in the bio to show as a placeholder. Something random in the bio to show as a placeholder.",
+      "applicants": "10 to 15",
+      "languages": "Marathi, Hindi, Avadhi",
+      "ratings": 3.5
     },
     {
       "id": 2,
       "title": "Carpenter Required for Wooden Finishing Work",
       "company": "Kalpataru",
       "verified": true,
-      "location": "Ram Mandir, Mumbai",
+      "location": "Ram Mandir, Mumbai, 400001",
       "city": "Mumbai",
       "coordinates": {
         "lat": 19.0176,
@@ -34,14 +38,18 @@
       "tags": ["Tag 1", "Tag 2"],
       "category": "Carpenter",
       "liked": false,
-      "postedTime": "4 hrs ago"
+      "postedTime": "4 hrs ago",
+      "description": "Experienced carpenter needed for high-quality wooden finishing work on residential project.",
+      "applicants": "8 to 12",
+      "languages": "Hindi, English, Marathi",
+      "ratings": 4.5
     },
     {
       "id": 3,
       "title": "Painter Required for House Painting",
       "company": "BuildCo",
       "verified": true,
-      "location": "Dadar, Mumbai",
+      "location": "Dadar, Mumbai, 400014",
       "city": "Mumbai",
       "coordinates": {
         "lat": 19.0176,
@@ -52,14 +60,18 @@
       "tags": ["Tag 1", "Tag 2"],
       "category": "Painter",
       "liked": false,
-      "postedTime": "6 hrs ago"
+      "postedTime": "6 hrs ago",
+      "description": "Looking for skilled painters to paint a 3 BHK apartment. Must have experience with interior painting.",
+      "applicants": "15 to 20",
+      "languages": "Hindi, Marathi, English",
+      "ratings": 4.0
     },
     {
       "id": 4,
       "title": "Electrician Needed for Wiring Installation",
       "company": "ElectroFix",
       "verified": false,
-      "location": "Andheri, Mumbai",
+      "location": "Andheri, Mumbai, 400053",
       "city": "Mumbai",
       "coordinates": {
         "lat": 19.1136,
@@ -70,14 +82,18 @@
       "tags": ["Tag 1", "Tag 2"],
       "category": "Electrician",
       "liked": false,
-      "postedTime": "8 hrs ago"
+      "postedTime": "8 hrs ago",
+      "description": "Professional electrician required for complete electrical wiring in new construction project.",
+      "applicants": "5 to 10",
+      "languages": "Hindi, English",
+      "ratings": 3.8
     },
     {
       "id": 5,
       "title": "Plumber Required for Pipe Repair",
       "company": "PlumbMaster",
       "verified": true,
-      "location": "Bandra, Mumbai",
+      "location": "Bandra, Mumbai, 400050",
       "city": "Mumbai",
       "coordinates": {
         "lat": 19.0596,
@@ -88,14 +104,18 @@
       "tags": ["Tag 1", "Tag 2"],
       "category": "Plumber",
       "liked": false,
-      "postedTime": "10 hrs ago"
+      "postedTime": "10 hrs ago",
+      "description": "Experienced plumber needed for urgent pipe repair and maintenance work. Must have own tools.",
+      "applicants": "12 to 18",
+      "languages": "Marathi, Hindi",
+      "ratings": 4.2
     },
     {
       "id": 6,
       "title": "Mason Needed for Bricklaying",
       "company": "BuildStone",
       "verified": true,
-      "location": "Goregaon, Mumbai",
+      "location": "Goregaon, Mumbai, 400063",
       "city": "Mumbai",
       "coordinates": {
         "lat": 19.1646,
@@ -106,14 +126,18 @@
       "tags": ["Tag 1", "Tag 2"],
       "category": "Mason",
       "liked": false,
-      "postedTime": "12 hrs ago"
+      "postedTime": "12 hrs ago",
+      "description": "Skilled mason required for bricklaying work on commercial building project.",
+      "applicants": "7 to 11",
+      "languages": "Hindi, Marathi",
+      "ratings": 4.3
     },
     {
       "id": 7,
       "title": "Cleaner Required for Office Cleaning",
       "company": "CleanCorp",
       "verified": false,
-      "location": "Lower Parel, Mumbai",
+      "location": "Lower Parel, Mumbai, 400013",
       "city": "Mumbai",
       "coordinates": {
         "lat": 18.9956,
@@ -124,14 +148,18 @@
       "tags": ["Tag 1", "Tag 2"],
       "category": "Cleaner",
       "liked": false,
-      "postedTime": "14 hrs ago"
+      "postedTime": "14 hrs ago",
+      "description": "Daily office cleaning required. Must be reliable and maintain high standards of cleanliness.",
+      "applicants": "20 to 25",
+      "languages": "Hindi, Marathi",
+      "ratings": 3.5
     },
     {
       "id": 8,
       "title": "Gardener Needed for Lawn Maintenance",
       "company": "GreenThumb",
       "verified": true,
-      "location": "Powai, Mumbai",
+      "location": "Powai, Mumbai, 400076",
       "city": "Mumbai",
       "coordinates": {
         "lat": 19.1197,
@@ -142,14 +170,18 @@
       "tags": ["Tag 1", "Tag 2"],
       "category": "Gardener",
       "liked": false,
-      "postedTime": "16 hrs ago"
+      "postedTime": "16 hrs ago",
+      "description": "Gardener needed for regular lawn maintenance, landscaping, and garden upkeep.",
+      "applicants": "6 to 9",
+      "languages": "Hindi, Marathi, English",
+      "ratings": 4.1
     },
     {
       "id": 9,
       "title": "Welder Required for Metal Fabrication",
       "company": "WeldTech",
       "verified": true,
-      "location": "Vikhroli, Mumbai",
+      "location": "Vikhroli, Mumbai, 400079",
       "city": "Mumbai",
       "coordinates": {
         "lat": 19.1116,
@@ -160,14 +192,18 @@
       "tags": ["Tag 1", "Tag 2"],
       "category": "Welder",
       "liked": false,
-      "postedTime": "18 hrs ago"
+      "postedTime": "18 hrs ago",
+      "description": "Expert welder required for precision metal fabrication work on industrial project.",
+      "applicants": "4 to 7",
+      "languages": "Hindi, English",
+      "ratings": 4.7
     },
     {
       "id": 10,
       "title": "Driver Needed for Delivery Service",
       "company": "QuickDeliver",
       "verified": false,
-      "location": "Kurla, Mumbai",
+      "location": "Kurla, Mumbai, 400070",
       "city": "Mumbai",
       "coordinates": {
         "lat": 19.0646,
@@ -178,7 +214,11 @@
       "tags": ["Tag 1", "Tag 2"],
       "category": "Driver",
       "liked": false,
-      "postedTime": "20 hrs ago"
+      "postedTime": "20 hrs ago",
+      "description": "Reliable driver needed for daily delivery operations. Must have valid driving license.",
+      "applicants": "18 to 22",
+      "languages": "Hindi, Marathi",
+      "ratings": 3.9
     }
   ],
   "categories": [
@@ -200,10 +240,6 @@
     "Mumbai": {
       "lat": 19.0760,
       "lng": 72.8777
-    },
-    "Pune": {
-      "lat": 18.5204,
-      "lng": 73.8567
     }
   }
 }

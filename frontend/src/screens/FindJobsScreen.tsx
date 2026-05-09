@@ -11,37 +11,30 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import routes from "../navigation/routes";
+import jobsData from "../data/jobsSeedData.json";
 
-export default () => {
+interface FindJobsScreenProps {
+    navigation: any;
+}
+
+export default ({ navigation }: FindJobsScreenProps) => {
     // Interactive states for UI tabs and filters
     const [activeTab, setActiveTab] = useState("Best Matches");
     const [activeFilter, setActiveFilter] = useState("Painter");
 
-    // Mock data for job cards
-    const jobListings = [
-        {
-            id: 1,
-            title: "Carpenter Required for Wooden Finishing Work",
-            company: "Kalpataru",
-            verified: true,
-            posted: "4 hrs ago",
-            location: "Ram Mandir, Thane, 410210",
-            budget: "$1000",
-            experience: "Unskilled",
-            tags: ["Tag 1", "Tag 1"]
-        },
-        {
-            id: 2,
-            title: "Carpenter Required for Wooden Finishing Work",
-            company: "Kalpataru",
-            verified: true,
-            posted: "4 hrs ago",
-            location: "Ram Mandir, Mumbai, 400001",
-            budget: "$1000",
-            experience: "Skilled",
-            tags: ["Tag 1", "Tag 1"]
-        }
-    ];
+    // Use the first two jobs from the seed data
+    const jobListings = jobsData.jobs.slice(0, 2).map(job => ({
+        id: job.id,
+        title: job.title,
+        company: job.company,
+        verified: job.verified,
+        posted: job.postedTime,
+        location: job.location,
+        budget: `$${job.budget}`,
+        experience: job.experience,
+        tags: job.tags
+    }));
 
     return (
         <SafeAreaView style={styles.container}>
@@ -114,7 +107,12 @@ export default () => {
                 {/* JOB CARDS LIST */}
                 <View style={styles.cardsContainer}>
                     {jobListings.map((job) => (
-                        <View key={job.id} style={styles.jobCard}>
+                        <TouchableOpacity 
+                            key={job.id} 
+                            style={styles.jobCard}
+                            onPress={() => navigation.navigate(routes.jobDetails, { jobId: job.id })}
+                            activeOpacity={0.7}
+                        >
                             
                             {/* Card Header & Heart Icon */}
                             <View style={styles.cardHeaderRow}>
@@ -158,7 +156,7 @@ export default () => {
                                 ))}
                             </View>
 
-                        </View>
+                        </TouchableOpacity>
                     ))}
                 </View>
             </ScrollView>

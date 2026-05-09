@@ -15,6 +15,7 @@ import BioScreen from "../screens/BioScreen";
 import HourlyRateScreen from "../screens/HourlyRateScreen";
 import EnterDetailsScreen from "../screens/EnterDetailsScreen";
 import FindJobsScreen from "../screens/FindJobsScreen";
+import JobDetailsScreen from "../screens/JobDetailsScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -33,6 +34,7 @@ const AppNavigator: React.FC = () => (
         <Stack.Screen name={routes.hourlyRate} component={HourlyRateScreen} />
         <Stack.Screen name={routes.enterDetails} component={EnterDetailsScreen} />
         <Stack.Screen name={routes.findJobs} component={FindJobsScreen} />
+        <Stack.Screen name={routes.jobDetails} component={JobDetailsScreen} />
     </Stack.Navigator>
 );
 

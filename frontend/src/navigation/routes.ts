@@ -12,6 +12,7 @@ const routes = {
     hourlyRate: "hourlyRate",
     enterDetails: "enterDetails",
     findJobs: "findJobs",
+    jobDetails: "jobDetails",
 } as const;
 
 export type RouteName = typeof routes[keyof typeof routes];
