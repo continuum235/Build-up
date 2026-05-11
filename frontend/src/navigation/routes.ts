@@ -14,6 +14,9 @@ const routes = {
     findJobs: "findJobs",
     jobDetails: "jobDetails",
     yourJobs: "yourJobs",
+    profile: "profile",
+    notifications: "notifications",
+    messages: "messages",
 } as const;
 
 export type RouteName = typeof routes[keyof typeof routes];

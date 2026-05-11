@@ -15,6 +15,7 @@ import routes from "../navigation/routes";
 import jobsData from "../data/jobsSeedData.json";
 import JobDetails from "../components/JobDetails";
 import BroadcastJobsEmptyState from "../components/BroadcastJobsEmptyState";
+import BottomNavigation from "../components/BottomNavigation";
 
 interface FindJobsScreenProps {
     navigation: any;
@@ -187,41 +188,7 @@ export default ({ navigation }: FindJobsScreenProps) => {
             </ScrollView>
 
             {/* BOTTOM NAVIGATION BAR */}
-            <View style={styles.bottomNav}>
-                <TouchableOpacity style={styles.navItem}>
-                    <Image
-                        source={require("../../assets/Search.png")}
-                        style={styles.navIconImage}
-                        resizeMode="contain"
-                    />
-                    <Text style={styles.navTextActive}>Find Jobs</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate(routes.yourJobs)}>
-                    <Text style={styles.navIcon}>📄</Text>
-                    <Text style={styles.navText}>Your Jobs</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.navItem}>
-                    {/* Avatar Profile Icon */}
-                    <Image
-                        source={require("../../assets/Girl.png")}
-                        style={styles.profileNavAvatar}
-                        resizeMode="contain"
-                    />
-                    <Text style={styles.navText}>Profile</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.navItem}>
-                    <Text style={styles.navIcon}>🔔</Text>
-                    <Text style={styles.navText}>Notifications</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.navItem}>
-                    <Text style={styles.navIcon}>💬</Text>
-                    <Text style={styles.navText}>Messages</Text>
-                </TouchableOpacity>
-            </View>
+            <BottomNavigation navigation={navigation} activeTab="findJobs" />
 
         </SafeAreaView>
     );
@@ -325,55 +292,6 @@ const styles = StyleSheet.create({
     },
     cardsContainer: {
         paddingHorizontal: wp('6%'),
-    },
-    /* BOTTOM NAVIGATION BAR */
-    bottomNav: {
-        flexDirection: "row",
-        justifyContent: "space-around",
-        alignItems: "center",
-        backgroundColor: "#FFFFFF",
-        borderTopColor: "#E5E5E5",
-        borderTopWidth: 1,
-        paddingVertical: hp('1.5%'),
-        paddingBottom: hp('3%'), // Extra padding for iOS home indicator
-        position: 'absolute',
-        bottom: 0,
-        width: '100%',
-    },
-    navItem: {
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    navIcon: {
-        fontSize: wp('6%'),
-        marginBottom: hp('0.5%'),
-        opacity: 0.5,
-    },
-    navIconActive: {
-        fontSize: wp('6%'),
-        marginBottom: hp('0.5%'),
-        color: "#965541",
-    },
-    navIconImage: {
-        width: wp('6%'),
-        height: wp('6%'),
-        marginBottom: hp('0.5%'),
-        tintColor: "#965541",
-    },
-    navText: {
-        fontSize: wp('2.8%'),
-        color: "#A4A9B6",
-        fontWeight: "600",
-    },
-    navTextActive: {
-        fontSize: wp('2.8%'),
-        color: "#965541",
-        fontWeight: "bold",
-    },
-    profileNavAvatar: {
-        width: wp('7%'),
-        height: wp('7%'),
-        marginBottom: hp('0.5%'),
     },
     emptyLikedJobsContainer: {
         alignItems: "center",

@@ -3,8 +3,7 @@ import {
     View, 
     ScrollView, 
     Text, 
-    Image, 
-    TouchableOpacity, 
+    TouchableOpacity,
     StyleSheet, 
     StatusBar
 } from "react-native";
@@ -12,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import routes from "../navigation/routes";
 import jobsData from "../data/jobsSeedData.json";
-import JobDetails from "../components/JobDetails";
+import BottomNavigation from "../components/BottomNavigation";
 
 interface YourJobsScreenProps {
     navigation: any;
@@ -191,41 +190,7 @@ export default ({ navigation }: YourJobsScreenProps) => {
             </ScrollView>
 
             {/* BOTTOM NAVIGATION BAR */}
-            <View style={styles.bottomNav}>
-                <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate(routes.findJobs)}>
-                    <Image
-                        source={require("../../assets/Search.png")}
-                        style={styles.navIconImage}
-                        resizeMode="contain"
-                    />
-                    <Text style={styles.navTextInactive}>Find Jobs</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.navItem}>
-                    <Text style={styles.navIcon}>📄</Text>
-                    <Text style={styles.navTextActive}>Your Jobs</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.navItem}>
-                    {/* Avatar Profile Icon */}
-                    <Image
-                        source={require("../../assets/Girl.png")}
-                        style={styles.profileNavAvatar}
-                        resizeMode="contain"
-                    />
-                    <Text style={styles.navTextInactive}>Profile</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.navItem}>
-                    <Text style={styles.navIcon}>🔔</Text>
-                    <Text style={styles.navTextInactive}>Notifications</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.navItem}>
-                    <Text style={styles.navIcon}>💬</Text>
-                    <Text style={styles.navTextInactive}>Messages</Text>
-                </TouchableOpacity>
-            </View>
+            <BottomNavigation navigation={navigation} activeTab="yourJobs" />
         </SafeAreaView>
     );
 };
@@ -400,42 +365,5 @@ const styles = StyleSheet.create({
         color: "#A4A9B6",
         fontWeight: "500",
     },
-    bottomNav: {
-        flexDirection: "row",
-        justifyContent: "space-around",
-        alignItems: "center",
-        borderTopWidth: 1,
-        borderTopColor: "#E0E0E0",
-        paddingVertical: hp("1%"),
-        backgroundColor: "#FFFFFF",
-    },
-    navItem: {
-        alignItems: "center",
-        paddingVertical: hp("1%"),
-    },
-    navIcon: {
-        fontSize: wp("6%"),
-        marginBottom: hp("0.3%"),
-    },
-    navIconImage: {
-        width: wp("5%"),
-        height: wp("5%"),
-        marginBottom: hp("0.3%"),
-        tintColor: "#A4A9B6",
-    },
-    profileNavAvatar: {
-        width: wp("6%"),
-        height: wp("6%"),
-        marginBottom: hp("0.3%"),
-        borderRadius: wp("3%"),
-    },
-    navTextActive: {
-        fontSize: wp("2.5%"),
-        color: "#FF6B35",
-        fontWeight: "600",
-    },
-    navTextInactive: {
-        fontSize: wp("2.5%"),
-        color: "#A4A9B6",
-    },
+
 });
