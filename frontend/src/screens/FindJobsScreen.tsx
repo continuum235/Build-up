@@ -197,7 +197,7 @@ export default ({ navigation }: FindJobsScreenProps) => {
                     <Text style={styles.navTextActive}>Find Jobs</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.navItem}>
+                <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate(routes.yourJobs)}>
                     <Text style={styles.navIcon}>📄</Text>
                     <Text style={styles.navText}>Your Jobs</Text>
                 </TouchableOpacity>

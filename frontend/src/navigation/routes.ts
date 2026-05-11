@@ -13,6 +13,7 @@ const routes = {
     enterDetails: "enterDetails",
     findJobs: "findJobs",
     jobDetails: "jobDetails",
+    yourJobs: "yourJobs",
 } as const;
 
 export type RouteName = typeof routes[keyof typeof routes];
