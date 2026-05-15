@@ -6,6 +6,7 @@ const routes = {
     roleType: "roleType",
     upload: "upload",
     roleTitle: "roleTitle",
+    employerRoleTitle: "employerRoleTitle",
     languages: "languages",
     skills: "skills",
     bio: "bio",

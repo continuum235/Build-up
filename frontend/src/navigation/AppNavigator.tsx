@@ -9,6 +9,7 @@ import SignupScreen from "../screens/SignupScreen";
 import RoleTypeScreen from "../screens/RoleTypeScreen";
 import UploadScreen from "../screens/UploadScreen";
 import RoleTitleScreen from "../screens/RoleTitleScreen";
+import EmployerRoleTitleScreen from "../screens/EmployerRoleTitleScreen";
 import LanguageScreen from "../screens/LanguageScreen";
 import SkillsScreen from "../screens/SkillsScreen";
 import BioScreen from "../screens/BioScreen";
@@ -29,6 +30,7 @@ const AppNavigator: React.FC = () => (
         <Stack.Screen name={routes.roleType} component={RoleTypeScreen} />
         <Stack.Screen name={routes.upload} component={UploadScreen} />
         <Stack.Screen name={routes.roleTitle} component={RoleTitleScreen} />
+        <Stack.Screen name={routes.employerRoleTitle} component={EmployerRoleTitleScreen} />
         <Stack.Screen name={routes.languages} component={LanguageScreen} />
         <Stack.Screen name={routes.skills} component={SkillsScreen} />
         <Stack.Screen name={routes.bio} component={BioScreen} />

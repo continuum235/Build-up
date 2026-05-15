@@ -24,7 +24,12 @@ const RoleTypeScreen: React.FC = () => {
   const handleSelect = (roleType: string) => {
     setSelectedRole(roleType);
     setRoleType(roleType);
-    navigation.navigate(routes.upload);
+    
+    if (roleType === "employer") {
+      navigation.navigate(routes.employerRoleTitle);
+    } else {
+      navigation.navigate(routes.upload);
+    }
   };
 
   return (

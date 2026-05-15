@@ -57,6 +57,12 @@
     "employerTitle": "I want to hire",
     "employerDesc": "Plumbers, labourers, etc..."
   },
+  "employerRole": {
+    "question": "Choose a title\nto tell the world what you do.",
+    "subtitle": "It's the first thing that someone sees while connecting. Make sure to describe your expertise in a role.",
+    "label": "Your professional role",
+    "placeholder": "Select a professional role"
+  },
   "upload": {
     "title": "Upload Profile",
     "heroTitle": "Looking for jobs",
