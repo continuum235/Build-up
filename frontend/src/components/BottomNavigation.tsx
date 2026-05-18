@@ -4,7 +4,10 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-nat
 import routes from "../navigation/routes";
 
 const SearchIcon = require("../../assets/Search.png");
-const GirlIcon = require("../../assets/Girl.png");
+const YourJobsIcon = require("../../assets/yourjobs.png");
+const ProfileIcon = require("../../assets/Profile-logo.png");
+const NotificationIcon = require("../../assets/notication.png");
+const MessageIcon = require("../../assets/message.png");
 
 interface BottomNavigationProps {
     navigation: any;
@@ -12,30 +15,37 @@ interface BottomNavigationProps {
 }
 
 export default function BottomNavigation({ navigation, activeTab }: BottomNavigationProps) {
-    const renderIcon = (tabId: string): React.ReactNode => {
+    const renderIcon = (tabId: string, isActive: boolean): React.ReactNode => {
+        const iconTint = isActive ? styles.navIconActive : styles.navIconInactive;
         switch (tabId) {
             case "findJobs":
                 return (
-                    <Image
-                        source={SearchIcon}
-                        style={styles.navIconImage}
-                        resizeMode="contain"
-                    />
+                    <Image source={SearchIcon} style={[styles.navIconImage, iconTint]} resizeMode="contain" />
+                );
+            case "yourJobs":
+                return (
+                    <Image source={YourJobsIcon} style={[styles.navIconImage, iconTint]} resizeMode="contain" />
                 );
             case "profile":
                 return (
+                    <Image source={ProfileIcon} style={[styles.navIconImage, iconTint]} resizeMode="contain" />
+                );
+            case "notifications":
+                return (
                     <Image
-                        source={GirlIcon}
-                        style={[styles.navIconImage, styles.profileNavAvatar]}
+                        source={NotificationIcon}
+                        style={[styles.navIconImage, iconTint]}
                         resizeMode="contain"
                     />
                 );
-            case "yourJobs":
-                return <Text style={styles.navIcon}>📄</Text>;
-            case "notifications":
-                return <Text style={styles.navIcon}>🔔</Text>;
             case "messages":
-                return <Text style={styles.navIcon}>💬</Text>;
+                return (
+                    <Image
+                        source={MessageIcon}
+                        style={[styles.navIconImage, iconTint]}
+                        resizeMode="contain"
+                    />
+                );
             default:
                 return null;
         }
@@ -65,23 +75,26 @@ export default function BottomNavigation({ navigation, activeTab }: BottomNaviga
 
     return (
         <View style={styles.bottomNav}>
-            {tabs.map((tab) => (
+            {tabs.map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
                 <TouchableOpacity
                     key={tab.id}
                     style={styles.navItem}
                     onPress={() => handlePress(tab.id)}
                 >
-                    {renderIcon(tab.id)}
+                    {renderIcon(tab.id, isActive)}
                     <Text
                         style={[
                             styles.navText,
-                            activeTab === tab.id && styles.navTextActive,
+                            isActive ? styles.navTextActive : styles.navTextInactive,
                         ]}
                     >
                         {tab.label}
                     </Text>
                 </TouchableOpacity>
-            ))}
+                );
+            })}
         </View>
     );
 }
@@ -89,40 +102,39 @@ export default function BottomNavigation({ navigation, activeTab }: BottomNaviga
 const styles = StyleSheet.create({
     bottomNav: {
         flexDirection: "row",
-        justifyContent: "space-around",
+        justifyContent: "space-between",
         alignItems: "center",
         borderTopWidth: 1,
-        borderTopColor: "#E0E0E0",
-        paddingVertical: hp("1%"),
-        backgroundColor: "#FFFFFF",
+        borderTopColor: "#E5E5E5",
+        paddingVertical: hp("1.5%"),
+        paddingHorizontal: wp("5%"),
+        backgroundColor: "#F9F9F9",
     },
     navItem: {
         alignItems: "center",
-        paddingVertical: hp("1%"),
-    },
-    navIcon: {
-        fontSize: wp("6%"),
-        marginBottom: hp("0.3%"),
+        justifyContent: "center",
+        flex: 1,
     },
     navIconImage: {
-        width: wp("5%"),
-        height: wp("5%"),
-        marginBottom: hp("0.3%"),
-        tintColor: "#A4A9B6",
-    },
-    profileNavAvatar: {
         width: wp("6%"),
         height: wp("6%"),
-        tintColor: undefined,
-        borderRadius: wp("3%"),
+        marginBottom: hp("0.5%"),
+    },
+    navIconActive: {
+        tintColor: "#965541",
+    },
+    navIconInactive: {
+        tintColor: "#A4A9B6",
     },
     navText: {
         fontSize: wp("2.5%"),
-        color: "#A4A9B6",
-        fontWeight: "500",
+        fontWeight: "700",
+        textAlign: "center",
     },
     navTextActive: {
-        color: "#FF6B35",
-        fontWeight: "600",
+        color: "#965541",
+    },
+    navTextInactive: {
+        color: "#A4A9B6",
     },
 });

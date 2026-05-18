@@ -216,8 +216,9 @@ const styles = StyleSheet.create({
     pageTitle: {
         fontSize: wp("6%"),
         fontWeight: "700",
-        color: "#000000",
-        marginHorizontal: wp("5%"),
+        color: "#965541",
+        alignSelf: "center",
+        textAlign: "center",
         marginTop: hp("1.5%"),
         marginBottom: hp("1%"),
     },
@@ -268,13 +269,13 @@ const styles = StyleSheet.create({
         paddingBottom: hp("1.5%"),
     },
     tabTextActive: {
-        color: "#000000",
+        color: "#965541",
         fontWeight: "600",
     },
     activeIndicator: {
         width: "100%",
         height: 2,
-        backgroundColor: "#FF6B35",
+        backgroundColor: "#965541",
         borderRadius: 1,
         marginTop: -1,
     },
@@ -293,12 +294,12 @@ const styles = StyleSheet.create({
         justifyContent: "center",
     },
     filterChipActive: {
-        backgroundColor: "#FF6B35",
-        borderColor: "#FF6B35",
+        backgroundColor: "#965541",
+        borderColor: "#965541",
     },
     filterChipInactive: {
         backgroundColor: "#FFFFFF",
-        borderColor: "#FF6B35",
+        borderColor: "#965541",
     },
     filterText: {
         fontSize: wp("3.6%"),
@@ -308,7 +309,7 @@ const styles = StyleSheet.create({
         color: "#FFFFFF",
     },
     filterTextInactive: {
-        color: "#FF6B35",
+        color: "#965541",
     },
     cardsContainer: {
         paddingHorizontal: wp("5%"),
@@ -342,7 +343,7 @@ const styles = StyleSheet.create({
         height: wp("6%"),
     },
     heartIconActive: {
-        tintColor: "#FF6B35",
+        tintColor: "#965541",
     },
     heartIconInactive: {
         tintColor: "#A4A9B6",
@@ -408,7 +409,7 @@ const styles = StyleSheet.create({
         flexDirection: "column",
     },
     detailLabel: {
-        color: "#FF6B35",
+        color: "#965541",
         fontSize: wp("3.4%"),
         marginBottom: hp("0.5%"),
     },
@@ -422,7 +423,7 @@ const styles = StyleSheet.create({
         flexWrap: "wrap",
     },
     tagChip: {
-        borderColor: "#FF6B35",
+        borderColor: "#965541",
         borderRadius: wp("2%"),
         borderWidth: 1,
         paddingVertical: hp("0.8%"),
@@ -431,7 +432,7 @@ const styles = StyleSheet.create({
         marginBottom: hp("1%"),
     },
     tagText: {
-        color: "#FF6B35",
+        color: "#965541",
         fontSize: wp("2.8%"),
         fontWeight: "600",
     },
