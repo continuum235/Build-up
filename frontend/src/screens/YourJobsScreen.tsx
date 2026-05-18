@@ -153,13 +153,13 @@ export default ({ navigation }: YourJobsScreenProps) => {
                 <Text style={styles.pageTitle}>Your Jobs</Text>
 
                 {/* INFO BANNER */}
-                {activeTab === "Sent Proposals" && (
+                {/* {activeTab === "Sent Proposals" && (
                     <View style={styles.infoBanner}>
                         <Text style={styles.infoBannerText}>
                             All the sent proposals will be rejected as soon as one of them gets accepted.
                         </Text>
                     </View>
-                )}
+                )} */}
 
                 {/* TEXT TABS */}
                 <View style={styles.tabContainer}>
@@ -209,13 +209,15 @@ const styles = StyleSheet.create({
     pageTitle: {
         fontSize: wp("6%"),
         fontWeight: "700",
-        color: "#000000",
+        color: "#965541",
         marginHorizontal: wp("5%"),
         marginTop: hp("1.5%"),
         marginBottom: hp("1%"),
+        textAlign: "center",
+        alignSelf: "center",
     },
     infoBanner: {
-        backgroundColor: "#FFF3E0",
+        backgroundColor: "#965541",
         borderRadius: wp("3%"),
         padding: wp("4%"),
         marginHorizontal: wp("5%"),
@@ -223,7 +225,7 @@ const styles = StyleSheet.create({
     },
     infoBannerText: {
         fontSize: wp("3.5%"),
-        color: "#FF9800",
+        color: "#FFFFFF",
         lineHeight: wp("5%"),
     },
     tabContainer: {
@@ -241,12 +243,12 @@ const styles = StyleSheet.create({
         paddingBottom: hp("1.5%"),
     },
     tabTextActive: {
-        color: "#000000",
+        color: "#965541",
         fontWeight: "600",
     },
     activeTabUnderline: {
         height: 2,
-        backgroundColor: "#FF6B35",
+        backgroundColor: "#965541",
         borderRadius: 1,
         position: "absolute",
         bottom: -1,
@@ -329,7 +331,7 @@ const styles = StyleSheet.create({
     },
     detailLabel: {
         fontSize: wp("2.8%"),
-        color: "#A4A9B6",
+        color: "#965541",
         marginBottom: hp("0.3%"),
     },
     detailValue: {
@@ -341,7 +343,9 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#F5F5F5",
+        backgroundColor: "#965541",
+        borderColor: "#965541",
+        borderWidth: 1,
         borderRadius: wp("3%"),
         paddingVertical: hp("1.2%"),
         marginTop: hp("1%"),
@@ -352,7 +356,7 @@ const styles = StyleSheet.create({
     },
     chatButtonText: {
         fontSize: wp("3%"),
-        color: "#333333",
+        color: "#FFFFFF",
         fontWeight: "500",
     },
     emptyStateContainer: {
