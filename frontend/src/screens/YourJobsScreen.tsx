@@ -1,138 +1,127 @@
 import React, { useState } from "react";
-import { 
-    View, 
-    ScrollView, 
-    Text, 
+import {
+    View,
+    ScrollView,
+    Text,
+    Image,
     TouchableOpacity,
-    StyleSheet, 
-    StatusBar
+    StyleSheet,
+    StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 import routes from "../navigation/routes";
 import jobsData from "../data/jobsSeedData.json";
 import BottomNavigation from "../components/BottomNavigation";
+
+const VerifiedIcon = require("../../assets/tick.png");
+const LocationIcon = require("../../assets/location.png");
+const ChatIcon = require("../../assets/message.png");
 
 interface YourJobsScreenProps {
     navigation: any;
 }
 
-interface JobWithStatus extends ReturnType<typeof mapJobData> {
-    status: "Accepted" | "Standby" | "Rejected";
-    appliedDate: string;
+type JobTab = "Sent Proposals" | "Active Jobs" | "Completed Jobs";
+type JobStatus = "Accepted" | "standby" | "Rejected" | "Active" | "Completed";
+
+interface JobCardData {
+    id: number;
+    status: JobStatus;
+    title: string;
+    company: string;
+    verified: boolean;
+    location: string;
+    budget: string;
+    showChat: boolean;
 }
 
-const mapJobData = (job: any) => ({
+const buildJobCard = (job: (typeof jobsData.jobs)[number], status: JobStatus, showChat: boolean): JobCardData => ({
     id: job.id,
+    status,
     title: job.title,
     company: job.company,
     verified: job.verified,
-    posted: job.postedTime,
     location: job.location,
     budget: `$${job.budget}`,
-    experience: job.experience,
-    tags: job.tags,
+    showChat,
 });
 
 export default ({ navigation }: YourJobsScreenProps) => {
-    // Interactive states for UI tabs
-    const [activeTab, setActiveTab] = useState("Sent Proposals");
+    const [activeTab, setActiveTab] = useState<JobTab>("Sent Proposals");
 
-    // Create applied jobs data with status from seed data
-    const appliedJobs: JobWithStatus[] = jobsData.jobs.slice(0, 3).map((job, index) => ({
-        ...mapJobData(job),
-        status: ["Accepted", "Standby", "Rejected"][index] as "Accepted" | "Standby" | "Rejected",
-        appliedDate: job.postedTime,
-    }));
+    const jobsByTab: Record<JobTab, JobCardData[]> = {
+        "Sent Proposals": [
+            buildJobCard(jobsData.jobs[0], "Accepted", true),
+            buildJobCard(jobsData.jobs[1], "standby", false),
+            buildJobCard(jobsData.jobs[2], "Rejected", false),
+        ],
+        "Active Jobs": [
+            buildJobCard(jobsData.jobs[0], "Active", true),
+            buildJobCard(jobsData.jobs[3], "standby", true),
+            buildJobCard(jobsData.jobs[4], "Accepted", true),
+        ],
+        "Completed Jobs": [
+            buildJobCard(jobsData.jobs[1], "Completed", false),
+            buildJobCard(jobsData.jobs[5], "Completed", false),
+            buildJobCard(jobsData.jobs[8], "Completed", false),
+        ],
+    };
 
-    const activeJobs = appliedJobs.filter(job => job.status === "Accepted" || job.status === "Standby");
-    const completedJobs = appliedJobs.filter(job => job.status === "Rejected");
-    const sentProposals = appliedJobs;
-
-    // Get jobs based on active tab
-    const getJobsForTab = () => {
-        switch(activeTab) {
-            case "Active Jobs":
-                return activeJobs;
-            case "Completed Jobs":
-                return completedJobs;
+    const getStatusColor = (status: JobStatus) => {
+        switch (status.toLowerCase()) {
+            case "accepted":
+            case "active":
+            case "completed":
+                return "#34C759";
+            case "standby":
+                return "#FF9500";
+            case "rejected":
+                return "#FF3B30";
             default:
-                return sentProposals;
+                return "#D8DADC";
         }
     };
 
-    const displayedJobs = getJobsForTab();
-
-    const getStatusColor = (status: string) => {
-        switch(status) {
-            case "Accepted":
-                return "#4CAF50"; // Green
-            case "Standby":
-                return "#FF9800"; // Orange
-            case "Rejected":
-                return "#F44336"; // Red
-            default:
-                return "#666666";
-        }
-    };
-
-    const getStatusIcon = (status: string) => {
-        switch(status) {
-            case "Accepted":
-                return "●"; // Circle for accepted
-            case "Standby":
-                return "●"; // Circle for standby
-            case "Rejected":
-                return "●"; // Circle for rejected
-            default:
-                return "";
-        }
-    };
-
-    const renderJobCard = (job: JobWithStatus) => (
+    const renderJobCard = (job: JobCardData) => (
         <TouchableOpacity
-            key={job.id}
+            key={`${activeTab}-${job.id}-${job.status}`}
             style={styles.jobCard}
+            activeOpacity={0.8}
             onPress={() => navigation.navigate(routes.jobDetails, { jobId: job.id })}
-            activeOpacity={0.7}
         >
-            {/* Status Badge */}
-            <View style={[styles.statusBadge, { borderLeftColor: getStatusColor(job.status) }]}>
+            <View style={styles.statusRow}>
                 <View style={[styles.statusDot, { backgroundColor: getStatusColor(job.status) }]} />
                 <Text style={styles.statusText}>{job.status}</Text>
             </View>
 
-            {/* Job Title */}
             <Text style={styles.jobTitle}>{job.title}</Text>
 
-            {/* Company Info */}
             <View style={styles.companyRow}>
-                <Text style={styles.companyText}>{job.company} </Text>
-                {job.verified && <Text style={styles.verifiedText}>✓ User Verified</Text>}
+                <Text style={styles.companyName}>{job.company}</Text>
+                {job.verified && (
+                    <View style={styles.verifiedBadge}>
+                        <Image source={VerifiedIcon} style={styles.verifiedIcon} resizeMode="contain" />
+                        <Text style={styles.verifiedText}>User Verified</Text>
+                    </View>
+                )}
             </View>
 
-            {/* Location */}
-            <View style={styles.locationRow}>
-                <Text style={styles.locationIcon}>📍</Text>
-                <Text style={styles.locationText}>{job.location}</Text>
-            </View>
-
-            {/* Budget and Experience */}
-            <View style={styles.detailsRow}>
-                <View style={styles.detailBlock}>
-                    <Text style={styles.detailLabel}>Budget</Text>
-                    <Text style={styles.detailValue}>{job.budget}</Text>
+            <View style={styles.locationBudgetRow}>
+                <View style={styles.locationWrapper}>
+                    <Image source={LocationIcon} style={styles.locationPin} resizeMode="contain" />
+                    <Text style={styles.locationText} numberOfLines={1}>
+                        {job.location}
+                    </Text>
                 </View>
-                <View style={styles.detailBlock}>
-                    <Text style={styles.detailLabel}>Experience</Text>
-                    <Text style={styles.detailValue}>{job.experience}</Text>
-                </View>
+                <Text style={styles.budgetLabel}>
+                    Budget <Text style={styles.budgetValue}>{job.budget}</Text>
+                </Text>
             </View>
 
-            {/* Chat Button (for accepted jobs) */}
-            {(job.status === "Accepted" || job.status === "Standby") && (
-                <TouchableOpacity style={styles.chatButton}>
-                    <Text style={styles.chatButtonIcon}>💬</Text>
+            {job.showChat && (
+                <TouchableOpacity style={styles.chatButton} activeOpacity={0.8}>
+                    <Image source={ChatIcon} style={styles.chatIcon} resizeMode="contain" />
                     <Text style={styles.chatButtonText}>Chat with {job.company}</Text>
                 </TouchableOpacity>
             )}
@@ -143,53 +132,31 @@ export default ({ navigation }: YourJobsScreenProps) => {
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-            {/* MAIN SCROLL VIEW */}
-            <ScrollView 
-                style={styles.scrollView}
-                contentContainerStyle={styles.scrollContent}
-                showsVerticalScrollIndicator={false}
-            >
-                {/* PAGE TITLE */}
+            <View style={styles.header}>
                 <Text style={styles.pageTitle}>Your Jobs</Text>
+            </View>
 
-                {/* INFO BANNER */}
-                {/* {activeTab === "Sent Proposals" && (
-                    <View style={styles.infoBanner}>
-                        <Text style={styles.infoBannerText}>
-                            All the sent proposals will be rejected as soon as one of them gets accepted.
-                        </Text>
-                    </View>
-                )} */}
+            <View style={styles.tabsContainer}>
+                {(Object.keys(jobsByTab) as JobTab[]).map((tab) => (
+                    <TouchableOpacity key={tab} style={styles.tabButton} onPress={() => setActiveTab(tab)}>
+                        <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>{tab}</Text>
+                        {activeTab === tab && <View style={styles.activeIndicator} />}
+                    </TouchableOpacity>
+                ))}
+            </View>
 
-                {/* TEXT TABS */}
-                <View style={styles.tabContainer}>
-                    {["Sent Proposals", "Active Jobs", "Completed Jobs"].map((tab) => (
-                        <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)}>
-                            <Text style={[
-                                styles.tabText, 
-                                activeTab === tab && styles.tabTextActive
-                            ]}>
-                                {tab}
-                            </Text>
-                            {activeTab === tab && <View style={styles.activeTabUnderline} />}
-                        </TouchableOpacity>
-                    ))}
-                </View>
+            <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+                {activeTab === "Sent Proposals" && (
+                    <Text style={styles.warningText}>
+                        All the sent proposals will be rejected as{"\n"}soon as one of them gets accepted.
+                    </Text>
+                )}
 
-                {/* JOB CARDS LIST */}
                 <View style={styles.cardsContainer}>
-                    {displayedJobs.length === 0 && (
-                        <View style={styles.emptyStateContainer}>
-                            <Text style={styles.emptyStateText}>
-                                No {activeTab.toLowerCase()} yet
-                            </Text>
-                        </View>
-                    )}
-                    {displayedJobs.map((job) => renderJobCard(job))}
+                    {jobsByTab[activeTab].map((job) => renderJobCard(job))}
                 </View>
             </ScrollView>
 
-            {/* BOTTOM NAVIGATION BAR */}
             <BottomNavigation navigation={navigation} activeTab="yourJobs" />
         </SafeAreaView>
     );
@@ -200,174 +167,164 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: "#FFFFFF",
     },
+    header: {
+        alignItems: "center",
+        paddingVertical: hp("2%"),
+    },
+    pageTitle: {
+        color: "#1E1E1E",
+        fontSize: wp("5.5%"),
+        fontWeight: "bold",
+    },
+    tabsContainer: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        paddingHorizontal: wp("6%"),
+        marginBottom: hp("1%"),
+        borderBottomWidth: 1,
+        borderBottomColor: "#F0F0F0",
+    },
+    tabButton: {
+        alignItems: "center",
+        paddingBottom: hp("1%"),
+    },
+    tabText: {
+        fontSize: wp("3.8%"),
+        color: "#666666",
+    },
+    tabTextActive: {
+        color: "#965541",
+        fontWeight: "bold",
+    },
+    activeIndicator: {
+        position: "absolute",
+        bottom: -1,
+        width: "100%",
+        height: hp("0.3%"),
+        backgroundColor: "#965541",
+        borderRadius: wp("1%"),
+    },
     scrollView: {
         flex: 1,
     },
     scrollContent: {
-        paddingBottom: hp("10%"),
+        paddingBottom: hp("2%"),
     },
-    pageTitle: {
-        fontSize: wp("6%"),
-        fontWeight: "700",
-        color: "#965541",
-        marginHorizontal: wp("5%"),
-        marginTop: hp("1.5%"),
-        marginBottom: hp("1%"),
+    warningText: {
+        color: "#FFAA00",
         textAlign: "center",
-        alignSelf: "center",
-    },
-    infoBanner: {
-        backgroundColor: "#965541",
-        borderRadius: wp("3%"),
-        padding: wp("4%"),
-        marginHorizontal: wp("5%"),
-        marginBottom: hp("2%"),
-    },
-    infoBannerText: {
-        fontSize: wp("3.5%"),
-        color: "#FFFFFF",
-        lineHeight: wp("5%"),
-    },
-    tabContainer: {
-        flexDirection: "row",
-        paddingHorizontal: wp("5%"),
-        marginBottom: hp("2%"),
-        borderBottomWidth: 1,
-        borderBottomColor: "#E0E0E0",
-    },
-    tabText: {
-        fontSize: wp("3.5%"),
-        color: "#A4A9B6",
-        fontWeight: "500",
-        paddingRight: wp("4%"),
-        paddingBottom: hp("1.5%"),
-    },
-    tabTextActive: {
-        color: "#965541",
-        fontWeight: "600",
-    },
-    activeTabUnderline: {
-        height: 2,
-        backgroundColor: "#965541",
-        borderRadius: 1,
-        position: "absolute",
-        bottom: -1,
-        left: 0,
-        right: wp("4%"),
+        fontSize: wp("3.8%"),
+        marginVertical: hp("2.5%"),
+        paddingHorizontal: wp("10%"),
     },
     cardsContainer: {
         paddingHorizontal: wp("5%"),
     },
     jobCard: {
-        borderColor: "#D8DADC",
-        borderWidth: 1.5,
-        borderRadius: wp("4%"),
-        padding: wp("4%"),
-        marginBottom: hp("2%"),
         backgroundColor: "#FFFFFF",
+        borderColor: "#A4A9B6",
+        borderRadius: wp("5%"),
+        borderWidth: 1,
+        padding: wp("5%"),
+        marginBottom: hp("2%"),
     },
-    statusBadge: {
+    statusRow: {
         flexDirection: "row",
         alignItems: "center",
-        paddingLeft: wp("2%"),
-        paddingVertical: hp("0.5%"),
         marginBottom: hp("1%"),
-        borderLeftWidth: 3,
     },
     statusDot: {
-        width: wp("2%"),
-        height: wp("2%"),
-        borderRadius: wp("1%"),
+        width: wp("2.5%"),
+        height: wp("2.5%"),
+        borderRadius: wp("1.25%"),
         marginRight: wp("2%"),
     },
     statusText: {
-        fontSize: wp("3%"),
-        fontWeight: "600",
-        color: "#333333",
+        color: "#1E1E1E",
+        fontSize: wp("3.5%"),
+        fontWeight: "500",
     },
     jobTitle: {
-        fontSize: wp("4%"),
-        fontWeight: "700",
         color: "#000000",
-        marginBottom: hp("0.5%"),
-        lineHeight: wp("5%"),
+        fontSize: wp("4.5%"),
+        fontWeight: "bold",
+        marginBottom: hp("1%"),
+        lineHeight: wp("6%"),
     },
     companyRow: {
         flexDirection: "row",
         alignItems: "center",
-        marginBottom: hp("1%"),
-    },
-    companyText: {
-        fontSize: wp("3%"),
-        color: "#333333",
-        fontWeight: "500",
-    },
-    verifiedText: {
-        fontSize: wp("2.8%"),
-        color: "#4CAF50",
-        fontWeight: "600",
-    },
-    locationRow: {
-        flexDirection: "row",
-        alignItems: "flex-start",
-        marginBottom: hp("1%"),
-    },
-    locationIcon: {
-        marginRight: wp("1.5%"),
-        fontSize: wp("4%"),
-    },
-    locationText: {
-        fontSize: wp("3%"),
-        color: "#333333",
-        flex: 1,
-    },
-    detailsRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
         marginBottom: hp("1.5%"),
     },
-    detailBlock: {
+    companyName: {
+        color: "#1E1E1E",
+        fontSize: wp("3.5%"),
+        fontWeight: "bold",
+        marginRight: wp("2%"),
+    },
+    verifiedBadge: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    verifiedIcon: {
+        width: wp("3.5%"),
+        height: wp("3.5%"),
+        marginRight: wp("1%"),
+        tintColor: "#007AFF",
+    },
+    verifiedText: {
+        color: "#007AFF",
+        fontSize: wp("3.2%"),
+        fontWeight: "bold",
+    },
+    locationBudgetRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: hp("1%"),
+    },
+    locationWrapper: {
+        flexDirection: "row",
+        alignItems: "center",
+        flex: 1,
+        marginRight: wp("2%"),
+    },
+    locationPin: {
+        width: wp("3.5%"),
+        height: wp("3.5%"),
+        marginRight: wp("1.5%"),
+        tintColor: "#965541",
+    },
+    locationText: {
+        color: "#1E1E1E",
+        fontSize: wp("3.5%"),
+        textDecorationLine: "underline",
         flex: 1,
     },
-    detailLabel: {
-        fontSize: wp("2.8%"),
+    budgetLabel: {
         color: "#965541",
-        marginBottom: hp("0.3%"),
-    },
-    detailValue: {
         fontSize: wp("3.5%"),
-        fontWeight: "600",
+    },
+    budgetValue: {
         color: "#000000",
+        fontWeight: "bold",
+        fontSize: wp("3.8%"),
     },
     chatButton: {
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "#965541",
-        borderColor: "#965541",
-        borderWidth: 1,
-        borderRadius: wp("3%"),
-        paddingVertical: hp("1.2%"),
         marginTop: hp("1%"),
     },
-    chatButtonIcon: {
+    chatIcon: {
+        width: wp("4.5%"),
+        height: wp("4.5%"),
         marginRight: wp("2%"),
-        fontSize: wp("4%"),
+        tintColor: "#965541",
     },
     chatButtonText: {
-        fontSize: wp("3%"),
-        color: "#FFFFFF",
+        color: "#965541",
+        fontSize: wp("3.5%"),
         fontWeight: "500",
+        textDecorationLine: "underline",
     },
-    emptyStateContainer: {
-        alignItems: "center",
-        justifyContent: "center",
-        paddingVertical: hp("10%"),
-    },
-    emptyStateText: {
-        fontSize: wp("4%"),
-        color: "#A4A9B6",
-        fontWeight: "500",
-    },
-
 });
