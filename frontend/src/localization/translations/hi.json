@@ -135,6 +135,22 @@
     "approve": "मंजूर करें",
     "decline": "अस्वीकार करें"
   },
+  "yourJobs": {
+    "title": "आपकी नौकरियां",
+    "sentProposals": "भेजे गए प्रस्ताव",
+    "activeJobs": "सक्रिय नौकरियां",
+    "completedJobs": "पूर्ण नौकरियां",
+    "proposalWarningLine1": "भेजे गए सभी प्रस्ताव अस्वीकार हो जाएंगे",
+    "proposalWarningLine2": "जैसे ही उनमें से कोई एक स्वीकार होगा।",
+    "accepted": "स्वीकृत",
+    "standby": "प्रतीक्षा में",
+    "rejected": "अस्वीकृत",
+    "active": "सक्रिय",
+    "completed": "पूर्ण",
+    "userVerified": "यूज़र सत्यापित",
+    "budget": "बजट",
+    "chatWith": "{{company}} से चैट करें"
+  },
   "validation": {
     "invalidLogin": "कृपया सही ईमेल और पासवर्ड दर्ज करें।",
     "invalidSignup": "नाम, ईमेल, पासवर्ड और स्थान भरें।",

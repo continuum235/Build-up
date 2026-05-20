@@ -13,6 +13,7 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-nat
 import routes from "../navigation/routes";
 import jobsData from "../data/jobsSeedData.json";
 import BottomNavigation from "../components/BottomNavigation";
+import { useLanguage } from "../context/LanguageContext";
 
 const VerifiedIcon = require("../../assets/tick.png");
 const LocationIcon = require("../../assets/location.png");
@@ -24,11 +25,12 @@ interface YourJobsScreenProps {
 
 type JobTab = "Sent Proposals" | "Active Jobs" | "Completed Jobs";
 type JobStatus = "Accepted" | "standby" | "Rejected" | "Active" | "Completed";
+type SupportedLanguage = "en" | "hi";
 
 interface JobCardData {
     id: number;
     status: JobStatus;
-    title: string;
+    source: (typeof jobsData.jobs)[number];
     company: string;
     verified: boolean;
     location: string;
@@ -39,7 +41,7 @@ interface JobCardData {
 const buildJobCard = (job: (typeof jobsData.jobs)[number], status: JobStatus, showChat: boolean): JobCardData => ({
     id: job.id,
     status,
-    title: job.title,
+    source: job,
     company: job.company,
     verified: job.verified,
     location: job.location,
@@ -48,7 +50,9 @@ const buildJobCard = (job: (typeof jobsData.jobs)[number], status: JobStatus, sh
 });
 
 export default ({ navigation }: YourJobsScreenProps) => {
+    const { language, t } = useLanguage();
     const [activeTab, setActiveTab] = useState<JobTab>("Sent Proposals");
+    const currentLanguage = language as SupportedLanguage;
 
     const jobsByTab: Record<JobTab, JobCardData[]> = {
         "Sent Proposals": [
@@ -83,63 +87,96 @@ export default ({ navigation }: YourJobsScreenProps) => {
         }
     };
 
-    const renderJobCard = (job: JobCardData) => (
-        <TouchableOpacity
-            key={`${activeTab}-${job.id}-${job.status}`}
-            style={styles.jobCard}
-            activeOpacity={0.8}
-            onPress={() => navigation.navigate(routes.jobDetails, { jobId: job.id })}
-        >
-            <View style={styles.statusRow}>
-                <View style={[styles.statusDot, { backgroundColor: getStatusColor(job.status) }]} />
-                <Text style={styles.statusText}>{job.status}</Text>
-            </View>
+    const getStatusLabel = (status: JobStatus) => {
+        switch (status) {
+            case "Accepted":
+                return t("yourJobs.accepted");
+            case "standby":
+                return t("yourJobs.standby");
+            case "Rejected":
+                return t("yourJobs.rejected");
+            case "Active":
+                return t("yourJobs.active");
+            case "Completed":
+                return t("yourJobs.completed");
+            default:
+                return status;
+        }
+    };
 
-            <Text style={styles.jobTitle}>{job.title}</Text>
+    const getTabLabel = (tab: JobTab) => {
+        switch (tab) {
+            case "Sent Proposals":
+                return t("yourJobs.sentProposals");
+            case "Active Jobs":
+                return t("yourJobs.activeJobs");
+            case "Completed Jobs":
+                return t("yourJobs.completedJobs");
+            default:
+                return tab;
+        }
+    };
 
-            <View style={styles.companyRow}>
-                <Text style={styles.companyName}>{job.company}</Text>
-                {job.verified && (
-                    <View style={styles.verifiedBadge}>
-                        <Image source={VerifiedIcon} style={styles.verifiedIcon} resizeMode="contain" />
-                        <Text style={styles.verifiedText}>User Verified</Text>
+    const renderJobCard = (job: JobCardData) => {
+        const localizedJob = job.source.translations[currentLanguage] ?? job.source.translations.en;
+        return (
+            <TouchableOpacity
+                key={`${activeTab}-${job.id}-${job.status}`}
+                style={styles.jobCard}
+                activeOpacity={0.8}
+                onPress={() => navigation.navigate(routes.jobDetails, { jobId: job.id })}
+            >
+                <View style={styles.statusRow}>
+                    <View style={[styles.statusDot, { backgroundColor: getStatusColor(job.status) }]} />
+                    <Text style={styles.statusText}>{getStatusLabel(job.status)}</Text>
+                </View>
+
+                <Text style={styles.jobTitle}>{localizedJob.title}</Text>
+
+                <View style={styles.companyRow}>
+                    <Text style={styles.companyName}>{job.company}</Text>
+                    {job.verified && (
+                        <View style={styles.verifiedBadge}>
+                            <Image source={VerifiedIcon} style={styles.verifiedIcon} resizeMode="contain" />
+                            <Text style={styles.verifiedText}>{t("yourJobs.userVerified")}</Text>
+                        </View>
+                    )}
+                </View>
+
+                <View style={styles.locationBudgetRow}>
+                    <View style={styles.locationWrapper}>
+                        <Image source={LocationIcon} style={styles.locationPin} resizeMode="contain" />
+                        <Text style={styles.locationText} numberOfLines={1}>
+                            {job.location}
+                        </Text>
                     </View>
-                )}
-            </View>
-
-            <View style={styles.locationBudgetRow}>
-                <View style={styles.locationWrapper}>
-                    <Image source={LocationIcon} style={styles.locationPin} resizeMode="contain" />
-                    <Text style={styles.locationText} numberOfLines={1}>
-                        {job.location}
+                    <Text style={styles.budgetLabel}>
+                        {t("yourJobs.budget")} <Text style={styles.budgetValue}>{job.budget}</Text>
                     </Text>
                 </View>
-                <Text style={styles.budgetLabel}>
-                    Budget <Text style={styles.budgetValue}>{job.budget}</Text>
-                </Text>
-            </View>
 
-            {job.showChat && (
-                <TouchableOpacity style={styles.chatButton} activeOpacity={0.8}>
-                    <Image source={ChatIcon} style={styles.chatIcon} resizeMode="contain" />
-                    <Text style={styles.chatButtonText}>Chat with {job.company}</Text>
-                </TouchableOpacity>
-            )}
-        </TouchableOpacity>
-    );
+                {job.showChat && (
+                    <TouchableOpacity style={styles.chatButton} activeOpacity={0.8}>
+                        <Image source={ChatIcon} style={styles.chatIcon} resizeMode="contain" />
+                        <Text style={styles.chatButtonText}>{t("yourJobs.chatWith", { company: job.company })}</Text>
+                    </TouchableOpacity>
+                )}
+            </TouchableOpacity>
+        );
+    };
 
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
             <View style={styles.header}>
-                <Text style={styles.pageTitle}>Your Jobs</Text>
+                <Text style={styles.pageTitle}>{t("yourJobs.title")}</Text>
             </View>
 
             <View style={styles.tabsContainer}>
                 {(Object.keys(jobsByTab) as JobTab[]).map((tab) => (
                     <TouchableOpacity key={tab} style={styles.tabButton} onPress={() => setActiveTab(tab)}>
-                        <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>{tab}</Text>
+                        <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>{getTabLabel(tab)}</Text>
                         {activeTab === tab && <View style={styles.activeIndicator} />}
                     </TouchableOpacity>
                 ))}
@@ -148,7 +185,7 @@ export default ({ navigation }: YourJobsScreenProps) => {
             <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 {activeTab === "Sent Proposals" && (
                     <Text style={styles.warningText}>
-                        All the sent proposals will be rejected as{"\n"}soon as one of them gets accepted.
+                        {t("yourJobs.proposalWarningLine1")}{"\n"}{t("yourJobs.proposalWarningLine2")}
                     </Text>
                 )}
 

@@ -135,6 +135,22 @@
     "approve": "Approve",
     "decline": "Decline"
   },
+  "yourJobs": {
+    "title": "Your Jobs",
+    "sentProposals": "Sent Proposals",
+    "activeJobs": "Active Jobs",
+    "completedJobs": "Completed Jobs",
+    "proposalWarningLine1": "All the sent proposals will be rejected as",
+    "proposalWarningLine2": "soon as one of them gets accepted.",
+    "accepted": "Accepted",
+    "standby": "standby",
+    "rejected": "Rejected",
+    "active": "Active",
+    "completed": "Completed",
+    "userVerified": "User Verified",
+    "budget": "Budget",
+    "chatWith": "Chat with {{company}}"
+  },
   "validation": {
     "invalidLogin": "Enter a valid email and password.",
     "invalidSignup": "Fill in name, email, password, and location.",
