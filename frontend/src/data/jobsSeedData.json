@@ -232,6 +232,162 @@
     "Welder",
     "Driver"
   ],
+  "professionalRoles": [
+    {
+      "id": "builder",
+      "label": {
+        "en": "Builder",
+        "hi": "बिल्डर"
+      }
+    },
+    {
+      "id": "contractor",
+      "label": {
+        "en": "Contractor",
+        "hi": "ठेकेदार"
+      }
+    },
+    {
+      "id": "architect",
+      "label": {
+        "en": "Architect",
+        "hi": "आर्किटेक्ट"
+      }
+    },
+    {
+      "id": "civil_engineer",
+      "label": {
+        "en": "Civil Engineer",
+        "hi": "सिविल इंजीनियर"
+      }
+    },
+    {
+      "id": "structural_engineer",
+      "label": {
+        "en": "Structural Engineer",
+        "hi": "स्ट्रक्चरल इंजीनियर"
+      }
+    },
+    {
+      "id": "project_manager",
+      "label": {
+        "en": "Project Manager",
+        "hi": "प्रोजेक्ट मैनेजर"
+      }
+    },
+    {
+      "id": "surveyor",
+      "label": {
+        "en": "Surveyor",
+        "hi": "सर्वेयर"
+      }
+    },
+    {
+      "id": "interior_designer",
+      "label": {
+        "en": "Interior Designer",
+        "hi": "इंटीरियर डिजाइनर"
+      }
+    },
+    {
+      "id": "electrician",
+      "label": {
+        "en": "Electrician",
+        "hi": "इलेक्ट्रीशियन"
+      }
+    },
+    {
+      "id": "plumber",
+      "label": {
+        "en": "Plumber",
+        "hi": "प्लंबर"
+      }
+    },
+    {
+      "id": "carpenter",
+      "label": {
+        "en": "Carpenter",
+        "hi": "कारपेंटर"
+      }
+    },
+    {
+      "id": "painter",
+      "label": {
+        "en": "Painter",
+        "hi": "पेंटर"
+      }
+    },
+    {
+      "id": "welder",
+      "label": {
+        "en": "Welder",
+        "hi": "वेल्डर"
+      }
+    },
+    {
+      "id": "mason",
+      "label": {
+        "en": "Mason",
+        "hi": "राजमिस्त्री"
+      }
+    },
+    {
+      "id": "tile_installer",
+      "label": {
+        "en": "Tile Installer",
+        "hi": "टाइल इंस्टॉलर"
+      }
+    },
+    {
+      "id": "hvac_technician",
+      "label": {
+        "en": "HVAC Technician",
+        "hi": "एचवीएसी तकनीशियन"
+      }
+    },
+    {
+      "id": "site_supervisor",
+      "label": {
+        "en": "Site Supervisor",
+        "hi": "साइट सुपरवाइजर"
+      }
+    },
+    {
+      "id": "safety_officer",
+      "label": {
+        "en": "Safety Officer",
+        "hi": "सुरक्षा अधिकारी"
+      }
+    },
+    {
+      "id": "quantity_surveyor",
+      "label": {
+        "en": "Quantity Surveyor",
+        "hi": "क्वांटिटी सर्वेयर"
+      }
+    },
+    {
+      "id": "construction_laborer",
+      "label": {
+        "en": "Construction Laborer",
+        "hi": "निर्माण मजदूर"
+      }
+    },
+    {
+      "id": "landscape_designer",
+      "label": {
+        "en": "Landscape Designer",
+        "hi": "लैंडस्केप डिजाइनर"
+      }
+    },
+    {
+      "id": "roofer",
+      "label": {
+        "en": "Roofer",
+        "hi": "छत कारीगर"
+      }
+    }
+  ],
   "cityCoordinates": {
     "Thane": {
       "lat": 19.2183,

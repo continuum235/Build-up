@@ -11,38 +11,19 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { useNavigation } from "@react-navigation/native";
-
-const professionRoles = [
-    "Builder",
-    "Contractor",
-    "Architect",
-    "Civil Engineer",
-    "Structural Engineer",
-    "Project Manager",
-    "Surveyor",
-    "Interior Designer",
-    "Electrician",
-    "Plumber",
-    "Carpenter",
-    "Painter",
-    "Welder",
-    "Mason",
-    "Tile Installer",
-    "HVAC Technician",
-    "Site Supervisor",
-    "Safety Officer",
-    "Quantity Surveyor",
-    "Construction Laborer",
-    "Landscape Designer",
-    "Roofer",
-];
+import jobsData from "../data/jobsSeedData.json";
+import { useLanguage } from "../context/LanguageContext";
 
 export default () => {
     const navigation = useNavigation();
+    const { language, t } = useLanguage();
+    const professionalRoles = jobsData.professionalRoles;
     
     // State to hold the selected role
-    const [selectedRole, setSelectedRole] = useState("Builder");
+    const [selectedRoleId, setSelectedRoleId] = useState(professionalRoles[0]?.id ?? "");
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const selectedRole = professionalRoles.find((role) => role.id === selectedRoleId) ?? professionalRoles[0];
+    const selectedRoleLabel = selectedRole?.label[language as "en" | "hi"] ?? selectedRole?.label.en ?? "";
 
     return (
         <SafeAreaView style={styles.container}>
@@ -60,7 +41,7 @@ export default () => {
                         style={styles.backIcon}
                     />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Create Your Profile</Text>
+                <Text style={styles.headerTitle}>{t("profile.headerTitle")}</Text>
                 <View style={styles.headerSpacer} />
             </View>
 
@@ -71,17 +52,13 @@ export default () => {
             >
                 {/* TEXT SECTION */}
                 <View style={styles.textSection}>
-                    <Text style={styles.mainHeading}>
-                        Choose a title{"\n"}to tell the world what{"\n"}you do.
-                    </Text>
-                    <Text style={styles.subHeading}>
-                        It’s the very first thing that someone sees while connecting. Make sure to describe your expertise in a particular role.
-                    </Text>
+                    <Text style={styles.mainHeading}>{t("employerRole.question")}</Text>
+                    <Text style={styles.subHeading}>{t("employerRole.subtitle")}</Text>
                 </View>
 
                 {/* DROPDOWN INPUT SECTION */}
                 <View style={styles.inputSection}>
-                    <Text style={styles.inputLabel}>Your professional role</Text>
+                    <Text style={styles.inputLabel}>{t("employerRole.label")}</Text>
                     
                     {/* Simulated Dropdown Button */}
                     <TouchableOpacity 
@@ -89,7 +66,7 @@ export default () => {
                         onPress={() => setIsDropdownOpen((isOpen) => !isOpen)}
                         activeOpacity={0.85}
                     >
-                        <Text style={styles.dropdownText}>{selectedRole}</Text>
+                        <Text style={styles.dropdownText}>{selectedRoleLabel}</Text>
                         <Image
                             source={require("../../assets/Drop-down-arrow.png")}
                             resizeMode="contain"
@@ -102,28 +79,31 @@ export default () => {
                     {isDropdownOpen && (
                         <View style={styles.dropdownMenu}>
                             <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>
-                                {professionRoles.map((role) => (
+                                {professionalRoles.map((role) => {
+                                    const roleLabel = role.label[language as "en" | "hi"] ?? role.label.en;
+                                    return (
                                     <TouchableOpacity
-                                        key={role}
+                                        key={role.id}
                                         style={[
                                             styles.dropdownOption,
-                                            selectedRole === role && styles.dropdownOptionSelected,
+                                            selectedRoleId === role.id && styles.dropdownOptionSelected,
                                         ]}
                                         onPress={() => {
-                                            setSelectedRole(role);
+                                            setSelectedRoleId(role.id);
                                             setIsDropdownOpen(false);
                                         }}
                                     >
                                         <Text
                                             style={[
                                                 styles.dropdownOptionText,
-                                                selectedRole === role && styles.dropdownOptionTextSelected,
+                                                selectedRoleId === role.id && styles.dropdownOptionTextSelected,
                                             ]}
                                         >
-                                            {role}
+                                            {roleLabel}
                                         </Text>
                                     </TouchableOpacity>
-                                ))}
+                                    );
+                                })}
                             </ScrollView>
                         </View>
                     )}
@@ -136,11 +116,11 @@ export default () => {
                 <TouchableOpacity 
                     style={styles.primaryButton} 
                     onPress={() => {
-                        console.log("Role selected:", selectedRole);
+                        console.log("Role selected:", selectedRoleLabel);
                         // navigation.navigate('NextScreen');
                     }}
                 >
-                    <Text style={styles.primaryButtonText}>Add Expertise</Text>
+                    <Text style={styles.primaryButtonText}>{t("common.addExpertise")}</Text>
                 </TouchableOpacity>
 
             </ScrollView>
