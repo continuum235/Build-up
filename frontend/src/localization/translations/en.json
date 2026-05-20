@@ -130,7 +130,10 @@
     "userVerified": "User Verified",
     "postedPrefix": "Posted",
     "budget": "Budget",
-    "experience": "Experience"
+    "experience": "Experience",
+    "maps": "Maps",
+    "approve": "Approve",
+    "decline": "Decline"
   },
   "validation": {
     "invalidLogin": "Enter a valid email and password.",

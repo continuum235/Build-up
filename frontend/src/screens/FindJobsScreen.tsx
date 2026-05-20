@@ -13,7 +13,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 import routes from "../navigation/routes";
 import jobsData from "../data/jobsSeedData.json";
-import BroadcastJobsEmptyState from "../components/BroadcastJobsEmptyState";
 import BottomNavigation from "../components/BottomNavigation";
 import { useLanguage } from "../context/LanguageContext";
 
@@ -29,8 +28,9 @@ interface FindJobsScreenProps {
 export default ({ navigation }: FindJobsScreenProps) => {
     const { language, t } = useLanguage();
     const [searchText, setSearchText] = useState("");
-    const [activeTab, setActiveTab] = useState("Best Matches");
+    const [activeTab, setActiveTab] = useState("Broadcasted Jobs");
     const [activeFilter, setActiveFilter] = useState("All");
+    const [showNewJobModal, setShowNewJobModal] = useState(false);
     const [likedJobIds, setLikedJobIds] = useState(
         () => new Set<number>(jobsData.jobs.filter((job) => job.liked).map((job) => job.id))
     );
@@ -45,6 +45,8 @@ export default ({ navigation }: FindJobsScreenProps) => {
     const isBroadcastTab = activeTab === "Broadcasted Jobs";
     const isLikedTab = activeTab === "Liked Jobs";
     const currentLanguage = language as "en" | "hi";
+    const broadcastJob = jobsData.jobs[0];
+    const localizedBroadcastJob = broadcastJob.translations[currentLanguage] ?? broadcastJob.translations.en;
 
     const getCategoryLabel = (category: string) =>
         jobsData.categoryTranslations[category as keyof typeof jobsData.categoryTranslations]?.[currentLanguage] ?? category;
@@ -109,37 +111,56 @@ export default ({ navigation }: FindJobsScreenProps) => {
                     ))}
                 </View>
 
-                {/* FILTER CHIPS */}
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.filterScrollContent}
-                    style={styles.filterScrollView}
-                >
-                    {filters.map((filter) => (
-                        <TouchableOpacity
-                            key={filter}
-                            onPress={() => setActiveFilter(filter)}
-                            style={[
-                                styles.filterChip,
-                                activeFilter === filter ? styles.filterChipActive : styles.filterChipInactive,
-                            ]}
-                        >
-                            <Text
+                {!isBroadcastTab && (
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.filterScrollContent}
+                        style={styles.filterScrollView}
+                    >
+                        {filters.map((filter) => (
+                            <TouchableOpacity
+                                key={filter}
+                                onPress={() => setActiveFilter(filter)}
                                 style={[
-                                    styles.filterText,
-                                    activeFilter === filter ? styles.filterTextActive : styles.filterTextInactive,
+                                    styles.filterChip,
+                                    activeFilter === filter ? styles.filterChipActive : styles.filterChipInactive,
                                 ]}
                             >
-                                {getCategoryLabel(filter)}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
+                                <Text
+                                    style={[
+                                        styles.filterText,
+                                        activeFilter === filter ? styles.filterTextActive : styles.filterTextInactive,
+                                    ]}
+                                >
+                                    {getCategoryLabel(filter)}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                )}
 
                 {/* JOB LIST */}
                 <View style={styles.cardsContainer}>
-                    {isBroadcastTab && <BroadcastJobsEmptyState message={t("findJobs.broadcastEmpty")} />}
+                    {isBroadcastTab && (
+                        <View style={styles.broadcastContent}>
+                            <Text style={styles.broadcastInfoText}>{t("findJobs.broadcastEmpty")}</Text>
+
+                            <View style={styles.radarContainer}>
+                                <View style={styles.circleOuter}>
+                                    <View style={styles.circleMiddle}>
+                                        <TouchableOpacity
+                                            style={styles.circleInner}
+                                            activeOpacity={0.8}
+                                            onPress={() => setShowNewJobModal(true)}
+                                        >
+                                            <Text style={styles.globeIcon}>🌐</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+                    )}
 
                     {!isBroadcastTab && filteredJobs.length === 0 && (
                         <View style={styles.emptyState}>
@@ -216,6 +237,54 @@ export default ({ navigation }: FindJobsScreenProps) => {
                 </View>
             </ScrollView>
 
+            {showNewJobModal && (
+                <View style={styles.broadcastOverlay}>
+                    <View style={styles.broadcastModalCard}>
+                        <Text style={styles.broadcastModalTitle}>{localizedBroadcastJob.title}</Text>
+
+                        <View style={styles.broadcastCompanyRow}>
+                            <Text style={styles.broadcastCompanyName}>{broadcastJob.company}</Text>
+                            <Text style={styles.broadcastVerifiedCheck}> ✓ </Text>
+                            <Text style={styles.broadcastVerifiedText}>{t("findJobs.userVerified")}</Text>
+                        </View>
+
+                        <View style={styles.mapBox}>
+                            <View style={styles.mapTop}>
+                                <Text style={styles.mapText}>{t("findJobs.maps")}</Text>
+                            </View>
+                            <View style={styles.mapBottom}>
+                                <Text style={styles.mapLocationText}>📍 {broadcastJob.location}</Text>
+                            </View>
+                        </View>
+
+                        <View style={styles.broadcastDetailsRow}>
+                            <Text style={styles.broadcastDetailLabel}>
+                                {t("findJobs.budget")} <Text style={styles.broadcastDetailValue}>${broadcastJob.budget}</Text>
+                            </Text>
+                            <Text style={styles.broadcastDetailLabel}>
+                                {t("findJobs.experience")} <Text style={styles.broadcastDetailValue}>{localizedBroadcastJob.experience}</Text>
+                            </Text>
+                        </View>
+
+                        <View style={styles.broadcastActionRow}>
+                            <TouchableOpacity
+                                style={styles.approveButton}
+                                onPress={() => setShowNewJobModal(false)}
+                            >
+                                <Text style={styles.approveText}>{t("findJobs.approve")}</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={styles.declineButton}
+                                onPress={() => setShowNewJobModal(false)}
+                            >
+                                <Text style={styles.declineText}>{t("findJobs.decline")}</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            )}
+
             <BottomNavigation navigation={navigation} activeTab="findJobs" />
         </SafeAreaView>
     );
@@ -267,30 +336,32 @@ const styles = StyleSheet.create({
     },
     tabsContainer: {
         flexDirection: "row",
-        paddingHorizontal: wp("5%"),
-        marginBottom: hp("2%"),
+        justifyContent: "space-between",
+        paddingHorizontal: wp("6%"),
+        paddingTop: hp("2%"),
+        marginBottom: hp("1%"),
         borderBottomWidth: 1,
-        borderBottomColor: "#E0E0E0",
+        borderBottomColor: "#E5E5E5",
     },
     tabButton: {
-        marginRight: wp("4%"),
+        alignItems: "center",
+        paddingBottom: hp("1.5%"),
     },
     tabText: {
-        fontSize: wp("3.5%"),
-        color: "#A4A9B6",
-        fontWeight: "500",
-        paddingBottom: hp("1.5%"),
+        fontSize: wp("4%"),
+        color: "#666666",
     },
     tabTextActive: {
         color: "#965541",
-        fontWeight: "600",
+        fontWeight: "bold",
     },
     activeIndicator: {
+        position: "absolute",
+        bottom: -1,
         width: "100%",
-        height: 2,
+        height: hp("0.35%"),
         backgroundColor: "#965541",
-        borderRadius: 1,
-        marginTop: -1,
+        borderRadius: wp("1%"),
     },
     filterScrollView: {
         marginBottom: hp("2.5%"),
@@ -326,6 +397,178 @@ const styles = StyleSheet.create({
     },
     cardsContainer: {
         paddingHorizontal: wp("5%"),
+    },
+    broadcastContent: {
+        flex: 1,
+        alignItems: "center",
+        minHeight: hp("58%"),
+        position: "relative",
+    },
+    broadcastInfoText: {
+        color: "#1E1E1E",
+        fontSize: wp("3.8%"),
+        textAlign: "center",
+        lineHeight: wp("5.5%"),
+        marginTop: hp("5%"),
+        marginBottom: hp("8%"),
+        paddingHorizontal: wp("4%"),
+    },
+    radarContainer: {
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    circleOuter: {
+        width: wp("70%"),
+        height: wp("70%"),
+        borderRadius: wp("35%"),
+        backgroundColor: "#D8C4BC",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    circleMiddle: {
+        width: wp("50%"),
+        height: wp("50%"),
+        borderRadius: wp("25%"),
+        backgroundColor: "#A67C6D",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    circleInner: {
+        width: wp("30%"),
+        height: wp("30%"),
+        borderRadius: wp("15%"),
+        backgroundColor: "#965541",
+        justifyContent: "center",
+        alignItems: "center",
+        elevation: 5,
+        shadowColor: "#000000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+    },
+    globeIcon: {
+        fontSize: wp("12%"),
+        color: "#FFFFFF",
+    },
+    broadcastOverlay: {
+        position: "absolute",
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+        backgroundColor: "rgba(0,0,0,0.45)",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 10,
+    },
+    broadcastModalCard: {
+        width: wp("85%"),
+        backgroundColor: "#FFFFFF",
+        borderRadius: wp("6%"),
+        padding: wp("6%"),
+        alignItems: "center",
+    },
+    broadcastModalTitle: {
+        color: "#000000",
+        fontSize: wp("5%"),
+        fontWeight: "bold",
+        textAlign: "center",
+        lineHeight: wp("6.5%"),
+        marginBottom: hp("1%"),
+    },
+    broadcastCompanyRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: hp("3%"),
+    },
+    broadcastCompanyName: {
+        color: "#1E1E1E",
+        fontSize: wp("3.5%"),
+    },
+    broadcastVerifiedCheck: {
+        color: "#FFFFFF",
+        fontSize: wp("3%"),
+        fontWeight: "bold",
+    },
+    broadcastVerifiedText: {
+        color: "#FFFFFF",
+        fontSize: wp("3.2%"),
+    },
+    mapBox: {
+        width: "100%",
+        height: hp("12%"),
+        borderColor: "#1E1E1E",
+        borderWidth: 1,
+        borderRadius: wp("3%"),
+        overflow: "hidden",
+        marginBottom: hp("2%"),
+    },
+    mapTop: {
+        flex: 1,
+        backgroundColor: "#F9F9F9",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    mapText: {
+        color: "#1E1E1E",
+        fontSize: wp("3.5%"),
+    },
+    mapBottom: {
+        backgroundColor: "#B88B7D",
+        paddingVertical: hp("0.5%"),
+        alignItems: "center",
+        borderTopWidth: 1,
+        borderColor: "#1E1E1E",
+    },
+    mapLocationText: {
+        color: "#FFFFFF",
+        fontSize: wp("2.8%"),
+    },
+    broadcastDetailsRow: {
+        flexDirection: "row",
+        justifyContent: "space-around",
+        width: "100%",
+        marginBottom: hp("3%"),
+    },
+    broadcastDetailLabel: {
+        color: "#1E1E1E",
+        fontSize: wp("3.5%"),
+    },
+    broadcastDetailValue: {
+        fontWeight: "bold",
+        color: "#000000",
+    },
+    broadcastActionRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        width: "100%",
+    },
+    approveButton: {
+        flex: 1,
+        backgroundColor: "#965541",
+        paddingVertical: hp("1.8%"),
+        borderRadius: wp("6%"),
+        alignItems: "center",
+        marginRight: wp("2%"),
+    },
+    approveText: {
+        color: "#FFFFFF",
+        fontWeight: "bold",
+        fontSize: wp("4%"),
+    },
+    declineButton: {
+        flex: 1,
+        backgroundColor: "#FFFFFF",
+        borderColor: "#965541",
+        borderWidth: 2,
+        paddingVertical: hp("1.8%"),
+        borderRadius: wp("6%"),
+        alignItems: "center",
+        marginLeft: wp("2%"),
+    },
+    declineText: {
+        color: "#965541",
+        fontWeight: "bold",
+        fontSize: wp("4%"),
     },
     jobCard: {
         backgroundColor: "#FFFFFF",

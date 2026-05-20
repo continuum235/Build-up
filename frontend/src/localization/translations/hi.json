@@ -130,7 +130,10 @@
     "userVerified": "यूज़र सत्यापित",
     "postedPrefix": "पोस्ट किया गया",
     "budget": "बजट",
-    "experience": "अनुभव"
+    "experience": "अनुभव",
+    "maps": "मैप्स",
+    "approve": "मंजूर करें",
+    "decline": "अस्वीकार करें"
   },
   "validation": {
     "invalidLogin": "कृपया सही ईमेल और पासवर्ड दर्ज करें।",
