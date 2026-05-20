@@ -118,6 +118,20 @@
     "city": "City*",
     "button": "Save Details"
   },
+  "findJobs": {
+    "title": "Find Jobs",
+    "searchPlaceholder": "Search for a job",
+    "bestMatches": "Best Matches",
+    "broadcastedJobs": "Broadcasted Jobs",
+    "likedJobs": "Liked Jobs",
+    "noJobsTitle": "No jobs found",
+    "noJobsText": "Try adjusting filters or search terms.",
+    "broadcastEmpty": "Check here for real time jobs which will pop up here when recruiters broadcast a job opening.",
+    "userVerified": "User Verified",
+    "postedPrefix": "Posted",
+    "budget": "Budget",
+    "experience": "Experience"
+  },
   "validation": {
     "invalidLogin": "Enter a valid email and password.",
     "invalidSignup": "Fill in name, email, password, and location.",

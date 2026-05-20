@@ -3,6 +3,20 @@
     {
       "id": 1,
       "title": "Carpenter Required for Wooden Finishing Work",
+      "translations": {
+        "en": {
+          "title": "Carpenter Required for Wooden Finishing Work",
+          "experience": "Unskilled",
+          "postedTime": "4 hrs ago",
+          "tags": ["Tag 1", "Tag 2"]
+        },
+        "hi": {
+          "title": "लकड़ी की फिनिशिंग के काम के लिए कारपेंटर चाहिए",
+          "experience": "अकुशल",
+          "postedTime": "4 घंटे पहले",
+          "tags": ["टैग 1", "टैग 2"]
+        }
+      },
       "company": "Kalpataru",
       "verified": true,
       "location": "Ram Mandir, Thane, 410210",
@@ -25,6 +39,20 @@
     {
       "id": 2,
       "title": "Carpenter Required for Wooden Finishing Work",
+      "translations": {
+        "en": {
+          "title": "Carpenter Required for Wooden Finishing Work",
+          "experience": "Skilled",
+          "postedTime": "4 hrs ago",
+          "tags": ["Tag 1", "Tag 2"]
+        },
+        "hi": {
+          "title": "लकड़ी की फिनिशिंग के काम के लिए कारपेंटर चाहिए",
+          "experience": "कुशल",
+          "postedTime": "4 घंटे पहले",
+          "tags": ["टैग 1", "टैग 2"]
+        }
+      },
       "company": "Kalpataru",
       "verified": true,
       "location": "Ram Mandir, Mumbai, 400001",
@@ -47,6 +75,20 @@
     {
       "id": 3,
       "title": "Painter Required for House Painting",
+      "translations": {
+        "en": {
+          "title": "Painter Required for House Painting",
+          "experience": "Unskilled",
+          "postedTime": "6 hrs ago",
+          "tags": ["Tag 1", "Tag 2"]
+        },
+        "hi": {
+          "title": "घर की पेंटिंग के लिए पेंटर चाहिए",
+          "experience": "अकुशल",
+          "postedTime": "6 घंटे पहले",
+          "tags": ["टैग 1", "टैग 2"]
+        }
+      },
       "company": "BuildCo",
       "verified": true,
       "location": "Dadar, Mumbai, 400014",
@@ -69,6 +111,20 @@
     {
       "id": 4,
       "title": "Electrician Needed for Wiring Installation",
+      "translations": {
+        "en": {
+          "title": "Electrician Needed for Wiring Installation",
+          "experience": "Skilled",
+          "postedTime": "8 hrs ago",
+          "tags": ["Tag 1", "Tag 2"]
+        },
+        "hi": {
+          "title": "वायरिंग इंस्टॉलेशन के लिए इलेक्ट्रीशियन चाहिए",
+          "experience": "कुशल",
+          "postedTime": "8 घंटे पहले",
+          "tags": ["टैग 1", "टैग 2"]
+        }
+      },
       "company": "ElectroFix",
       "verified": false,
       "location": "Andheri, Mumbai, 400053",
@@ -91,6 +147,20 @@
     {
       "id": 5,
       "title": "Plumber Required for Pipe Repair",
+      "translations": {
+        "en": {
+          "title": "Plumber Required for Pipe Repair",
+          "experience": "Unskilled",
+          "postedTime": "10 hrs ago",
+          "tags": ["Tag 1", "Tag 2"]
+        },
+        "hi": {
+          "title": "पाइप मरम्मत के लिए प्लंबर चाहिए",
+          "experience": "अकुशल",
+          "postedTime": "10 घंटे पहले",
+          "tags": ["टैग 1", "टैग 2"]
+        }
+      },
       "company": "PlumbMaster",
       "verified": true,
       "location": "Bandra, Mumbai, 400050",
@@ -113,6 +183,20 @@
     {
       "id": 6,
       "title": "Mason Needed for Bricklaying",
+      "translations": {
+        "en": {
+          "title": "Mason Needed for Bricklaying",
+          "experience": "Skilled",
+          "postedTime": "12 hrs ago",
+          "tags": ["Tag 1", "Tag 2"]
+        },
+        "hi": {
+          "title": "ईंट लगाने के काम के लिए राजमिस्त्री चाहिए",
+          "experience": "कुशल",
+          "postedTime": "12 घंटे पहले",
+          "tags": ["टैग 1", "टैग 2"]
+        }
+      },
       "company": "BuildStone",
       "verified": true,
       "location": "Goregaon, Mumbai, 400063",
@@ -135,6 +219,20 @@
     {
       "id": 7,
       "title": "Cleaner Required for Office Cleaning",
+      "translations": {
+        "en": {
+          "title": "Cleaner Required for Office Cleaning",
+          "experience": "Unskilled",
+          "postedTime": "14 hrs ago",
+          "tags": ["Tag 1", "Tag 2"]
+        },
+        "hi": {
+          "title": "ऑफिस सफाई के लिए क्लीनर चाहिए",
+          "experience": "अकुशल",
+          "postedTime": "14 घंटे पहले",
+          "tags": ["टैग 1", "टैग 2"]
+        }
+      },
       "company": "CleanCorp",
       "verified": false,
       "location": "Lower Parel, Mumbai, 400013",
@@ -157,6 +255,20 @@
     {
       "id": 8,
       "title": "Gardener Needed for Lawn Maintenance",
+      "translations": {
+        "en": {
+          "title": "Gardener Needed for Lawn Maintenance",
+          "experience": "Unskilled",
+          "postedTime": "16 hrs ago",
+          "tags": ["Tag 1", "Tag 2"]
+        },
+        "hi": {
+          "title": "लॉन रखरखाव के लिए माली चाहिए",
+          "experience": "अकुशल",
+          "postedTime": "16 घंटे पहले",
+          "tags": ["टैग 1", "टैग 2"]
+        }
+      },
       "company": "GreenThumb",
       "verified": true,
       "location": "Powai, Mumbai, 400076",
@@ -179,6 +291,20 @@
     {
       "id": 9,
       "title": "Welder Required for Metal Fabrication",
+      "translations": {
+        "en": {
+          "title": "Welder Required for Metal Fabrication",
+          "experience": "Skilled",
+          "postedTime": "18 hrs ago",
+          "tags": ["Tag 1", "Tag 2"]
+        },
+        "hi": {
+          "title": "मेटल फैब्रिकेशन के लिए वेल्डर चाहिए",
+          "experience": "कुशल",
+          "postedTime": "18 घंटे पहले",
+          "tags": ["टैग 1", "टैग 2"]
+        }
+      },
       "company": "WeldTech",
       "verified": true,
       "location": "Vikhroli, Mumbai, 400079",
@@ -201,6 +327,20 @@
     {
       "id": 10,
       "title": "Driver Needed for Delivery Service",
+      "translations": {
+        "en": {
+          "title": "Driver Needed for Delivery Service",
+          "experience": "Unskilled",
+          "postedTime": "20 hrs ago",
+          "tags": ["Tag 1", "Tag 2"]
+        },
+        "hi": {
+          "title": "डिलीवरी सेवा के लिए ड्राइवर चाहिए",
+          "experience": "अकुशल",
+          "postedTime": "20 घंटे पहले",
+          "tags": ["टैग 1", "टैग 2"]
+        }
+      },
       "company": "QuickDeliver",
       "verified": false,
       "location": "Kurla, Mumbai, 400070",
@@ -232,6 +372,48 @@
     "Welder",
     "Driver"
   ],
+  "categoryTranslations": {
+    "All": {
+      "en": "All",
+      "hi": "सभी"
+    },
+    "Carpenter": {
+      "en": "Carpenter",
+      "hi": "कारपेंटर"
+    },
+    "Painter": {
+      "en": "Painter",
+      "hi": "पेंटर"
+    },
+    "Electrician": {
+      "en": "Electrician",
+      "hi": "इलेक्ट्रीशियन"
+    },
+    "Plumber": {
+      "en": "Plumber",
+      "hi": "प्लंबर"
+    },
+    "Mason": {
+      "en": "Mason",
+      "hi": "राजमिस्त्री"
+    },
+    "Cleaner": {
+      "en": "Cleaner",
+      "hi": "क्लीनर"
+    },
+    "Gardener": {
+      "en": "Gardener",
+      "hi": "माली"
+    },
+    "Welder": {
+      "en": "Welder",
+      "hi": "वेल्डर"
+    },
+    "Driver": {
+      "en": "Driver",
+      "hi": "ड्राइवर"
+    }
+  },
   "professionalRoles": [
     {
       "id": "builder",

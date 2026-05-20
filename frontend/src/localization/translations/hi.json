@@ -118,6 +118,20 @@
     "city": "शहर*",
     "button": "विवरण सेव करें"
   },
+  "findJobs": {
+    "title": "नौकरियां खोजें",
+    "searchPlaceholder": "नौकरी खोजें",
+    "bestMatches": "बेहतरीन मिलान",
+    "broadcastedJobs": "ब्रॉडकास्टेड नौकरियां",
+    "likedJobs": "पसंदीदा नौकरियां",
+    "noJobsTitle": "कोई नौकरी नहीं मिली",
+    "noJobsText": "फ़िल्टर या खोज शब्द बदलकर देखें।",
+    "broadcastEmpty": "यहां रियल टाइम नौकरियां दिखेंगी जब भर्ती करने वाले नौकरी पोस्ट करेंगे।",
+    "userVerified": "यूज़र सत्यापित",
+    "postedPrefix": "पोस्ट किया गया",
+    "budget": "बजट",
+    "experience": "अनुभव"
+  },
   "validation": {
     "invalidLogin": "कृपया सही ईमेल और पासवर्ड दर्ज करें।",
     "invalidSignup": "नाम, ईमेल, पासवर्ड और स्थान भरें।",
