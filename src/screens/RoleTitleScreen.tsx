@@ -29,7 +29,7 @@ const RoleTitleScreen: React.FC = () => {
       return;
     }
     setRoleTitle(roleTitle.trim());
-    navigation.navigate(routes.languages);
+    navigation.navigate(routes.upload);
   };
 
   return (

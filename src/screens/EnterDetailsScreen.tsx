@@ -49,7 +49,7 @@ const EnterDetailsScreen: React.FC = () => {
     alert("Profile saved. Check console for details.");
     navigation.reset({
       index: 0,
-      routes: [{ name: routes.findJobs }],
+      routes: [{ name: routes.profile }],
     });
   };
 

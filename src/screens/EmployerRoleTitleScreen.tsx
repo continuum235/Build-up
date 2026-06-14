@@ -11,11 +11,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { useNavigation } from "@react-navigation/native";
+import routes from "../navigation/routes";
 import jobsData from "../data/jobsSeedData.json";
+import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
 
 export default () => {
-    const navigation = useNavigation();
+    const navigation = useNavigation<any>();
+    const { setRoleTitle } = useProfile();
     const { language, t } = useLanguage();
     const professionalRoles = jobsData.professionalRoles;
     
@@ -24,6 +27,14 @@ export default () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const selectedRole = professionalRoles.find((role) => role.id === selectedRoleId) ?? professionalRoles[0];
     const selectedRoleLabel = selectedRole?.label[language as "en" | "hi"] ?? selectedRole?.label.en ?? "";
+
+    const handleAddExpertise = () => {
+        if (!selectedRole) {
+            return;
+        }
+        setRoleTitle(selectedRole.label.en);
+        navigation.navigate(routes.upload);
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -115,10 +126,7 @@ export default () => {
                 {/* ADD EXPERTISE BUTTON */}
                 <TouchableOpacity 
                     style={styles.primaryButton} 
-                    onPress={() => {
-                        console.log("Role selected:", selectedRoleLabel);
-                        // navigation.navigate('NextScreen');
-                    }}
+                    onPress={handleAddExpertise}
                 >
                     <Text style={styles.primaryButtonText}>{t("common.addExpertise")}</Text>
                 </TouchableOpacity>
@@ -146,7 +154,7 @@ export default () => {
                     </TouchableOpacity>
                     <TouchableOpacity 
                         style={styles.arrowButton} 
-                        onPress={() => console.log('Next Step')}
+                        onPress={handleAddExpertise}
                     >
                         <Text style={styles.arrowText}>{'>'}</Text>
                     </TouchableOpacity>

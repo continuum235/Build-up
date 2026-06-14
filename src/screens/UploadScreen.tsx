@@ -28,7 +28,7 @@ const UploadScreen: React.FC = () => {
       alert(t("validation.uploadDoc"));
       return;
     }
-    navigation.navigate(routes.roleTitle);
+    navigation.navigate(routes.languages);
   };
 
   const renderUploadButton = (key: keyof typeof documents) => {

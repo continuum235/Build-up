@@ -18,6 +18,7 @@ import EnterDetailsScreen from "../screens/EnterDetailsScreen";
 import FindJobsScreen from "../screens/FindJobsScreen";
 import YourJobsScreen from "../screens/YourJobsScreen";
 import JobDetailsScreen from "../screens/JobDetailsScreen";
+import ProfileScreen from "../screens/ProfileScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -38,6 +39,7 @@ const AppNavigator: React.FC = () => (
         <Stack.Screen name={routes.enterDetails} component={EnterDetailsScreen} />
         <Stack.Screen name={routes.findJobs} component={FindJobsScreen} />
         <Stack.Screen name={routes.yourJobs} component={YourJobsScreen} />
+        <Stack.Screen name={routes.profile} component={ProfileScreen} />
         <Stack.Screen name={routes.jobDetails} component={JobDetailsScreen} />
     </Stack.Navigator>
 );

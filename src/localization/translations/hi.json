@@ -13,7 +13,19 @@
     "saveDetails": "विवरण सेव करें"
   },
   "profile": {
-    "headerTitle": "अपनी प्रोफ़ाइल बनाएं"
+    "headerTitle": "अपनी प्रोफ़ाइल बनाएं",
+    "viewTitle": "प्रोफ़ाइल",
+    "roleFallback": "भूमिका नहीं जोड़ी गई",
+    "hirer": "नियोक्ता",
+    "employee": "कर्मचारी",
+    "detailsTitle": "विवरण",
+    "locationFallback": "स्थान नहीं जोड़ा गया",
+    "emailFallback": "ईमेल नहीं जोड़ा गया",
+    "skillsTitle": "कौशल",
+    "skillsFallback": "कौशल नहीं जोड़े गए",
+    "rateTitle": "प्रति घंटे की दर",
+    "rateFallback": "दर नहीं जोड़ी गई",
+    "documentsTitle": "दस्तावेज़"
   },
   "welcome": {
     "headline": "एक अच्छा हेडलाइन",

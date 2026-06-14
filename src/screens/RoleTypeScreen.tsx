@@ -28,7 +28,7 @@ const RoleTypeScreen: React.FC = () => {
     if (roleType === "employer") {
       navigation.navigate(routes.employerRoleTitle);
     } else {
-      navigation.navigate(routes.upload);
+      navigation.navigate(routes.roleTitle);
     }
   };
 

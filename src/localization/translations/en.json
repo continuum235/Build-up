@@ -13,7 +13,19 @@
     "saveDetails": "Save Details"
   },
   "profile": {
-    "headerTitle": "Create Your Profile"
+    "headerTitle": "Create Your Profile",
+    "viewTitle": "Profile",
+    "roleFallback": "Role not added",
+    "hirer": "Hirer",
+    "employee": "Employee",
+    "detailsTitle": "Details",
+    "locationFallback": "Location not added",
+    "emailFallback": "Email not added",
+    "skillsTitle": "Skills",
+    "skillsFallback": "Skills not added",
+    "rateTitle": "Hourly Rate",
+    "rateFallback": "Rate not added",
+    "documentsTitle": "Documents"
   },
   "welcome": {
     "headline": "A good headline",
