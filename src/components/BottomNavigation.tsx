@@ -9,13 +9,15 @@ const ProfileIcon = require("../../assets/Profile-logo.png");
 const NotificationIcon = require("../../assets/notication.png");
 const MessageIcon = require("../../assets/message.png");
 
+type BottomTabId = "findJobs" | "yourJobs" | "profile" | "notifications" | "messages";
+
 interface BottomNavigationProps {
     navigation: any;
-    activeTab: "findJobs" | "yourJobs" | "profile" | "notifications" | "messages";
+    activeTab: BottomTabId;
 }
 
 export default function BottomNavigation({ navigation, activeTab }: BottomNavigationProps) {
-    const renderIcon = (tabId: string, isActive: boolean): React.ReactNode => {
+    const renderIcon = (tabId: BottomTabId, isActive: boolean): React.ReactNode => {
         const iconTint = isActive ? styles.navIconActive : styles.navIconInactive;
         switch (tabId) {
             case "findJobs":
@@ -51,8 +53,8 @@ export default function BottomNavigation({ navigation, activeTab }: BottomNaviga
         }
     };
 
-    const handlePress = (tabId: string) => {
-        const routeMap: Record<string, any> = {
+    const handlePress = (tabId: BottomTabId) => {
+        const routeMap: Record<BottomTabId, any> = {
             findJobs: routes.findJobs,
             yourJobs: routes.yourJobs,
             profile: routes.profile,
@@ -65,7 +67,7 @@ export default function BottomNavigation({ navigation, activeTab }: BottomNaviga
         }
     };
 
-    const tabs = [
+    const tabs: Array<{ id: BottomTabId; label: string }> = [
         { id: "findJobs", label: "Find Jobs" },
         { id: "yourJobs", label: "Your Jobs" },
         { id: "profile", label: "Profile" },
