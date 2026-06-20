@@ -9,7 +9,10 @@ import {
   StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 import { useNavigation } from "@react-navigation/native";
 import routes from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
@@ -59,7 +62,11 @@ const UploadScreen: React.FC = () => {
           onPress={() => navigation.goBack()}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Image source={require("../../assets/Back-button.png")} resizeMode="contain" style={styles.backIcon} />
+          <Image
+            source={require("../../assets/Back-button.png")}
+            resizeMode="contain"
+            style={styles.backIcon}
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("upload.title")}</Text>
         <View style={styles.headerSpacer} />
@@ -67,7 +74,11 @@ const UploadScreen: React.FC = () => {
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         <View style={styles.heroCard}>
-          <Image source={require("../../assets/Search.png")} resizeMode="contain" style={styles.heroIcon} />
+          <Image
+            source={require("../../assets/Search.png")}
+            resizeMode="contain"
+            style={styles.heroIcon}
+          />
           <Text style={styles.title}>{t("upload.heroTitle")}</Text>
           <Text style={styles.subtitle}>{t("upload.heroSubtitle")}</Text>
         </View>

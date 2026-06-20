@@ -6,10 +6,13 @@ import {
   StyleSheet,
   StatusBar,
   TextInput,
-  Image
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 import { useNavigation } from "@react-navigation/native";
 import routes from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
@@ -37,7 +40,7 @@ const HourlyRateScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" />
 
       <View style={styles.headerRow}>
-    <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Image
             source={require("../../assets/Back-button.png")}
             style={styles.backIcon}
@@ -48,7 +51,10 @@ const HourlyRateScreen: React.FC = () => {
         <View style={styles.headerSpacer} />
       </View>
 
-      <KeyboardSafeWrapper scrollStyle={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <KeyboardSafeWrapper
+        scrollStyle={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
         <View style={styles.textSection}>
           <Text style={styles.mainHeading}>{t("hourlyRate.heading")}</Text>
           <Text style={styles.subHeading}>{t("hourlyRate.subtitle")}</Text>

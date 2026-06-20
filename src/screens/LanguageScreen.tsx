@@ -9,7 +9,10 @@ import {
   TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 import { useNavigation } from "@react-navigation/native";
 import routes from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
@@ -50,14 +53,24 @@ const LanguageScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" />
 
       <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Image source={require("../../assets/Back-button.png")} resizeMode="contain" style={styles.backIcon} />
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Image
+            source={require("../../assets/Back-button.png")}
+            resizeMode="contain"
+            style={styles.backIcon}
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("profile.headerTitle")}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
-      <KeyboardSafeWrapper scrollStyle={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <KeyboardSafeWrapper
+        scrollStyle={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
         <View style={styles.textSection}>
           <Text style={styles.mainHeading}>{t("languages.heading")}</Text>
           <Text style={styles.subHeading}>{t("languages.subtitle")}</Text>
@@ -71,7 +84,11 @@ const LanguageScreen: React.FC = () => {
             {languages.map((lang) => (
               <TouchableOpacity key={lang} style={styles.chip} onPress={() => removeLanguage(lang)}>
                 <Text style={styles.chipText}>{lang}</Text>
-                <Image source={require("../../assets/Drop-down-arrow.png")} style={styles.chipIcon} resizeMode="contain" />
+                <Image
+                  source={require("../../assets/Drop-down-arrow.png")}
+                  style={styles.chipIcon}
+                  resizeMode="contain"
+                />
               </TouchableOpacity>
             ))}
 
@@ -120,10 +137,18 @@ const LanguageScreen: React.FC = () => {
         <Text style={styles.stepText}>3/6</Text>
         <View style={{ flexDirection: "row" }}>
           <TouchableOpacity style={styles.arrowButton} onPress={() => navigation.goBack()}>
-            <Image source={require("../../assets/Back-button.png")} style={styles.navIcon} resizeMode="contain" />
+            <Image
+              source={require("../../assets/Back-button.png")}
+              style={styles.navIcon}
+              resizeMode="contain"
+            />
           </TouchableOpacity>
           <TouchableOpacity style={styles.arrowButton} onPress={handleNext}>
-            <Image source={require("../../assets/Next-page-logo.png")} style={styles.navIcon} resizeMode="contain" />
+            <Image
+              source={require("../../assets/Next-page-logo.png")}
+              style={styles.navIcon}
+              resizeMode="contain"
+            />
           </TouchableOpacity>
         </View>
       </View>

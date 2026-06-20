@@ -9,7 +9,10 @@ import {
   TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 import { useNavigation } from "@react-navigation/native";
 import routes from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
@@ -37,14 +40,24 @@ const RoleTitleScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" />
 
       <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Image source={require("../../assets/Back-button.png")} resizeMode="contain" style={styles.backIcon} />
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Image
+            source={require("../../assets/Back-button.png")}
+            resizeMode="contain"
+            style={styles.backIcon}
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("profile.headerTitle")}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
-      <KeyboardSafeWrapper scrollStyle={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <KeyboardSafeWrapper
+        scrollStyle={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
         <View style={styles.textSection}>
           <Text style={styles.mainHeading}>{t("roleTitle.heading")}</Text>
           <Text style={styles.subHeading}>{t("roleTitle.subtitle")}</Text>

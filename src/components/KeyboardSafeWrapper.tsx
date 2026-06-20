@@ -7,11 +7,12 @@ interface KeyboardSafeWrapperProps {
   scrollStyle?: StyleProp<ViewStyle>;
 }
 
-const KeyboardSafeWrapper: React.FC<KeyboardSafeWrapperProps> = ({ children, contentContainerStyle, scrollStyle }) => (
-  <KeyboardAvoidingView
-    style={{ flex: 1 }}
-    behavior={Platform.OS === "ios" ? "padding" : "height"}
-  >
+const KeyboardSafeWrapper: React.FC<KeyboardSafeWrapperProps> = ({
+  children,
+  contentContainerStyle,
+  scrollStyle,
+}) => (
+  <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
     <ScrollView
       style={scrollStyle}
       contentContainerStyle={contentContainerStyle}

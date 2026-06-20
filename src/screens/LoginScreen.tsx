@@ -9,7 +9,10 @@ import {
   SafeAreaView,
   StatusBar,
 } from "react-native";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 import { useNavigation } from "@react-navigation/native";
 import routes from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
@@ -57,8 +60,6 @@ const LoginScreen: React.FC = () => {
             </View>
           </View>
 
-          
-
           <Text style={styles.welcomeText}>{t("auth.welcomeBack")}</Text>
           <Text style={styles.subText}>{t("auth.loginSubtitle")}</Text>
 
@@ -103,7 +104,10 @@ const LoginScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.footerBtn} onPress={() => navigation.navigate(routes.signup)}>
+          <TouchableOpacity
+            style={styles.footerBtn}
+            onPress={() => navigation.navigate(routes.signup)}
+          >
             <Text style={styles.footerText}>
               {t("auth.noAccount")} <Text style={styles.signupLink}>{t("auth.signupLink")}</Text>
             </Text>

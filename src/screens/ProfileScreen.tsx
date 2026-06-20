@@ -1,14 +1,10 @@
 import React from "react";
-import {
-  View,
-  ScrollView,
-  Text,
-  Image,
-  StyleSheet,
-  StatusBar,
-} from "react-native";
+import { View, ScrollView, Text, Image, StyleSheet, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 import BottomNavigation from "../components/BottomNavigation";
 import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
@@ -40,7 +36,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           <View style={styles.profileIntro}>
             <Text style={styles.name}>{displayName}</Text>
             <Text style={styles.role}>{profile.roleTitle || t("profile.roleFallback")}</Text>
-            <Text style={styles.type}>{isEmployer ? t("profile.hirer") : t("profile.employee")}</Text>
+            <Text style={styles.type}>
+              {isEmployer ? t("profile.hirer") : t("profile.employee")}
+            </Text>
           </View>
         </View>
 
@@ -72,7 +70,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           <Text style={styles.sectionTitle}>{t("profile.documentsTitle")}</Text>
           <View style={styles.documentRow}>
             {Object.entries(profile.documents).map(([key, uploaded]) => (
-              <View key={key} style={[styles.documentBadge, uploaded && styles.documentBadgeActive]}>
+              <View
+                key={key}
+                style={[styles.documentBadge, uploaded && styles.documentBadgeActive]}
+              >
                 <Image
                   source={require("../../assets/Upload.png")}
                   resizeMode="contain"

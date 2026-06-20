@@ -9,7 +9,10 @@ import {
   StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 import { useNavigation } from "@react-navigation/native";
 import routes from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
@@ -45,14 +48,25 @@ const SkillsScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" />
 
       <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Image source={require("../../assets/Back-button.png")} resizeMode="contain" style={styles.backIcon} />
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Image
+            source={require("../../assets/Back-button.png")}
+            resizeMode="contain"
+            style={styles.backIcon}
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("profile.headerTitle")}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.textSection}>
           <Text style={styles.mainHeading}>{t("skills.heading")}</Text>
           <Text style={styles.subHeading}>{t("skills.subtitle")}</Text>
@@ -67,16 +81,28 @@ const SkillsScreen: React.FC = () => {
               <Text style={styles.placeholderText}>{t("skills.placeholder")}</Text>
             )}
             {skills.map((skill) => (
-              <TouchableOpacity key={skill} style={styles.selectedChip} onPress={() => removeSkill(skill)}>
+              <TouchableOpacity
+                key={skill}
+                style={styles.selectedChip}
+                onPress={() => removeSkill(skill)}
+              >
                 <Text style={styles.selectedChipText}>{skill}</Text>
-                <Image source={require("../../assets/Drop-down-arrow.png")} style={styles.chipIcon} resizeMode="contain" />
+                <Image
+                  source={require("../../assets/Drop-down-arrow.png")}
+                  style={styles.chipIcon}
+                  resizeMode="contain"
+                />
               </TouchableOpacity>
             ))}
           </View>
 
           <View style={styles.suggestedContainer}>
             {suggestedSkills.map((skill) => (
-              <TouchableOpacity key={skill} style={styles.suggestedChip} onPress={() => handleAddSkill(skill)}>
+              <TouchableOpacity
+                key={skill}
+                style={styles.suggestedChip}
+                onPress={() => handleAddSkill(skill)}
+              >
                 <Text style={styles.suggestedChipText}>{skill}</Text>
               </TouchableOpacity>
             ))}
@@ -100,10 +126,18 @@ const SkillsScreen: React.FC = () => {
         <Text style={styles.stepText}>4/6</Text>
         <View style={styles.navArrowsContainer}>
           <TouchableOpacity style={styles.arrowButton} onPress={() => navigation.goBack()}>
-            <Image source={require("../../assets/Back-button.png")} style={styles.navIcon} resizeMode="contain" />
+            <Image
+              source={require("../../assets/Back-button.png")}
+              style={styles.navIcon}
+              resizeMode="contain"
+            />
           </TouchableOpacity>
           <TouchableOpacity style={styles.arrowButton} onPress={handleNext}>
-            <Image source={require("../../assets/Next-page-logo.png")} style={styles.navIcon} resizeMode="contain" />
+            <Image
+              source={require("../../assets/Next-page-logo.png")}
+              style={styles.navIcon}
+              resizeMode="contain"
+            />
           </TouchableOpacity>
         </View>
       </View>

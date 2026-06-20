@@ -9,7 +9,10 @@ import {
   StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 import { useNavigation } from "@react-navigation/native";
 import routes from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
@@ -24,7 +27,7 @@ const RoleTypeScreen: React.FC = () => {
   const handleSelect = (roleType: string) => {
     setSelectedRole(roleType);
     setRoleType(roleType);
-    
+
     if (roleType === "employer") {
       navigation.navigate(routes.employerRoleTitle);
     } else {
@@ -37,14 +40,25 @@ const RoleTypeScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" />
 
       <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Image source={require("../../assets/Back-button.png")} resizeMode="contain" style={styles.backIcon} />
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Image
+            source={require("../../assets/Back-button.png")}
+            resizeMode="contain"
+            style={styles.backIcon}
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("profile.headerTitle")}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.textSection}>
           <Text style={styles.mainQuestion}>{t("roleType.question")}</Text>
           <Text style={styles.subText}>{t("roleType.subtitle")}</Text>
@@ -56,7 +70,11 @@ const RoleTypeScreen: React.FC = () => {
             style={[styles.card, selectedRole === "jobSeeker" && styles.cardSelected]}
             onPress={() => handleSelect("jobSeeker")}
           >
-            <Image source={require("../../assets/Search.png")} resizeMode="contain" style={styles.cardIcon} />
+            <Image
+              source={require("../../assets/Search.png")}
+              resizeMode="contain"
+              style={styles.cardIcon}
+            />
             <View style={styles.cardTextContent}>
               <Text style={styles.cardTitle}>{t("roleType.jobSeekerTitle")}</Text>
               <Text style={styles.cardDesc}>{t("roleType.jobSeekerDesc")}</Text>
@@ -68,7 +86,11 @@ const RoleTypeScreen: React.FC = () => {
             style={[styles.card, selectedRole === "employer" && styles.cardSelected]}
             onPress={() => handleSelect("employer")}
           >
-            <Image source={require("../../assets/Edit.png")} resizeMode="contain" style={styles.cardIcon} />
+            <Image
+              source={require("../../assets/Edit.png")}
+              resizeMode="contain"
+              style={styles.cardIcon}
+            />
             <View style={styles.cardTextContent}>
               <Text style={styles.cardTitle}>{t("roleType.employerTitle")}</Text>
               <Text style={styles.cardDesc}>{t("roleType.employerDesc")}</Text>

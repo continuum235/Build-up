@@ -8,7 +8,6 @@ https://www.figma.com/design/CVwIhr6rSFajjV8DZv7U4A/Untitled?node-id=3-143&t=Bxo
 
 ## Getting Started
 
-
 Requirements:
 
 - Node.js
@@ -37,6 +36,7 @@ npm run web
 ```
 
 if using expo
+
 ```bash
 cd my-app
 npx expo start

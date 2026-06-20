@@ -114,9 +114,7 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
         })),
       addSkill: (skill) =>
         setProfile((prev) =>
-          prev.skills.includes(skill)
-            ? prev
-            : { ...prev, skills: [...prev.skills, skill] }
+          prev.skills.includes(skill) ? prev : { ...prev, skills: [...prev.skills, skill] }
         ),
       removeSkill: (skill) =>
         setProfile((prev) => ({

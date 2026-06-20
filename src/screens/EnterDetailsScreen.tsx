@@ -9,7 +9,10 @@ import {
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 import { useNavigation } from "@react-navigation/native";
 import routes from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
@@ -72,7 +75,10 @@ const EnterDetailsScreen: React.FC = () => {
         <View style={styles.headerSpacer} />
       </View>
 
-      <KeyboardSafeWrapper scrollStyle={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <KeyboardSafeWrapper
+        scrollStyle={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
         <View style={styles.avatarRow}>
           <View style={styles.avatarCircle}>
             <Text style={styles.avatarText}>U</Text>
