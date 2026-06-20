@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   ScrollView,
@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
-  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -20,10 +19,12 @@ interface JobDetailsScreenProps {
   route: any;
 }
 
-export default ({ navigation, route }: JobDetailsScreenProps) => {
+const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({
+  navigation,
+  route,
+}) => {
   const { jobId } = route.params;
   const job = jobsData.jobs.find((j) => j.id === jobId);
-  const [isLiked, setIsLiked] = useState(job?.liked || false);
 
   if (!job) {
     return (
@@ -168,6 +169,8 @@ export default ({ navigation, route }: JobDetailsScreenProps) => {
     </SafeAreaView>
   );
 };
+
+export default JobDetailsScreen;
 
 const styles = StyleSheet.create({
   container: {

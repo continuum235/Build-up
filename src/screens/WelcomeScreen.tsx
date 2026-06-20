@@ -16,7 +16,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import routes from "../navigation/routes";
 
-export default () => {
+const WelcomeScreen: React.FC = () => {
   const navigation = useNavigation<any>();
 
   return (
@@ -88,6 +88,8 @@ export default () => {
     </SafeAreaView>
   );
 };
+
+export default WelcomeScreen;
 
 const styles = StyleSheet.create({
   container: {

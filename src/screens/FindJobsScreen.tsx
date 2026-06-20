@@ -28,7 +28,7 @@ interface FindJobsScreenProps {
   navigation: any;
 }
 
-export default ({ navigation }: FindJobsScreenProps) => {
+const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {
   const { language, t } = useLanguage();
   const [searchText, setSearchText] = useState("");
   const [activeTab, setActiveTab] = useState("Broadcasted Jobs");
@@ -363,6 +363,8 @@ export default ({ navigation }: FindJobsScreenProps) => {
     </SafeAreaView>
   );
 };
+
+export default FindJobsScreen;
 
 const styles = StyleSheet.create({
   container: {

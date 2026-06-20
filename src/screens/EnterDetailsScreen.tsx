@@ -24,7 +24,7 @@ const EnterDetailsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { profile, setDetails } = useProfile();
   const { t } = useLanguage();
-  const [country, setCountry] = useState<string>(profile.details.country);
+  const [country] = useState<string>(profile.details.country);
   const [addressLine1, setAddressLine1] = useState<string>(
     profile.details.addressLine1,
   );

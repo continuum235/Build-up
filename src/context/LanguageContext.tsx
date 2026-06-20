@@ -19,8 +19,11 @@ const LanguageContext = createContext<LanguageContextType | null>(null);
 const normalizeLocale = (locale: string): string =>
   locale === "hi" ? "hi" : "en";
 
+const getDeviceLocale = (): string =>
+  Localization.getLocales()[0]?.languageCode ?? "en";
+
 const getInitialLanguage = (): string => {
-  const deviceLocale = Localization.locale?.split("-")[0] || "en";
+  const deviceLocale = getDeviceLocale();
   return normalizeLocale(deviceLocale);
 };
 

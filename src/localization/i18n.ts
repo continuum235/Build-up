@@ -9,7 +9,7 @@ i18n.enableFallback = true;
 
 i18n.defaultLocale = "en";
 
-i18n.locale = Localization.locale?.split("-")[0] || "en";
+i18n.locale = Localization.getLocales()[0]?.languageCode ?? "en";
 
 export const setI18nConfig = (locale: string): void => {
   i18n.locale = locale;

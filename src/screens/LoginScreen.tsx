@@ -57,22 +57,40 @@ const LoginScreen: React.FC = () => {
 
         <View className="items-center px-[10%]">
           <View className="flex-row mb-[4%]" style={{ marginBottom: hp("4%") }}>
-            <View className="bg-[#965541] px-[2%]" style={{ paddingHorizontal: wp("2%") }}>
-              <Text className="text-white font-bold" style={{ fontSize: wp("10%") }}>
+            <View
+              className="bg-[#965541] px-[2%]"
+              style={{ paddingHorizontal: wp("2%") }}
+            >
+              <Text
+                className="text-white font-bold"
+                style={{ fontSize: wp("10%") }}
+              >
                 build
               </Text>
             </View>
-            <View className="border-2 border-[#965541] px-[2%] ml-[1%]" style={{ paddingHorizontal: wp("2%"), marginLeft: wp("1%") }}>
-              <Text className="text-[#965541] font-bold" style={{ fontSize: wp("10%") }}>
+            <View
+              className="border-2 border-[#965541] px-[2%] ml-[1%]"
+              style={{ paddingHorizontal: wp("2%"), marginLeft: wp("1%") }}
+            >
+              <Text
+                className="text-[#965541] font-bold"
+                style={{ fontSize: wp("10%") }}
+              >
                 up
               </Text>
             </View>
           </View>
 
-          <Text className="font-bold text-[#1E1E1E]" style={{ fontSize: wp("7.5%") }}>
+          <Text
+            className="font-bold text-[#1E1E1E]"
+            style={{ fontSize: wp("7.5%") }}
+          >
             {t("auth.welcomeBack")}
           </Text>
-          <Text className="text-[#666] mb-[5%]" style={{ fontSize: wp("4%"), marginBottom: hp("5%") }}>
+          <Text
+            className="text-[#666] mb-[5%]"
+            style={{ fontSize: wp("4%"), marginBottom: hp("5%") }}
+          >
             {t("auth.loginSubtitle")}
           </Text>
 
@@ -90,8 +108,14 @@ const LoginScreen: React.FC = () => {
               onChangeText={setPassword}
               secureTextEntry
             />
-            <TouchableOpacity className="self-end mb-[4%]" style={{ marginBottom: hp("4%") }}>
-              <Text className="text-[#965541] font-semibold" style={{ fontSize: wp("3.5%") }}>
+            <TouchableOpacity
+              className="self-end mb-[4%]"
+              style={{ marginBottom: hp("4%") }}
+            >
+              <Text
+                className="text-[#965541] font-semibold"
+                style={{ fontSize: wp("3.5%") }}
+              >
                 {t("auth.forgotPassword")}
               </Text>
             </TouchableOpacity>
@@ -103,15 +127,24 @@ const LoginScreen: React.FC = () => {
             disabled={!canSubmit}
           />
 
-          <View className="flex-row items-center mb-[3%]" style={{ marginBottom: hp("3%") }}>
+          <View
+            className="flex-row items-center mb-[3%]"
+            style={{ marginBottom: hp("3%") }}
+          >
             <View className="flex-1 h-[1px] bg-[#D8DADC]" />
-            <Text className="mx-[3%] text-[#A4A9B6]" style={{ fontSize: wp("3.5%") }}>
+            <Text
+              className="mx-[3%] text-[#A4A9B6]"
+              style={{ fontSize: wp("3.5%") }}
+            >
               {t("auth.orLoginWith")}
             </Text>
             <View className="flex-1 h-[1px] bg-[#D8DADC]" />
           </View>
 
-          <View className="flex-row justify-center mb-[5%]" style={{ marginBottom: hp("5%") }}>
+          <View
+            className="flex-row justify-center mb-[5%]"
+            style={{ marginBottom: hp("5%") }}
+          >
             <TouchableOpacity
               className="bg-white rounded-full items-center justify-center mx-[3%]"
               style={{

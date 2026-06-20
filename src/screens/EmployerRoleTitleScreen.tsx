@@ -19,7 +19,7 @@ import jobsData from "../data/jobsSeedData.json";
 import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
 
-export default () => {
+const EmployerRoleTitleScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { setRoleTitle } = useProfile();
   const { language, t } = useLanguage();
@@ -180,6 +180,8 @@ export default () => {
     </SafeAreaView>
   );
 };
+
+export default EmployerRoleTitleScreen;
 
 const styles = StyleSheet.create({
   container: {

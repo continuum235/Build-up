@@ -56,7 +56,7 @@ const buildJobCard = (
   showChat,
 });
 
-export default ({ navigation }: YourJobsScreenProps) => {
+const YourJobsScreen: React.FC<YourJobsScreenProps> = ({ navigation }) => {
   const { language, t } = useLanguage();
   const [activeTab, setActiveTab] = useState<JobTab>("Sent Proposals");
   const currentLanguage = language as SupportedLanguage;
@@ -247,6 +247,8 @@ export default ({ navigation }: YourJobsScreenProps) => {
     </SafeAreaView>
   );
 };
+
+export default YourJobsScreen;
 
 const styles = StyleSheet.create({
   container: {
