@@ -25,16 +25,29 @@ interface JobDetailsProps {
   isLiked?: boolean;
 }
 
-export default function JobDetails({ job, onPress, onLikePress, isLiked }: JobDetailsProps) {
+export default function JobDetails({
+  job,
+  onPress,
+  onLikePress,
+  isLiked,
+}: JobDetailsProps) {
   const handleLikePress = () => {
     onLikePress?.();
   };
 
   return (
-    <TouchableOpacity style={styles.jobCard} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={styles.jobCard}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
       <View style={styles.cardHeaderRow}>
         <Text style={styles.jobTitle}>{job.title}</Text>
-        <TouchableOpacity style={styles.heartButton} onPress={handleLikePress} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.heartButton}
+          onPress={handleLikePress}
+          activeOpacity={0.7}
+        >
           <Text style={[styles.heartIcon, isLiked && styles.heartIconLiked]}>
             {isLiked ? "♥" : "♡"}
           </Text>
@@ -43,7 +56,9 @@ export default function JobDetails({ job, onPress, onLikePress, isLiked }: JobDe
 
       <View style={styles.companyRow}>
         <Text style={styles.companyText}>{job.company} </Text>
-        {job.verified && <Text style={styles.verifiedText}>✓ User Verified</Text>}
+        {job.verified && (
+          <Text style={styles.verifiedText}>✓ User Verified</Text>
+        )}
         <Text style={styles.postedText}> • Posted {job.posted}</Text>
       </View>
 

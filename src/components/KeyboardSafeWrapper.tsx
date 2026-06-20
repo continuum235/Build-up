@@ -1,5 +1,11 @@
 import React from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, ViewStyle, StyleProp } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  ViewStyle,
+  StyleProp,
+} from "react-native";
 
 interface KeyboardSafeWrapperProps {
   children: React.ReactNode;
@@ -12,7 +18,10 @@ const KeyboardSafeWrapper: React.FC<KeyboardSafeWrapperProps> = ({
   contentContainerStyle,
   scrollStyle,
 }) => (
-  <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+  <KeyboardAvoidingView
+    style={{ flex: 1 }}
+    behavior={Platform.OS === "ios" ? "padding" : "height"}
+  >
     <ScrollView
       style={scrollStyle}
       contentContainerStyle={contentContainerStyle}

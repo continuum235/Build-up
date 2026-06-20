@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useMemo, useState, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useMemo,
+  useState,
+  ReactNode,
+} from "react";
 import * as Localization from "expo-localization";
 import { setI18nConfig, t } from "../localization/i18n";
 
@@ -10,7 +16,8 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | null>(null);
 
-const normalizeLocale = (locale: string): string => (locale === "hi" ? "hi" : "en");
+const normalizeLocale = (locale: string): string =>
+  locale === "hi" ? "hi" : "en";
 
 const getInitialLanguage = (): string => {
   const deviceLocale = Localization.locale?.split("-")[0] || "en";
@@ -24,7 +31,9 @@ interface LanguageProviderProps {
   children: ReactNode;
 }
 
-export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
+export const LanguageProvider: React.FC<LanguageProviderProps> = ({
+  children,
+}) => {
   const [language, setLanguageState] = useState<string>(initialLanguage);
 
   const setLanguage = (nextLanguage: string) => {
@@ -39,10 +48,14 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       setLanguage,
       t,
     }),
-    [language]
+    [language],
   );
 
-  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
+  return (
+    <LanguageContext.Provider value={value}>
+      {children}
+    </LanguageContext.Provider>
+  );
 };
 
 export const useLanguage = (): LanguageContextType => {

@@ -30,7 +30,10 @@ const SignupScreen: React.FC = () => {
   const [location, setLocation] = useState<string>(profile.auth.location);
 
   const canSubmit =
-    isNonEmpty(name) && isValidEmail(email) && isValidPassword(password, 8) && isNonEmpty(location);
+    isNonEmpty(name) &&
+    isValidEmail(email) &&
+    isValidPassword(password, 8) &&
+    isNonEmpty(location);
 
   const handleSignup = () => {
     if (!canSubmit) {
@@ -44,7 +47,10 @@ const SignupScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      <KeyboardSafeWrapper scrollStyle={styles.flex1} contentContainerStyle={styles.scrollContent}>
+      <KeyboardSafeWrapper
+        scrollStyle={styles.flex1}
+        contentContainerStyle={styles.scrollContent}
+      >
         <TouchableOpacity
           style={styles.backButtonContainer}
           onPress={() => navigation.goBack()}
@@ -72,8 +78,14 @@ const SignupScreen: React.FC = () => {
           </View>
 
           <View style={styles.socialSection}>
-            <TouchableOpacity style={styles.socialButton} onPress={() => alert("Google Login")}>
-              <Image source={require("../../assets/Google-logo.png")} style={styles.googleIcon} />
+            <TouchableOpacity
+              style={styles.socialButton}
+              onPress={() => alert("Google Login")}
+            >
+              <Image
+                source={require("../../assets/Google-logo.png")}
+                style={styles.googleIcon}
+              />
               <Text style={[styles.socialButtonText, { color: "#4285F4" }]}>
                 {t("auth.signupWithGoogle")}
               </Text>
@@ -120,7 +132,9 @@ const SignupScreen: React.FC = () => {
           </View>
 
           <TouchableOpacity style={styles.submitButton} onPress={handleSignup}>
-            <Text style={styles.submitButtonText}>{t("auth.createAccount")}</Text>
+            <Text style={styles.submitButtonText}>
+              {t("auth.createAccount")}
+            </Text>
           </TouchableOpacity>
 
           <Text style={styles.footerTerms}>

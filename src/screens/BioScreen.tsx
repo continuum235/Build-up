@@ -40,7 +40,10 @@ const BioScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" />
 
       <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => navigation.goBack()}
+        >
           <Image
             source={require("../../assets/Back-button.png")}
             style={styles.backIcon}
@@ -89,7 +92,10 @@ const BioScreen: React.FC = () => {
       <View style={styles.bottomNav}>
         <Text style={styles.stepText}>5/6</Text>
         <View style={styles.navArrowsContainer}>
-          <TouchableOpacity style={styles.arrowButton} onPress={() => navigation.goBack()}>
+          <TouchableOpacity
+            style={styles.arrowButton}
+            onPress={() => navigation.goBack()}
+          >
             <Text style={styles.arrowText}>{"<"}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.arrowButton} onPress={handleNext}>

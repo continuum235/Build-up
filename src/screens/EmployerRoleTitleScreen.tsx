@@ -26,12 +26,17 @@ export default () => {
   const professionalRoles = jobsData.professionalRoles;
 
   // State to hold the selected role
-  const [selectedRoleId, setSelectedRoleId] = useState(professionalRoles[0]?.id ?? "");
+  const [selectedRoleId, setSelectedRoleId] = useState(
+    professionalRoles[0]?.id ?? "",
+  );
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const selectedRole =
-    professionalRoles.find((role) => role.id === selectedRoleId) ?? professionalRoles[0];
+    professionalRoles.find((role) => role.id === selectedRoleId) ??
+    professionalRoles[0];
   const selectedRoleLabel =
-    selectedRole?.label[language as "en" | "hi"] ?? selectedRole?.label.en ?? "";
+    selectedRole?.label[language as "en" | "hi"] ??
+    selectedRole?.label.en ??
+    "";
 
   const handleAddExpertise = () => {
     if (!selectedRole) {
@@ -86,20 +91,28 @@ export default () => {
             <Image
               source={require("../../assets/Drop-down-arrow.png")}
               resizeMode="contain"
-              style={[styles.dropdownIcon, isDropdownOpen && styles.dropdownIconOpen]}
+              style={[
+                styles.dropdownIcon,
+                isDropdownOpen && styles.dropdownIconOpen,
+              ]}
             />
           </TouchableOpacity>
           {isDropdownOpen && (
             <View style={styles.dropdownMenu}>
-              <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>
+              <ScrollView
+                nestedScrollEnabled
+                showsVerticalScrollIndicator={false}
+              >
                 {professionalRoles.map((role) => {
-                  const roleLabel = role.label[language as "en" | "hi"] ?? role.label.en;
+                  const roleLabel =
+                    role.label[language as "en" | "hi"] ?? role.label.en;
                   return (
                     <TouchableOpacity
                       key={role.id}
                       style={[
                         styles.dropdownOption,
-                        selectedRoleId === role.id && styles.dropdownOptionSelected,
+                        selectedRoleId === role.id &&
+                          styles.dropdownOptionSelected,
                       ]}
                       onPress={() => {
                         setSelectedRoleId(role.id);
@@ -109,7 +122,8 @@ export default () => {
                       <Text
                         style={[
                           styles.dropdownOptionText,
-                          selectedRoleId === role.id && styles.dropdownOptionTextSelected,
+                          selectedRoleId === role.id &&
+                            styles.dropdownOptionTextSelected,
                         ]}
                       >
                         {roleLabel}
@@ -126,8 +140,13 @@ export default () => {
         <View style={{ flex: 1 }} />
 
         {/* ADD EXPERTISE BUTTON */}
-        <TouchableOpacity style={styles.primaryButton} onPress={handleAddExpertise}>
-          <Text style={styles.primaryButtonText}>{t("common.addExpertise")}</Text>
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={handleAddExpertise}
+        >
+          <Text style={styles.primaryButtonText}>
+            {t("common.addExpertise")}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -144,10 +163,16 @@ export default () => {
 
         {/* Arrow Navigation (Left & Right) */}
         <View style={styles.navArrowsContainer}>
-          <TouchableOpacity style={styles.arrowButton} onPress={() => navigation.goBack()}>
+          <TouchableOpacity
+            style={styles.arrowButton}
+            onPress={() => navigation.goBack()}
+          >
             <Text style={styles.arrowText}>{"<"}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.arrowButton} onPress={handleAddExpertise}>
+          <TouchableOpacity
+            style={styles.arrowButton}
+            onPress={handleAddExpertise}
+          >
             <Text style={styles.arrowText}>{">"}</Text>
           </TouchableOpacity>
         </View>

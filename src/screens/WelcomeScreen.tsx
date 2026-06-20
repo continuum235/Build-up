@@ -61,7 +61,7 @@ export default () => {
             onPress={() =>
               navigation.navigate(
                 routes.languageSelection as never,
-                { next: routes.login } as never
+                { next: routes.login } as never,
               )
             }
           >
@@ -75,7 +75,7 @@ export default () => {
             onPress={() =>
               navigation.navigate(
                 routes.languageSelection as never,
-                { next: routes.signup } as never
+                { next: routes.signup } as never,
               )
             }
           >

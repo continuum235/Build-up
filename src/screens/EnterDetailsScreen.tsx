@@ -25,8 +25,12 @@ const EnterDetailsScreen: React.FC = () => {
   const { profile, setDetails } = useProfile();
   const { t } = useLanguage();
   const [country, setCountry] = useState<string>(profile.details.country);
-  const [addressLine1, setAddressLine1] = useState<string>(profile.details.addressLine1);
-  const [addressLine2, setAddressLine2] = useState<string>(profile.details.addressLine2);
+  const [addressLine1, setAddressLine1] = useState<string>(
+    profile.details.addressLine1,
+  );
+  const [addressLine2, setAddressLine2] = useState<string>(
+    profile.details.addressLine2,
+  );
   const [city, setCity] = useState<string>(profile.details.city);
 
   const handleSubmit = () => {
@@ -142,7 +146,10 @@ const EnterDetailsScreen: React.FC = () => {
       <View style={styles.bottomNav}>
         <Text style={styles.stepText}>1/n</Text>
         <View style={styles.navArrowsContainer}>
-          <TouchableOpacity style={styles.arrowButton} onPress={() => navigation.goBack()}>
+          <TouchableOpacity
+            style={styles.arrowButton}
+            onPress={() => navigation.goBack()}
+          >
             <Text style={styles.arrowText}>{"<"}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.arrowButton} onPress={handleSubmit}>

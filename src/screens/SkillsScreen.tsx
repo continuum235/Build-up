@@ -78,7 +78,9 @@ const SkillsScreen: React.FC = () => {
 
           <View style={styles.selectedBox}>
             {skills.length === 0 && (
-              <Text style={styles.placeholderText}>{t("skills.placeholder")}</Text>
+              <Text style={styles.placeholderText}>
+                {t("skills.placeholder")}
+              </Text>
             )}
             {skills.map((skill) => (
               <TouchableOpacity
@@ -125,7 +127,10 @@ const SkillsScreen: React.FC = () => {
       <View style={styles.bottomNav}>
         <Text style={styles.stepText}>4/6</Text>
         <View style={styles.navArrowsContainer}>
-          <TouchableOpacity style={styles.arrowButton} onPress={() => navigation.goBack()}>
+          <TouchableOpacity
+            style={styles.arrowButton}
+            onPress={() => navigation.goBack()}
+          >
             <Image
               source={require("../../assets/Back-button.png")}
               style={styles.navIcon}

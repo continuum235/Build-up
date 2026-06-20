@@ -35,7 +35,10 @@ export default ({ navigation }: FindJobsScreenProps) => {
   const [activeFilter, setActiveFilter] = useState("All");
   const [showNewJobModal, setShowNewJobModal] = useState(false);
   const [likedJobIds, setLikedJobIds] = useState(
-    () => new Set<number>(jobsData.jobs.filter((job) => job.liked).map((job) => job.id))
+    () =>
+      new Set<number>(
+        jobsData.jobs.filter((job) => job.liked).map((job) => job.id),
+      ),
   );
 
   const filters = ["All", ...jobsData.categories];
@@ -53,9 +56,9 @@ export default ({ navigation }: FindJobsScreenProps) => {
     broadcastJob.translations[currentLanguage] ?? broadcastJob.translations.en;
 
   const getCategoryLabel = (category: string) =>
-    jobsData.categoryTranslations[category as keyof typeof jobsData.categoryTranslations]?.[
-      currentLanguage
-    ] ?? category;
+    jobsData.categoryTranslations[
+      category as keyof typeof jobsData.categoryTranslations
+    ]?.[currentLanguage] ?? category;
 
   const toggleLike = (jobId: number) => {
     setLikedJobIds((prev) => {
@@ -79,7 +82,8 @@ export default ({ navigation }: FindJobsScreenProps) => {
     if (!normalizedSearch) {
       return true;
     }
-    const localizedJob = job.translations[currentLanguage] ?? job.translations.en;
+    const localizedJob =
+      job.translations[currentLanguage] ?? job.translations.en;
     const haystack =
       `${localizedJob.title} ${job.title} ${job.company} ${job.location} ${getCategoryLabel(job.category)}`.toLowerCase();
     return haystack.includes(normalizedSearch);
@@ -98,7 +102,11 @@ export default ({ navigation }: FindJobsScreenProps) => {
 
         {/* SEARCH BAR */}
         <View style={styles.searchBar}>
-          <Image source={SearchIcon} resizeMode="contain" style={styles.searchIcon} />
+          <Image
+            source={SearchIcon}
+            resizeMode="contain"
+            style={styles.searchIcon}
+          />
           <TextInput
             placeholder={t("findJobs.searchPlaceholder")}
             placeholderTextColor="#A4A9B6"
@@ -116,7 +124,12 @@ export default ({ navigation }: FindJobsScreenProps) => {
               style={styles.tabButton}
               onPress={() => setActiveTab(tab.id)}
             >
-              <Text style={[styles.tabText, activeTab === tab.id && styles.tabTextActive]}>
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === tab.id && styles.tabTextActive,
+                ]}
+              >
                 {tab.label}
               </Text>
               {activeTab === tab.id && <View style={styles.activeIndicator} />}
@@ -137,13 +150,17 @@ export default ({ navigation }: FindJobsScreenProps) => {
                 onPress={() => setActiveFilter(filter)}
                 style={[
                   styles.filterChip,
-                  activeFilter === filter ? styles.filterChipActive : styles.filterChipInactive,
+                  activeFilter === filter
+                    ? styles.filterChipActive
+                    : styles.filterChipInactive,
                 ]}
               >
                 <Text
                   style={[
                     styles.filterText,
-                    activeFilter === filter ? styles.filterTextActive : styles.filterTextInactive,
+                    activeFilter === filter
+                      ? styles.filterTextActive
+                      : styles.filterTextInactive,
                   ]}
                 >
                   {getCategoryLabel(filter)}
@@ -157,7 +174,9 @@ export default ({ navigation }: FindJobsScreenProps) => {
         <View style={styles.cardsContainer}>
           {isBroadcastTab && (
             <View style={styles.broadcastContent}>
-              <Text style={styles.broadcastInfoText}>{t("findJobs.broadcastEmpty")}</Text>
+              <Text style={styles.broadcastInfoText}>
+                {t("findJobs.broadcastEmpty")}
+              </Text>
 
               <View style={styles.radarContainer}>
                 <View style={styles.circleOuter}>
@@ -177,31 +196,43 @@ export default ({ navigation }: FindJobsScreenProps) => {
 
           {!isBroadcastTab && filteredJobs.length === 0 && (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyStateTitle}>{t("findJobs.noJobsTitle")}</Text>
-              <Text style={styles.emptyStateText}>{t("findJobs.noJobsText")}</Text>
+              <Text style={styles.emptyStateTitle}>
+                {t("findJobs.noJobsTitle")}
+              </Text>
+              <Text style={styles.emptyStateText}>
+                {t("findJobs.noJobsText")}
+              </Text>
             </View>
           )}
 
           {!isBroadcastTab &&
             filteredJobs.map((job) => {
               const isLiked = likedJobIds.has(job.id);
-              const localizedJob = job.translations[currentLanguage] ?? job.translations.en;
+              const localizedJob =
+                job.translations[currentLanguage] ?? job.translations.en;
               return (
                 <TouchableOpacity
                   key={job.id}
                   style={styles.jobCard}
                   activeOpacity={0.8}
-                  onPress={() => navigation.navigate(routes.jobDetails, { jobId: job.id })}
+                  onPress={() =>
+                    navigation.navigate(routes.jobDetails, { jobId: job.id })
+                  }
                 >
                   <View style={styles.cardHeader}>
                     <Text style={styles.jobTitle}>{localizedJob.title}</Text>
-                    <TouchableOpacity style={styles.heartButton} onPress={() => toggleLike(job.id)}>
+                    <TouchableOpacity
+                      style={styles.heartButton}
+                      onPress={() => toggleLike(job.id)}
+                    >
                       <Image
                         source={HeartIcon}
                         resizeMode="contain"
                         style={[
                           styles.heartIcon,
-                          isLiked ? styles.heartIconActive : styles.heartIconInactive,
+                          isLiked
+                            ? styles.heartIconActive
+                            : styles.heartIconInactive,
                         ]}
                       />
                     </TouchableOpacity>
@@ -216,7 +247,9 @@ export default ({ navigation }: FindJobsScreenProps) => {
                           resizeMode="contain"
                           style={styles.verifiedIcon}
                         />
-                        <Text style={styles.verifiedText}>{t("findJobs.userVerified")}</Text>
+                        <Text style={styles.verifiedText}>
+                          {t("findJobs.userVerified")}
+                        </Text>
                       </View>
                     )}
                     <Text style={styles.postedText}>
@@ -226,18 +259,28 @@ export default ({ navigation }: FindJobsScreenProps) => {
                   </View>
 
                   <View style={styles.locationRow}>
-                    <Image source={LocationIcon} resizeMode="contain" style={styles.locationIcon} />
+                    <Image
+                      source={LocationIcon}
+                      resizeMode="contain"
+                      style={styles.locationIcon}
+                    />
                     <Text style={styles.locationText}>{job.location}</Text>
                   </View>
 
                   <View style={styles.detailsRow}>
                     <View style={styles.detailBlock}>
-                      <Text style={styles.detailLabel}>{t("findJobs.budget")}</Text>
+                      <Text style={styles.detailLabel}>
+                        {t("findJobs.budget")}
+                      </Text>
                       <Text style={styles.detailValue}>${job.budget}</Text>
                     </View>
                     <View style={styles.detailBlock}>
-                      <Text style={styles.detailLabel}>{t("findJobs.experience")}</Text>
-                      <Text style={styles.detailValue}>{localizedJob.experience}</Text>
+                      <Text style={styles.detailLabel}>
+                        {t("findJobs.experience")}
+                      </Text>
+                      <Text style={styles.detailValue}>
+                        {localizedJob.experience}
+                      </Text>
                     </View>
                   </View>
 
@@ -257,12 +300,18 @@ export default ({ navigation }: FindJobsScreenProps) => {
       {showNewJobModal && (
         <View style={styles.broadcastOverlay}>
           <View style={styles.broadcastModalCard}>
-            <Text style={styles.broadcastModalTitle}>{localizedBroadcastJob.title}</Text>
+            <Text style={styles.broadcastModalTitle}>
+              {localizedBroadcastJob.title}
+            </Text>
 
             <View style={styles.broadcastCompanyRow}>
-              <Text style={styles.broadcastCompanyName}>{broadcastJob.company}</Text>
+              <Text style={styles.broadcastCompanyName}>
+                {broadcastJob.company}
+              </Text>
               <Text style={styles.broadcastVerifiedCheck}> ✓ </Text>
-              <Text style={styles.broadcastVerifiedText}>{t("findJobs.userVerified")}</Text>
+              <Text style={styles.broadcastVerifiedText}>
+                {t("findJobs.userVerified")}
+              </Text>
             </View>
 
             <View style={styles.mapBox}>
@@ -270,18 +319,24 @@ export default ({ navigation }: FindJobsScreenProps) => {
                 <Text style={styles.mapText}>{t("findJobs.maps")}</Text>
               </View>
               <View style={styles.mapBottom}>
-                <Text style={styles.mapLocationText}>📍 {broadcastJob.location}</Text>
+                <Text style={styles.mapLocationText}>
+                  📍 {broadcastJob.location}
+                </Text>
               </View>
             </View>
 
             <View style={styles.broadcastDetailsRow}>
               <Text style={styles.broadcastDetailLabel}>
                 {t("findJobs.budget")}{" "}
-                <Text style={styles.broadcastDetailValue}>${broadcastJob.budget}</Text>
+                <Text style={styles.broadcastDetailValue}>
+                  ${broadcastJob.budget}
+                </Text>
               </Text>
               <Text style={styles.broadcastDetailLabel}>
                 {t("findJobs.experience")}{" "}
-                <Text style={styles.broadcastDetailValue}>{localizedBroadcastJob.experience}</Text>
+                <Text style={styles.broadcastDetailValue}>
+                  {localizedBroadcastJob.experience}
+                </Text>
               </Text>
             </View>
 

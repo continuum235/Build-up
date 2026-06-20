@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useMemo, useState, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useMemo,
+  useState,
+  ReactNode,
+} from "react";
 
 interface Auth {
   name: string;
@@ -80,7 +86,9 @@ interface ProfileProviderProps {
   children: ReactNode;
 }
 
-export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) => {
+export const ProfileProvider: React.FC<ProfileProviderProps> = ({
+  children,
+}) => {
   const [profile, setProfile] = useState<Profile>(initialProfile);
 
   const value = useMemo<ProfileContextType>(
@@ -92,7 +100,8 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
           auth: { ...prev.auth, ...updates },
         })),
       setRoleType: (roleType) => setProfile((prev) => ({ ...prev, roleType })),
-      setRoleTitle: (roleTitle) => setProfile((prev) => ({ ...prev, roleTitle })),
+      setRoleTitle: (roleTitle) =>
+        setProfile((prev) => ({ ...prev, roleTitle })),
       toggleDocument: (key) =>
         setProfile((prev) => ({
           ...prev,
@@ -105,7 +114,7 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
         setProfile((prev) =>
           prev.languages.includes(language)
             ? prev
-            : { ...prev, languages: [...prev.languages, language] }
+            : { ...prev, languages: [...prev.languages, language] },
         ),
       removeLanguage: (language) =>
         setProfile((prev) => ({
@@ -114,7 +123,9 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
         })),
       addSkill: (skill) =>
         setProfile((prev) =>
-          prev.skills.includes(skill) ? prev : { ...prev, skills: [...prev.skills, skill] }
+          prev.skills.includes(skill)
+            ? prev
+            : { ...prev, skills: [...prev.skills, skill] },
         ),
       removeSkill: (skill) =>
         setProfile((prev) => ({
@@ -122,7 +133,8 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
           skills: prev.skills.filter((item) => item !== skill),
         })),
       setBio: (bio) => setProfile((prev) => ({ ...prev, bio })),
-      setHourlyRate: (rate) => setProfile((prev) => ({ ...prev, hourlyRate: rate })),
+      setHourlyRate: (rate) =>
+        setProfile((prev) => ({ ...prev, hourlyRate: rate })),
       setDetails: (updates) =>
         setProfile((prev) => ({
           ...prev,
@@ -130,10 +142,12 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
         })),
       resetProfile: () => setProfile(initialProfile),
     }),
-    [profile]
+    [profile],
   );
 
-  return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>;
+  return (
+    <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>
+  );
 };
 
 export const useProfile = (): ProfileContextType => {

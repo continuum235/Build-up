@@ -15,6 +15,7 @@ export const setI18nConfig = (locale: string): void => {
   i18n.locale = locale;
 };
 
-export const t = (scope: string, options?: any): string => i18n.t(scope, options);
+export const t = (scope: string, options?: any): string =>
+  i18n.t(scope, options);
 
 export default i18n;

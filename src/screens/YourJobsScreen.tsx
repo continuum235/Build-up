@@ -44,7 +44,7 @@ interface JobCardData {
 const buildJobCard = (
   job: (typeof jobsData.jobs)[number],
   status: JobStatus,
-  showChat: boolean
+  showChat: boolean,
 ): JobCardData => ({
   id: job.id,
   status,
@@ -125,16 +125,24 @@ export default ({ navigation }: YourJobsScreenProps) => {
   };
 
   const renderJobCard = (job: JobCardData) => {
-    const localizedJob = job.source.translations[currentLanguage] ?? job.source.translations.en;
+    const localizedJob =
+      job.source.translations[currentLanguage] ?? job.source.translations.en;
     return (
       <TouchableOpacity
         key={`${activeTab}-${job.id}-${job.status}`}
         style={styles.jobCard}
         activeOpacity={0.8}
-        onPress={() => navigation.navigate(routes.jobDetails, { jobId: job.id })}
+        onPress={() =>
+          navigation.navigate(routes.jobDetails, { jobId: job.id })
+        }
       >
         <View style={styles.statusRow}>
-          <View style={[styles.statusDot, { backgroundColor: getStatusColor(job.status) }]} />
+          <View
+            style={[
+              styles.statusDot,
+              { backgroundColor: getStatusColor(job.status) },
+            ]}
+          />
           <Text style={styles.statusText}>{getStatusLabel(job.status)}</Text>
         </View>
 
@@ -144,27 +152,42 @@ export default ({ navigation }: YourJobsScreenProps) => {
           <Text style={styles.companyName}>{job.company}</Text>
           {job.verified && (
             <View style={styles.verifiedBadge}>
-              <Image source={VerifiedIcon} style={styles.verifiedIcon} resizeMode="contain" />
-              <Text style={styles.verifiedText}>{t("yourJobs.userVerified")}</Text>
+              <Image
+                source={VerifiedIcon}
+                style={styles.verifiedIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.verifiedText}>
+                {t("yourJobs.userVerified")}
+              </Text>
             </View>
           )}
         </View>
 
         <View style={styles.locationBudgetRow}>
           <View style={styles.locationWrapper}>
-            <Image source={LocationIcon} style={styles.locationPin} resizeMode="contain" />
+            <Image
+              source={LocationIcon}
+              style={styles.locationPin}
+              resizeMode="contain"
+            />
             <Text style={styles.locationText} numberOfLines={1}>
               {job.location}
             </Text>
           </View>
           <Text style={styles.budgetLabel}>
-            {t("yourJobs.budget")} <Text style={styles.budgetValue}>{job.budget}</Text>
+            {t("yourJobs.budget")}{" "}
+            <Text style={styles.budgetValue}>{job.budget}</Text>
           </Text>
         </View>
 
         {job.showChat && (
           <TouchableOpacity style={styles.chatButton} activeOpacity={0.8}>
-            <Image source={ChatIcon} style={styles.chatIcon} resizeMode="contain" />
+            <Image
+              source={ChatIcon}
+              style={styles.chatIcon}
+              resizeMode="contain"
+            />
             <Text style={styles.chatButtonText}>
               {t("yourJobs.chatWith", { company: job.company })}
             </Text>
@@ -184,8 +207,17 @@ export default ({ navigation }: YourJobsScreenProps) => {
 
       <View style={styles.tabsContainer}>
         {(Object.keys(jobsByTab) as JobTab[]).map((tab) => (
-          <TouchableOpacity key={tab} style={styles.tabButton} onPress={() => setActiveTab(tab)}>
-            <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+          <TouchableOpacity
+            key={tab}
+            style={styles.tabButton}
+            onPress={() => setActiveTab(tab)}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === tab && styles.tabTextActive,
+              ]}
+            >
               {getTabLabel(tab)}
             </Text>
             {activeTab === tab && <View style={styles.activeIndicator} />}

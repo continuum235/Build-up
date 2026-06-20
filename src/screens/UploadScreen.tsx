@@ -46,7 +46,9 @@ const UploadScreen: React.FC = () => {
           resizeMode="contain"
           style={[styles.uploadIcon, uploaded && styles.uploadIconActive]}
         />
-        <Text style={[styles.uploadBtnText, uploaded && styles.uploadBtnTextActive]}>
+        <Text
+          style={[styles.uploadBtnText, uploaded && styles.uploadBtnTextActive]}
+        >
           {uploaded ? t("common.uploaded") : t("common.upload")}
         </Text>
       </TouchableOpacity>
@@ -72,7 +74,10 @@ const UploadScreen: React.FC = () => {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
         <View style={styles.heroCard}>
           <Image
             source={require("../../assets/Search.png")}

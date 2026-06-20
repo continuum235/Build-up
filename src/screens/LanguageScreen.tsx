@@ -82,7 +82,11 @@ const LanguageScreen: React.FC = () => {
 
           <View style={styles.chipInputContainer}>
             {languages.map((lang) => (
-              <TouchableOpacity key={lang} style={styles.chip} onPress={() => removeLanguage(lang)}>
+              <TouchableOpacity
+                key={lang}
+                style={styles.chip}
+                onPress={() => removeLanguage(lang)}
+              >
                 <Text style={styles.chipText}>{lang}</Text>
                 <Image
                   source={require("../../assets/Drop-down-arrow.png")}
@@ -114,7 +118,9 @@ const LanguageScreen: React.FC = () => {
                 onPress={handleAddLanguage}
                 disabled={!inputText.trim()}
               >
-                <Text style={styles.addLanguageButtonText}>{t("languages.addButton")}</Text>
+                <Text style={styles.addLanguageButtonText}>
+                  {t("languages.addButton")}
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -136,7 +142,10 @@ const LanguageScreen: React.FC = () => {
       <View style={styles.bottomNav}>
         <Text style={styles.stepText}>3/6</Text>
         <View style={{ flexDirection: "row" }}>
-          <TouchableOpacity style={styles.arrowButton} onPress={() => navigation.goBack()}>
+          <TouchableOpacity
+            style={styles.arrowButton}
+            onPress={() => navigation.goBack()}
+          >
             <Image
               source={require("../../assets/Back-button.png")}
               style={styles.navIcon}

@@ -34,7 +34,10 @@ const LanguageSelectionScreen: React.FC = () => {
             <Text style={styles.backIconText}>U</Text>
           </View>
         </TouchableOpacity> */}
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => navigation.goBack()}
+        >
           <Image
             source={require("../../assets/Back-button.png")}
             style={styles.backIcon}
@@ -45,25 +48,40 @@ const LanguageSelectionScreen: React.FC = () => {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.textSection}>
           <Text style={styles.mainHeading}>{t("languageSelection.title")}</Text>
-          <Text style={styles.subHeading}>{t("languageSelection.subtitle")}</Text>
+          <Text style={styles.subHeading}>
+            {t("languageSelection.subtitle")}
+          </Text>
         </View>
 
         <View style={styles.cardSection}>
           <TouchableOpacity
-            style={[styles.languageCard, language === "en" && styles.languageCardSelected]}
+            style={[
+              styles.languageCard,
+              language === "en" && styles.languageCardSelected,
+            ]}
             onPress={() => setLanguage("en")}
           >
-            <Text style={styles.languageTitle}>{t("languageSelection.english")}</Text>
+            <Text style={styles.languageTitle}>
+              {t("languageSelection.english")}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.languageCard, language === "hi" && styles.languageCardSelected]}
+            style={[
+              styles.languageCard,
+              language === "hi" && styles.languageCardSelected,
+            ]}
             onPress={() => setLanguage("hi")}
           >
-            <Text style={styles.languageTitle}>{t("languageSelection.hindi")}</Text>
+            <Text style={styles.languageTitle}>
+              {t("languageSelection.hindi")}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -73,7 +91,9 @@ const LanguageSelectionScreen: React.FC = () => {
           style={styles.primaryButton}
           onPress={() => navigation.navigate(nextRoute)}
         >
-          <Text style={styles.primaryButtonText}>{t("languageSelection.continue")}</Text>
+          <Text style={styles.primaryButtonText}>
+            {t("languageSelection.continue")}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

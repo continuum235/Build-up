@@ -67,7 +67,10 @@ const RoleTypeScreen: React.FC = () => {
         <View style={styles.cardsSection}>
           <TouchableOpacity
             activeOpacity={0.8}
-            style={[styles.card, selectedRole === "jobSeeker" && styles.cardSelected]}
+            style={[
+              styles.card,
+              selectedRole === "jobSeeker" && styles.cardSelected,
+            ]}
             onPress={() => handleSelect("jobSeeker")}
           >
             <Image
@@ -76,14 +79,19 @@ const RoleTypeScreen: React.FC = () => {
               style={styles.cardIcon}
             />
             <View style={styles.cardTextContent}>
-              <Text style={styles.cardTitle}>{t("roleType.jobSeekerTitle")}</Text>
+              <Text style={styles.cardTitle}>
+                {t("roleType.jobSeekerTitle")}
+              </Text>
               <Text style={styles.cardDesc}>{t("roleType.jobSeekerDesc")}</Text>
             </View>
           </TouchableOpacity>
 
           <TouchableOpacity
             activeOpacity={0.8}
-            style={[styles.card, selectedRole === "employer" && styles.cardSelected]}
+            style={[
+              styles.card,
+              selectedRole === "employer" && styles.cardSelected,
+            ]}
             onPress={() => handleSelect("employer")}
           >
             <Image
@@ -92,7 +100,9 @@ const RoleTypeScreen: React.FC = () => {
               style={styles.cardIcon}
             />
             <View style={styles.cardTextContent}>
-              <Text style={styles.cardTitle}>{t("roleType.employerTitle")}</Text>
+              <Text style={styles.cardTitle}>
+                {t("roleType.employerTitle")}
+              </Text>
               <Text style={styles.cardDesc}>{t("roleType.employerDesc")}</Text>
             </View>
           </TouchableOpacity>

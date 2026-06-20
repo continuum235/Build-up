@@ -90,7 +90,10 @@ const RoleTitleScreen: React.FC = () => {
       <View style={styles.bottomNav}>
         <Text style={styles.stepText}>2/6</Text>
         <View style={{ flexDirection: "row" }}>
-          <TouchableOpacity style={styles.arrowButton} onPress={() => navigation.goBack()}>
+          <TouchableOpacity
+            style={styles.arrowButton}
+            onPress={() => navigation.goBack()}
+          >
             <Text style={styles.arrowText}>{"<"}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.arrowButton} onPress={handleNext}>

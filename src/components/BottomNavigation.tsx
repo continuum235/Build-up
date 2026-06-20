@@ -12,20 +12,35 @@ const ProfileIcon = require("../../assets/Profile-logo.png");
 const NotificationIcon = require("../../assets/notication.png");
 const MessageIcon = require("../../assets/message.png");
 
-type BottomTabId = "findJobs" | "yourJobs" | "profile" | "notifications" | "messages";
+type BottomTabId =
+  | "findJobs"
+  | "yourJobs"
+  | "profile"
+  | "notifications"
+  | "messages";
 
 interface BottomNavigationProps {
   navigation: any;
   activeTab: BottomTabId;
 }
 
-export default function BottomNavigation({ navigation, activeTab }: BottomNavigationProps) {
-  const renderIcon = (tabId: BottomTabId, isActive: boolean): React.ReactNode => {
+export default function BottomNavigation({
+  navigation,
+  activeTab,
+}: BottomNavigationProps) {
+  const renderIcon = (
+    tabId: BottomTabId,
+    isActive: boolean,
+  ): React.ReactNode => {
     const iconTint = isActive ? styles.navIconActive : styles.navIconInactive;
     switch (tabId) {
       case "findJobs":
         return (
-          <Image source={SearchIcon} style={[styles.navIconImage, iconTint]} resizeMode="contain" />
+          <Image
+            source={SearchIcon}
+            style={[styles.navIconImage, iconTint]}
+            resizeMode="contain"
+          />
         );
       case "yourJobs":
         return (
@@ -91,10 +106,17 @@ export default function BottomNavigation({ navigation, activeTab }: BottomNaviga
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         return (
-          <TouchableOpacity key={tab.id} style={styles.navItem} onPress={() => handlePress(tab.id)}>
+          <TouchableOpacity
+            key={tab.id}
+            style={styles.navItem}
+            onPress={() => handlePress(tab.id)}
+          >
             {renderIcon(tab.id, isActive)}
             <Text
-              style={[styles.navText, isActive ? styles.navTextActive : styles.navTextInactive]}
+              style={[
+                styles.navText,
+                isActive ? styles.navTextActive : styles.navTextInactive,
+              ]}
             >
               {tab.label}
             </Text>

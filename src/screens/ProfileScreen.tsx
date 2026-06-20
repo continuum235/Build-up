@@ -1,5 +1,12 @@
 import React from "react";
-import { View, ScrollView, Text, Image, StyleSheet, StatusBar } from "react-native";
+import {
+  View,
+  ScrollView,
+  Text,
+  Image,
+  StyleSheet,
+  StatusBar,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   widthPercentageToDP as wp,
@@ -18,7 +25,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const { t } = useLanguage();
   const isEmployer = profile.roleType === "employer";
   const displayName = profile.auth.name || "User";
-  const location = [profile.details.city, profile.details.country].filter(Boolean).join(", ");
+  const location = [profile.details.city, profile.details.country]
+    .filter(Boolean)
+    .join(", ");
 
   return (
     <SafeAreaView style={styles.container}>
@@ -28,14 +37,21 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         <Text style={styles.headerTitle}>{t("profile.viewTitle")}</Text>
       </View>
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
         <View style={styles.profileHeader}>
           <View style={styles.avatarCircle}>
-            <Text style={styles.avatarText}>{displayName.charAt(0).toUpperCase()}</Text>
+            <Text style={styles.avatarText}>
+              {displayName.charAt(0).toUpperCase()}
+            </Text>
           </View>
           <View style={styles.profileIntro}>
             <Text style={styles.name}>{displayName}</Text>
-            <Text style={styles.role}>{profile.roleTitle || t("profile.roleFallback")}</Text>
+            <Text style={styles.role}>
+              {profile.roleTitle || t("profile.roleFallback")}
+            </Text>
             <Text style={styles.type}>
               {isEmployer ? t("profile.hirer") : t("profile.employee")}
             </Text>
@@ -44,23 +60,33 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t("profile.detailsTitle")}</Text>
-          <Text style={styles.detailText}>{location || t("profile.locationFallback")}</Text>
-          <Text style={styles.detailText}>{profile.auth.email || t("profile.emailFallback")}</Text>
+          <Text style={styles.detailText}>
+            {location || t("profile.locationFallback")}
+          </Text>
+          <Text style={styles.detailText}>
+            {profile.auth.email || t("profile.emailFallback")}
+          </Text>
         </View>
 
         {!isEmployer && (
           <>
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{t("profile.skillsTitle")}</Text>
+              <Text style={styles.sectionTitle}>
+                {t("profile.skillsTitle")}
+              </Text>
               <Text style={styles.detailText}>
-                {profile.skills.length ? profile.skills.join(", ") : t("profile.skillsFallback")}
+                {profile.skills.length
+                  ? profile.skills.join(", ")
+                  : t("profile.skillsFallback")}
               </Text>
             </View>
 
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>{t("profile.rateTitle")}</Text>
               <Text style={styles.detailText}>
-                {profile.hourlyRate ? `₹${profile.hourlyRate}/hr` : t("profile.rateFallback")}
+                {profile.hourlyRate
+                  ? `₹${profile.hourlyRate}/hr`
+                  : t("profile.rateFallback")}
               </Text>
             </View>
           </>
@@ -72,14 +98,25 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             {Object.entries(profile.documents).map(([key, uploaded]) => (
               <View
                 key={key}
-                style={[styles.documentBadge, uploaded && styles.documentBadgeActive]}
+                style={[
+                  styles.documentBadge,
+                  uploaded && styles.documentBadgeActive,
+                ]}
               >
                 <Image
                   source={require("../../assets/Upload.png")}
                   resizeMode="contain"
-                  style={[styles.documentIcon, uploaded && styles.documentIconActive]}
+                  style={[
+                    styles.documentIcon,
+                    uploaded && styles.documentIconActive,
+                  ]}
                 />
-                <Text style={[styles.documentText, uploaded && styles.documentTextActive]}>
+                <Text
+                  style={[
+                    styles.documentText,
+                    uploaded && styles.documentTextActive,
+                  ]}
+                >
                   {uploaded ? t("common.uploaded") : t("common.upload")}
                 </Text>
               </View>
