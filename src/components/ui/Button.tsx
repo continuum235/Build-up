@@ -4,6 +4,7 @@ import {
   Text,
   ActivityIndicator,
   TouchableOpacityProps,
+  StyleSheet,
 } from "react-native";
 
 interface ButtonProps extends TouchableOpacityProps {
@@ -11,21 +12,6 @@ interface ButtonProps extends TouchableOpacityProps {
   variant?: "primary" | "secondary" | "outline" | "social";
   loading?: boolean;
 }
-
-const variantStyles = {
-  primary: "bg-[#1E1E1E] rounded-lg py-[14px]",
-  secondary: "bg-[#965541] rounded-lg py-[14px]",
-  outline: "border border-[#1E1E1E] rounded-[30px] py-[12px]",
-  social:
-    "border border-[#1E1E1E] rounded-[30px] py-[12px] flex-row justify-center",
-};
-
-const textStyles = {
-  primary: "text-white text-center font-bold text-[16px]",
-  secondary: "text-white text-center font-bold text-[16px]",
-  outline: "text-black text-center font-bold text-[14px]",
-  social: "text-black text-center font-bold text-[14px]",
-};
 
 export default function Button({
   title,
@@ -38,7 +24,7 @@ export default function Button({
 }: ButtonProps) {
   return (
     <TouchableOpacity
-      className={`w-full items-center ${variantStyles[variant]} ${disabled ? "opacity-50" : ""} ${className}`}
+      style={[styles.button, styles[variant], disabled && styles.disabled]}
       disabled={disabled || loading}
       activeOpacity={0.7}
       {...props}
@@ -48,9 +34,63 @@ export default function Button({
       ) : (
         <>
           {children}
-          <Text className={textStyles[variant]}>{title}</Text>
+          <Text style={[styles.text, styles[`text_${variant}`]]}>{title}</Text>
         </>
       )}
     </TouchableOpacity>
   );
 }
+
+const styles = StyleSheet.create({
+  button: {
+    width: "100%",
+    alignItems: "center",
+  },
+  primary: {
+    backgroundColor: "#1E1E1E",
+    borderRadius: 8,
+    paddingVertical: 14,
+  },
+  secondary: {
+    backgroundColor: "#965541",
+    borderRadius: 8,
+    paddingVertical: 14,
+  },
+  outline: {
+    borderWidth: 1,
+    borderColor: "#1E1E1E",
+    borderRadius: 30,
+    paddingVertical: 12,
+  },
+  social: {
+    borderWidth: 1,
+    borderColor: "#1E1E1E",
+    borderRadius: 30,
+    paddingVertical: 12,
+    flexDirection: "row",
+    justifyContent: "center",
+  },
+  disabled: {
+    opacity: 0.5,
+  },
+  text: {
+    textAlign: "center",
+    fontWeight: "bold",
+  },
+  text_primary: {
+    color: "white",
+    fontSize: 16,
+  },
+  text_secondary: {
+    color: "white",
+    fontSize: 16,
+  },
+  text_outline: {
+    color: "black",
+    fontSize: 14,
+  },
+  text_social: {
+    color: "black",
+    fontSize: 14,
+  },
+});

@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
+  StyleSheet,
 } from "react-native";
 import {
   widthPercentageToDP as wp,
@@ -39,62 +40,34 @@ const LoginScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F2E1DA]">
+    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       <KeyboardSafeWrapper>
         <TouchableOpacity
-          className="pl-[5%] pt-[2%] w-[20%]"
-          style={{ padding: wp("5%"), marginTop: hp("2%") }}
+          style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
           <Image
             source={require("../../assets/Back-button.png")}
-            className="w-[8%] h-[8%]"
-            style={{ width: wp("8%"), height: wp("8%") }}
+            style={styles.backIcon}
             resizeMode="contain"
           />
         </TouchableOpacity>
 
-        <View className="items-center px-[10%]">
-          <View className="flex-row mb-[4%]" style={{ marginBottom: hp("4%") }}>
-            <View
-              className="bg-[#965541] px-[2%]"
-              style={{ paddingHorizontal: wp("2%") }}
-            >
-              <Text
-                className="text-white font-bold"
-                style={{ fontSize: wp("10%") }}
-              >
-                build
-              </Text>
+        <View style={styles.contentContainer}>
+          <View style={styles.logoContainer}>
+            <View style={styles.logoBuild}>
+              <Text style={styles.logoBuildText}>build</Text>
             </View>
-            <View
-              className="border-2 border-[#965541] px-[2%] ml-[1%]"
-              style={{ paddingHorizontal: wp("2%"), marginLeft: wp("1%") }}
-            >
-              <Text
-                className="text-[#965541] font-bold"
-                style={{ fontSize: wp("10%") }}
-              >
-                up
-              </Text>
+            <View style={styles.logoUp}>
+              <Text style={styles.logoUpText}>up</Text>
             </View>
           </View>
 
-          <Text
-            className="font-bold text-[#1E1E1E]"
-            style={{ fontSize: wp("7.5%") }}
-          >
-            {t("auth.welcomeBack")}
-          </Text>
-          <Text
-            className="text-[#666] mb-[5%]"
-            style={{ fontSize: wp("4%"), marginBottom: hp("5%") }}
-          >
-            {t("auth.loginSubtitle")}
-          </Text>
+          <Text style={styles.welcomeTitle}>{t("auth.welcomeBack")}</Text>
+          <Text style={styles.welcomeSubtitle}>{t("auth.loginSubtitle")}</Text>
 
-          <View className="w-full">
+          <View style={styles.inputContainer}>
             <TextInput
               placeholder={t("auth.emailPlaceholder")}
               value={email}
@@ -108,14 +81,8 @@ const LoginScreen: React.FC = () => {
               onChangeText={setPassword}
               secureTextEntry
             />
-            <TouchableOpacity
-              className="self-end mb-[4%]"
-              style={{ marginBottom: hp("4%") }}
-            >
-              <Text
-                className="text-[#965541] font-semibold"
-                style={{ fontSize: wp("3.5%") }}
-              >
+            <TouchableOpacity style={styles.forgotPasswordButton}>
+              <Text style={styles.forgotPasswordText}>
                 {t("auth.forgotPassword")}
               </Text>
             </TouchableOpacity>
@@ -127,51 +94,28 @@ const LoginScreen: React.FC = () => {
             disabled={!canSubmit}
           />
 
-          <View
-            className="flex-row items-center mb-[3%]"
-            style={{ marginBottom: hp("3%") }}
-          >
-            <View className="flex-1 h-[1px] bg-[#D8DADC]" />
-            <Text
-              className="mx-[3%] text-[#A4A9B6]"
-              style={{ fontSize: wp("3.5%") }}
-            >
-              {t("auth.orLoginWith")}
-            </Text>
-            <View className="flex-1 h-[1px] bg-[#D8DADC]" />
+          <View style={styles.dividerContainer}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>{t("auth.orLoginWith")}</Text>
+            <View style={styles.dividerLine} />
           </View>
 
-          <View
-            className="flex-row justify-center mb-[5%]"
-            style={{ marginBottom: hp("5%") }}
-          >
-            <TouchableOpacity
-              className="bg-white rounded-full items-center justify-center mx-[3%]"
-              style={{
-                width: wp("14%"),
-                height: wp("14%"),
-                elevation: 3,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-              }}
-            >
+          <View style={styles.socialContainer}>
+            <TouchableOpacity style={styles.socialButton}>
               <Image
                 source={require("../../assets/Google-logo.png")}
-                style={{ width: wp("6%"), height: wp("6%") }}
+                style={styles.socialIcon}
               />
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity
-            className="p-[2%]"
+            style={styles.signupLink}
             onPress={() => navigation.navigate(routes.signup)}
           >
-            <Text className="text-[#666]" style={{ fontSize: wp("3.5%") }}>
+            <Text style={styles.signupText}>
               {t("auth.noAccount")}{" "}
-              <Text className="text-[#007AFF] font-bold">
-                {t("auth.signupLink")}
-              </Text>
+              <Text style={styles.signupLinkText}>{t("auth.signupLink")}</Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -179,5 +123,119 @@ const LoginScreen: React.FC = () => {
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F2E1DA",
+  },
+  backButton: {
+    paddingLeft: wp("5%"),
+    paddingTop: hp("2%"),
+    width: wp("20%"),
+  },
+  backIcon: {
+    width: wp("8%"),
+    height: wp("8%"),
+  },
+  contentContainer: {
+    alignItems: "center",
+    paddingHorizontal: wp("10%"),
+  },
+  logoContainer: {
+    flexDirection: "row",
+    marginBottom: hp("4%"),
+  },
+  logoBuild: {
+    backgroundColor: "#965541",
+    paddingHorizontal: wp("2%"),
+  },
+  logoBuildText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: wp("10%"),
+  },
+  logoUp: {
+    borderWidth: 2,
+    borderColor: "#965541",
+    paddingHorizontal: wp("2%"),
+    marginLeft: wp("1%"),
+  },
+  logoUpText: {
+    color: "#965541",
+    fontWeight: "bold",
+    fontSize: wp("10%"),
+  },
+  welcomeTitle: {
+    fontWeight: "bold",
+    color: "#1E1E1E",
+    fontSize: wp("7.5%"),
+  },
+  welcomeSubtitle: {
+    color: "#666",
+    fontSize: wp("4%"),
+    marginBottom: hp("5%"),
+  },
+  inputContainer: {
+    width: "100%",
+  },
+  forgotPasswordButton: {
+    alignSelf: "flex-end",
+    marginBottom: hp("4%"),
+  },
+  forgotPasswordText: {
+    color: "#965541",
+    fontWeight: "600",
+    fontSize: wp("3.5%"),
+  },
+  dividerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: hp("3%"),
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#D8DADC",
+  },
+  dividerText: {
+    marginHorizontal: wp("3%"),
+    color: "#A4A9B6",
+    fontSize: wp("3.5%"),
+  },
+  socialContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: hp("5%"),
+  },
+  socialButton: {
+    width: wp("14%"),
+    height: wp("14%"),
+    borderRadius: wp("7%"),
+    backgroundColor: "white",
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: wp("3%"),
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+  },
+  socialIcon: {
+    width: wp("6%"),
+    height: wp("6%"),
+  },
+  signupLink: {
+    paddingHorizontal: wp("2%"),
+  },
+  signupText: {
+    color: "#666",
+    fontSize: wp("3.5%"),
+  },
+  signupLinkText: {
+    color: "#007AFF",
+    fontWeight: "bold",
+  },
+});
 
 export default LoginScreen;

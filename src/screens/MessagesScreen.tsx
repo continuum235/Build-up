@@ -8,6 +8,8 @@ import {
   StatusBar,
   KeyboardAvoidingView,
   Platform,
+  StyleSheet,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -77,107 +79,60 @@ export default function MessagesScreen({ navigation }: MessageScreenProps) {
   ];
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
       <KeyboardAvoidingView
-        className="flex-1"
+        style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <View
-          className="flex-row items-center justify-center py-[2.5%] px-[6%]"
-          style={{ paddingVertical: hp("2.5%"), paddingHorizontal: wp("6%") }}
-        >
+        {/* HEADER */}
+        <View style={styles.header}>
           {activeChat ? (
             <>
               <TouchableOpacity
-                className="absolute left-[6%] z-10"
-                style={{ left: wp("6%") }}
+                style={styles.backButton}
                 onPress={() => setActiveChat(null)}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <Text
-                  className="font-bold text-[#1E1E1E]"
-                  style={{ fontSize: wp("6%") }}
-                >
-                  〈
-                </Text>
+                <Image
+                  source={require("../../assets/Back-button.png")}
+                  style={styles.backIcon}
+                />
               </TouchableOpacity>
-              <Text
-                className="font-bold text-[#1E1E1E]"
-                style={{ fontSize: wp("4.5%") }}
-              >
-                {activeChat}
-              </Text>
-              <View style={{ width: wp("6%") }} />
+              <Text style={styles.chatTitle}>{activeChat}</Text>
+              <View style={styles.backButtonSpacer} />
             </>
           ) : (
-            <Text
-              className="font-bold text-[#1E1E1E]"
-              style={{ fontSize: wp("5.5%") }}
-            >
-              Messages
-            </Text>
+            <Text style={styles.pageTitle}>Messages</Text>
           )}
         </View>
 
+        {/* DYNAMIC CONTENT AREA */}
         {!activeChat ? (
+          // INBOX LIST VIEW
           <ScrollView
-            className="flex-1"
-            contentContainerStyle={{
-              paddingHorizontal: wp("6%"),
-              paddingBottom: hp("3%"),
-            }}
+            style={styles.scrollView}
+            contentContainerStyle={styles.inboxScrollContent}
             showsVerticalScrollIndicator={false}
           >
             {inboxMessages.map((msg, index) => (
               <TouchableOpacity
                 key={`${msg.id}-${index}`}
-                className="flex-row items-center py-[2%] border-b border-[#F0F0F0]"
-                style={{ paddingVertical: hp("2%") }}
+                style={styles.messageRow}
                 onPress={() => setActiveChat("Kalpataru")}
               >
-                <View
-                  className="bg-[#D8DADC] mr-[4%]"
-                  style={{
-                    width: wp("13%"),
-                    height: wp("13%"),
-                    borderRadius: wp("6.5%"),
-                    marginRight: wp("4%"),
-                  }}
-                />
-                <View className="flex-1">
-                  <View
-                    className="flex-row justify-between items-center mb-[0.5%]"
-                    style={{ marginBottom: hp("0.5%") }}
-                  >
-                    <Text
-                      className="font-bold text-[#965541]"
-                      style={{ fontSize: wp("4.2%") }}
-                    >
-                      {msg.name}
-                    </Text>
-                    <View className="flex-row items-center">
-                      <Text
-                        className="text-[#A4A9B6]"
-                        style={{ fontSize: wp("3.2%") }}
-                      >
-                        {msg.time}
-                      </Text>
-                      <Text
-                        className="text-[#A4A9B6] ml-[1%] mt-[0.2%]"
-                        style={{ fontSize: wp("3.5%") }}
-                      >
-                        {" "}
-                        〉
-                      </Text>
+                <View style={styles.avatarPlaceholder} />
+
+                <View style={styles.messageDetails}>
+                  <View style={styles.messageHeader}>
+                    <Text style={styles.senderName}>{msg.name}</Text>
+                    <View style={styles.timeChevronWrap}>
+                      <Text style={styles.timeText}>{msg.time}</Text>
+                      <Text style={styles.chevronIcon}> 〉</Text>
                     </View>
                   </View>
-                  <Text
-                    className="text-[#A4A9B6]"
-                    style={{ fontSize: wp("3.5%"), lineHeight: wp("5%") }}
-                    numberOfLines={2}
-                  >
+                  <Text style={styles.previewText} numberOfLines={2}>
                     {msg.preview}
                   </Text>
                 </View>
@@ -185,36 +140,27 @@ export default function MessagesScreen({ navigation }: MessageScreenProps) {
             ))}
           </ScrollView>
         ) : (
-          <View className="flex-1">
+          // ACTIVE CHAT VIEW
+          <View style={styles.chatContainer}>
             <ScrollView
-              className="flex-1"
-              contentContainerStyle={{
-                paddingHorizontal: wp("5%"),
-                paddingTop: hp("2%"),
-                paddingBottom: hp("4%"),
-              }}
+              style={styles.scrollView}
+              contentContainerStyle={styles.chatScrollContent}
               showsVerticalScrollIndicator={false}
             >
               {chatHistory.map((chat) => (
                 <View
                   key={chat.id}
-                  className={`max-w-[80%] px-[4%] mb-[2%] ${chat.sender === "me" ? "self-end bg-[#965541]" : "self-start bg-[#E5E5EA]"}`}
-                  style={{
-                    paddingVertical: hp("1.5%"),
-                    paddingHorizontal: wp("4%"),
-                    marginBottom: hp("2%"),
-                    borderTopLeftRadius: wp("4%"),
-                    borderTopRightRadius: wp("4%"),
-                    borderBottomLeftRadius: chat.sender === "me" ? wp("4%") : 0,
-                    borderBottomRightRadius:
-                      chat.sender === "me" ? 0 : wp("4%"),
-                  }}
+                  style={[
+                    styles.chatBubble,
+                    chat.sender === "me" ? styles.bubbleMe : styles.bubbleThem,
+                  ]}
                 >
                   <Text
-                    className={
-                      chat.sender === "me" ? "text-white" : "text-[#1E1E1E]"
+                    style={
+                      chat.sender === "me"
+                        ? styles.chatTextMe
+                        : styles.chatTextThem
                     }
-                    style={{ fontSize: wp("4%"), lineHeight: wp("5.8%") }}
                   >
                     {chat.text}
                   </Text>
@@ -222,51 +168,19 @@ export default function MessagesScreen({ navigation }: MessageScreenProps) {
               ))}
             </ScrollView>
 
-            <View
-              className="px-[5%] py-[1.5%] bg-white"
-              style={{
-                paddingHorizontal: wp("5%"),
-                paddingVertical: hp("1.5%"),
-              }}
-            >
-              <View
-                className="flex-row items-end border border-[#D8DADC] rounded-[30px] px-[4%] py-[0.8%] bg-white"
-                style={{
-                  borderRadius: wp("6%"),
-                  paddingHorizontal: wp("4%"),
-                  paddingVertical: hp("0.8%"),
-                }}
-              >
+            {/* CHAT INPUT AREA */}
+            <View style={styles.inputArea}>
+              <View style={styles.inputWrapper}>
                 <TextInput
-                  className="flex-1 text-[#1E1E1E]"
-                  style={{
-                    fontSize: wp("4%"),
-                    minHeight: hp("4.5%"),
-                    maxHeight: hp("12%"),
-                    paddingTop: hp("1%"),
-                  }}
+                  style={styles.textInput}
                   placeholder="Write your message"
                   placeholderTextColor="#A4A9B6"
                   value={messageText}
                   onChangeText={setMessageText}
                   multiline
                 />
-                <TouchableOpacity
-                  className="bg-[#965541] rounded-full items-center justify-center ml-[2%] mb-[0.3%]"
-                  style={{
-                    width: wp("8%"),
-                    height: wp("8%"),
-                    borderRadius: wp("4%"),
-                    marginLeft: wp("2%"),
-                    marginBottom: hp("0.3%"),
-                  }}
-                >
-                  <Text
-                    className="text-white font-bold ml-[0.5%]"
-                    style={{ fontSize: wp("3.5%") }}
-                  >
-                    〉
-                  </Text>
+                <TouchableOpacity style={styles.sendButton}>
+                  <Text style={styles.sendIcon}>〉</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -278,3 +192,184 @@ export default function MessagesScreen({ navigation }: MessageScreenProps) {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+
+  /* HEADER STYLES */
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: hp("2.5%"),
+    paddingHorizontal: wp("6%"),
+  },
+  pageTitle: {
+    color: "#1E1E1E",
+    fontSize: wp("5.5%"),
+    fontWeight: "bold",
+  },
+  backButton: {
+    position: "absolute",
+    left: wp("6%"),
+    zIndex: 10,
+  },
+  backIcon: {
+    width: wp("6%"),
+    height: wp("6%"),
+    resizeMode: "contain",
+  },
+  chatTitle: {
+    color: "#1E1E1E",
+    fontSize: wp("4.5%"),
+    fontWeight: "bold",
+  },
+  backButtonSpacer: {
+    width: wp("6%"),
+  },
+
+  /* GENERAL SCROLL */
+  scrollView: {
+    flex: 1,
+  },
+
+  /* INBOX LIST STYLES */
+  inboxScrollContent: {
+    paddingHorizontal: wp("6%"),
+    paddingBottom: hp("12%"),
+  },
+  messageRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: hp("2%"),
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
+  avatarPlaceholder: {
+    width: wp("13%"),
+    height: wp("13%"),
+    borderRadius: wp("6.5%"),
+    backgroundColor: "#D8DADC",
+    marginRight: wp("4%"),
+  },
+  messageDetails: {
+    flex: 1,
+  },
+  messageHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: hp("0.5%"),
+  },
+  senderName: {
+    color: "#965541",
+    fontSize: wp("4.2%"),
+    fontWeight: "bold",
+  },
+  timeChevronWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  timeText: {
+    color: "#A4A9B6",
+    fontSize: wp("3.2%"),
+  },
+  chevronIcon: {
+    color: "#A4A9B6",
+    fontSize: wp("3.5%"),
+    marginLeft: wp("1%"),
+    marginTop: hp("0.2%"),
+  },
+  previewText: {
+    color: "#A4A9B6",
+    fontSize: wp("3.5%"),
+    lineHeight: wp("5%"),
+  },
+
+  /* ACTIVE CHAT STYLES */
+  chatContainer: {
+    flex: 1,
+  },
+  chatScrollContent: {
+    paddingHorizontal: wp("5%"),
+    paddingTop: hp("2%"),
+    paddingBottom: hp("4%"),
+  },
+  chatBubble: {
+    maxWidth: "80%",
+    paddingVertical: hp("1.5%"),
+    paddingHorizontal: wp("4%"),
+    marginBottom: hp("2%"),
+  },
+  bubbleMe: {
+    alignSelf: "flex-end",
+    backgroundColor: "#965541",
+    borderTopLeftRadius: wp("4%"),
+    borderTopRightRadius: wp("4%"),
+    borderBottomLeftRadius: wp("4%"),
+    borderBottomRightRadius: 0,
+  },
+  bubbleThem: {
+    alignSelf: "flex-start",
+    backgroundColor: "#E5E5EA",
+    borderTopLeftRadius: wp("4%"),
+    borderTopRightRadius: wp("4%"),
+    borderBottomRightRadius: wp("4%"),
+    borderBottomLeftRadius: 0,
+  },
+  chatTextMe: {
+    color: "#FFFFFF",
+    fontSize: wp("4%"),
+    lineHeight: wp("5.8%"),
+  },
+  chatTextThem: {
+    color: "#1E1E1E",
+    fontSize: wp("4%"),
+    lineHeight: wp("5.8%"),
+  },
+
+  /* CHAT INPUT AREA */
+  inputArea: {
+    paddingHorizontal: wp("5%"),
+    paddingVertical: hp("1.5%"),
+    paddingBottom: hp("12%"),
+    backgroundColor: "#FFFFFF",
+  },
+  inputWrapper: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    borderColor: "#D8DADC",
+    borderWidth: 1,
+    borderRadius: wp("6%"),
+    paddingHorizontal: wp("4%"),
+    paddingVertical: hp("0.8%"),
+    backgroundColor: "#FFFFFF",
+  },
+  textInput: {
+    flex: 1,
+    minHeight: hp("4.5%"),
+    maxHeight: hp("12%"),
+    color: "#1E1E1E",
+    fontSize: wp("4%"),
+    paddingTop: hp("1%"),
+  },
+  sendButton: {
+    width: wp("8%"),
+    height: wp("8%"),
+    borderRadius: wp("4%"),
+    backgroundColor: "#965541",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: wp("2%"),
+    marginBottom: hp("0.3%"),
+  },
+  sendIcon: {
+    color: "#FFFFFF",
+    fontSize: wp("3.5%"),
+    fontWeight: "bold",
+    marginLeft: wp("0.5%"),
+  },
+});

@@ -4,6 +4,7 @@ import {
   Text,
   TextInputProps as RNTextInputProps,
   View,
+  StyleSheet,
 } from "react-native";
 
 interface TextInputProps extends RNTextInputProps {
@@ -19,19 +20,45 @@ export default function TextInput({
   ...props
 }: TextInputProps) {
   return (
-    <View className="w-full mb-3">
-      {label && (
-        <Text className="text-[#1E1E1E] text-sm font-semibold mb-1">
-          {label}
-        </Text>
-      )}
+    <View style={styles.container}>
+      {label && <Text style={styles.label}>{label}</Text>}
       <RNTextInput
-        className={`bg-white border ${error ? "border-red-500" : "border-[#D8DADC]"} rounded-lg px-4 py-3.5 text-base text-black ${className}`}
+        style={[styles.input, error && styles.inputError, style]}
         placeholderTextColor="#A4A9B6"
-        style={style}
         {...props}
       />
-      {error && <Text className="text-red-500 text-xs mt-1">{error}</Text>}
+      {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    width: "100%",
+    marginBottom: 12,
+  },
+  label: {
+    color: "#1E1E1E",
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  input: {
+    backgroundColor: "white",
+    borderWidth: 1,
+    borderColor: "#D8DADC",
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: "black",
+  },
+  inputError: {
+    borderColor: "red",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginTop: 4,
+  },
+});
