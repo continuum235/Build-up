@@ -41,3 +41,9 @@ if using expo
 cd my-app
 npx expo start
 ```
+Lint and prettier 
+```bash
+npm run lint
+npm run lint -- --fix
+npm run format
+```
