@@ -16,7 +16,6 @@ const routes = {
   jobDetails: "jobDetails",
   yourJobs: "yourJobs",
   profile: "profile",
-  notifications: "notifications",
   messages: "messages",
 } as const;
 

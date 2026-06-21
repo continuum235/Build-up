@@ -10,15 +10,9 @@ import routes from "../navigation/routes";
 const SearchIcon = require("../../assets/Search.png");
 const YourJobsIcon = require("../../assets/yourjobs.png");
 const ProfileIcon = require("../../assets/Profile-logo.png");
-const NotificationIcon = require("../../assets/notication.png");
 const MessageIcon = require("../../assets/message.png");
 
-type BottomTabId =
-  | "findJobs"
-  | "yourJobs"
-  | "profile"
-  | "notifications"
-  | "messages";
+type BottomTabId = "findJobs" | "yourJobs" | "profile" | "messages";
 
 interface BottomNavigationProps {
   activeTab: BottomTabId;
@@ -56,14 +50,6 @@ export default function BottomNavigation({ activeTab }: BottomNavigationProps) {
             resizeMode="contain"
           />
         );
-      case "notifications":
-        return (
-          <Image
-            source={NotificationIcon}
-            style={[styles.navIconImage, iconTint]}
-            resizeMode="contain"
-          />
-        );
       case "messages":
         return (
           <Image
@@ -82,7 +68,6 @@ export default function BottomNavigation({ activeTab }: BottomNavigationProps) {
       findJobs: routes.findJobs,
       yourJobs: routes.yourJobs,
       profile: routes.profile,
-      notifications: routes.notifications,
       messages: routes.messages,
     };
     const route = routeMap[tabId];
@@ -95,7 +80,6 @@ export default function BottomNavigation({ activeTab }: BottomNavigationProps) {
     { id: "findJobs", label: "Find Jobs" },
     { id: "yourJobs", label: "Your Jobs" },
     { id: "profile", label: "Profile" },
-    { id: "notifications", label: "Notifications" },
     { id: "messages", label: "Messages" },
   ];
 
