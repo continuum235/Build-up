@@ -10,7 +10,7 @@ import { useProfile } from "../context/ProfileContext";
 
 const SearchIcon = require("../../assets/Search.png");
 const YourJobsIcon = require("../../assets/yourjobs.png");
-const ProfileIcon = require("../../assets/Profile-logo.png");
+
 const MessageIcon = require("../../assets/message.png");
 const GirlIcon = require("../../assets/Girl.png");
 
@@ -97,11 +97,13 @@ export default function BottomNavigation({ activeTab }: BottomNavigationProps) {
         );
       case "profile":
         return (
-          <Image
-            source={ProfileIcon}
-            style={[styles.navIconImage, iconTint]}
-            resizeMode="contain"
-          />
+          <View style={[styles.profileAvatar, isActive && styles.profileAvatarActive]}>
+            <Image
+              source={GirlIcon}
+              style={{ width: "100%", height: "100%" }}
+              resizeMode="cover"
+            />
+          </View>
         );
       case "messages":
         return (
