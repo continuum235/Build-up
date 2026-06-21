@@ -6,25 +6,78 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import routes from "../navigation/routes";
+import { useProfile } from "../context/ProfileContext";
 
 const SearchIcon = require("../../assets/Search.png");
 const YourJobsIcon = require("../../assets/yourjobs.png");
 const ProfileIcon = require("../../assets/Profile-logo.png");
 const MessageIcon = require("../../assets/message.png");
-
-type BottomTabId = "findJobs" | "yourJobs" | "profile" | "messages";
+const GirlIcon = require("../../assets/Girl.png");
 
 interface BottomNavigationProps {
-  activeTab: BottomTabId;
+  activeTab: string;
 }
+
+const workerTabs: { id: string; label: string }[] = [
+  { id: "findJobs", label: "Find Jobs" },
+  { id: "yourJobs", label: "Your Jobs" },
+  { id: "profile", label: "Profile" },
+  { id: "messages", label: "Messages" },
+];
+
+const hirerTabs: { id: string; label: string }[] = [
+  { id: "jobBoard", label: "Job board" },
+  { id: "profile", label: "Profile" },
+  { id: "messages", label: "Messages" },
+];
 
 export default function BottomNavigation({ activeTab }: BottomNavigationProps) {
   const navigation = useNavigation<any>();
-  const renderIcon = (
-    tabId: BottomTabId,
-    isActive: boolean,
-  ): React.ReactNode => {
+  const { profile } = useProfile();
+  const isEmployer = profile.roleType === "employer";
+  const tabs = isEmployer ? hirerTabs : workerTabs;
+
+  const renderIcon = (tabId: string, isActive: boolean): React.ReactNode => {
     const iconTint = isActive ? styles.navIconActive : styles.navIconInactive;
+
+    if (isEmployer) {
+      switch (tabId) {
+        case "jobBoard":
+          return (
+            <Image
+              source={YourJobsIcon}
+              style={[styles.navIconImage, iconTint]}
+              resizeMode="contain"
+            />
+          );
+        case "profile":
+          return (
+            <View
+              style={[
+                styles.profileAvatar,
+                isActive && styles.profileAvatarActive,
+              ]}
+            >
+              <Image
+                source={GirlIcon}
+                style={{ width: "100%", height: "100%" }}
+                resizeMode="cover"
+              />
+            </View>
+          );
+        case "messages":
+          return (
+            <Image
+              source={MessageIcon}
+              style={[styles.navIconImage, iconTint]}
+              resizeMode="contain"
+            />
+          );
+        default:
+          return null;
+      }
+    }
+
     switch (tabId) {
       case "findJobs":
         return (
@@ -63,25 +116,19 @@ export default function BottomNavigation({ activeTab }: BottomNavigationProps) {
     }
   };
 
-  const handlePress = (tabId: BottomTabId) => {
-    const routeMap: Record<BottomTabId, any> = {
+  const handlePress = (tabId: string) => {
+    const routeMap: Record<string, any> = {
       findJobs: routes.findJobs,
       yourJobs: routes.yourJobs,
       profile: routes.profile,
       messages: routes.messages,
+      jobBoard: routes.jobBoard,
     };
     const route = routeMap[tabId];
     if (route) {
       navigation.navigate(route);
     }
   };
-
-  const tabs: { id: BottomTabId; label: string }[] = [
-    { id: "findJobs", label: "Find Jobs" },
-    { id: "yourJobs", label: "Your Jobs" },
-    { id: "profile", label: "Profile" },
-    { id: "messages", label: "Messages" },
-  ];
 
   return (
     <View style={styles.bottomNav}>
@@ -146,5 +193,19 @@ const styles = StyleSheet.create({
   },
   navTextInactive: {
     color: "#A4A9B6",
+  },
+  profileAvatar: {
+    width: wp("7%"),
+    height: wp("7%"),
+    backgroundColor: "#FFD1DC",
+    borderRadius: wp("3.5%"),
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: hp("0.5%"),
+  },
+  profileAvatarActive: {
+    borderWidth: 2,
+    borderColor: "#965541",
   },
 });

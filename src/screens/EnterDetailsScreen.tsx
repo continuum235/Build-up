@@ -54,9 +54,11 @@ const EnterDetailsScreen: React.FC = () => {
 
     console.log("Profile submit:", payload);
     alert("Profile saved. Check console for details.");
+    const destRoute =
+      profile.roleType === "employer" ? routes.jobBoard : routes.profile;
     navigation.reset({
       index: 0,
-      routes: [{ name: routes.profile }],
+      routes: [{ name: destRoute }],
     });
   };
 

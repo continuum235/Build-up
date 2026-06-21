@@ -20,6 +20,7 @@ import YourJobsScreen from "../screens/YourJobsScreen";
 import JobDetailsScreen from "../screens/JobDetailsScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import MessagesScreen from "../screens/MessagesScreen";
+import JobBoardScreen from "../screens/JobBoardScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -51,6 +52,7 @@ const AppNavigator: React.FC = () => (
     <Stack.Screen name={routes.yourJobs} component={YourJobsScreen} />
     <Stack.Screen name={routes.profile} component={ProfileScreen} />
     <Stack.Screen name={routes.messages} component={MessagesScreen} />
+    <Stack.Screen name={routes.jobBoard} component={JobBoardScreen} />
     <Stack.Screen name={routes.jobDetails} component={JobDetailsScreen} />
   </Stack.Navigator>
 );
