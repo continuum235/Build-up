@@ -16,11 +16,7 @@ import BottomNavigation from "../components/BottomNavigation";
 import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
 
-interface ProfileScreenProps {
-  navigation: any;
-}
-
-const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
+const ProfileScreen: React.FC = () => {
   const { profile } = useProfile();
   const { t } = useLanguage();
   const isEmployer = profile.roleType === "employer";
@@ -125,7 +121,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      <BottomNavigation navigation={navigation} activeTab="profile" />
+      <BottomNavigation activeTab="profile" />
     </SafeAreaView>
   );
 };

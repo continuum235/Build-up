@@ -18,11 +18,7 @@ import {
 } from "react-native-responsive-screen";
 import BottomNavigation from "../components/BottomNavigation";
 
-interface MessageScreenProps {
-  navigation: any;
-}
-
-export default function MessagesScreen({ navigation }: MessageScreenProps) {
+export default function MessagesScreen() {
   const [activeChat, setActiveChat] = useState<string | null>(null);
   const [messageText, setMessageText] = useState("");
 
@@ -187,7 +183,7 @@ export default function MessagesScreen({ navigation }: MessageScreenProps) {
           </View>
         )}
 
-        <BottomNavigation navigation={navigation} activeTab="messages" />
+        <BottomNavigation activeTab="messages" />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

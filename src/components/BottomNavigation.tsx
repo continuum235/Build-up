@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -20,14 +21,11 @@ type BottomTabId =
   | "messages";
 
 interface BottomNavigationProps {
-  navigation: any;
   activeTab: BottomTabId;
 }
 
-export default function BottomNavigation({
-  navigation,
-  activeTab,
-}: BottomNavigationProps) {
+export default function BottomNavigation({ activeTab }: BottomNavigationProps) {
+  const navigation = useNavigation<any>();
   const renderIcon = (
     tabId: BottomTabId,
     isActive: boolean,

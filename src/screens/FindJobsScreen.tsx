@@ -359,7 +359,7 @@ const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {
         </View>
       )}
 
-      <BottomNavigation navigation={navigation} activeTab="findJobs" />
+      <BottomNavigation activeTab="findJobs" />
     </SafeAreaView>
   );
 };

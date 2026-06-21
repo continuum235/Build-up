@@ -243,7 +243,7 @@ const YourJobsScreen: React.FC<YourJobsScreenProps> = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      <BottomNavigation navigation={navigation} activeTab="yourJobs" />
+      <BottomNavigation activeTab="yourJobs" />
     </SafeAreaView>
   );
 };
