@@ -14,14 +14,17 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import { useNavigation } from "@react-navigation/native";
-import routes from "../navigation/routes";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import routes, { RootStackParamList } from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
 import { isValidDetails } from "../utils/validation";
 import KeyboardSafeWrapper from "../components/KeyboardSafeWrapper";
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 const EnterDetailsScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NavigationProp>();
   const { profile, setDetails } = useProfile();
   const { t } = useLanguage();
   const [country] = useState<string>(profile.details.country);

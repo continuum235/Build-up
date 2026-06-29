@@ -13,16 +13,26 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import routes, { RouteName } from "../navigation/routes";
+import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import routes, {
+  ParameterlessRouteName,
+  RootStackParamList,
+} from "../navigation/routes";
 import { useLanguage } from "../context/LanguageContext";
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type LanguageSelectionRouteProp = RouteProp<
+  RootStackParamList,
+  typeof routes.languageSelection
+>;
+
 const LanguageSelectionScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
-  const route = useRoute<any>();
+  const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<LanguageSelectionRouteProp>();
   const { language, setLanguage, t } = useLanguage();
 
-  const nextRoute: RouteName = route.params?.next || routes.login;
+  const nextRoute: ParameterlessRouteName = route.params?.next || routes.login;
 
   return (
     <SafeAreaView style={styles.container}>

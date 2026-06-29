@@ -22,4 +22,28 @@ const routes = {
 
 export type RouteName = (typeof routes)[keyof typeof routes];
 
+export type ParameterlessRouteName = Exclude<RouteName, typeof routes.jobDetails>;
+
+export type RootStackParamList = {
+  [routes.welcome]: undefined;
+  [routes.languageSelection]: { next?: ParameterlessRouteName } | undefined;
+  [routes.login]: undefined;
+  [routes.signup]: undefined;
+  [routes.roleType]: undefined;
+  [routes.upload]: undefined;
+  [routes.roleTitle]: undefined;
+  [routes.employerRoleTitle]: undefined;
+  [routes.languages]: undefined;
+  [routes.skills]: undefined;
+  [routes.bio]: undefined;
+  [routes.hourlyRate]: undefined;
+  [routes.enterDetails]: undefined;
+  [routes.findJobs]: undefined;
+  [routes.jobDetails]: { jobId: number };
+  [routes.yourJobs]: undefined;
+  [routes.profile]: undefined;
+  [routes.messages]: undefined;
+  [routes.jobBoard]: undefined;
+};
+
 export default routes;

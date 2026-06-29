@@ -1,6 +1,6 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import routes from "./routes";
+import routes, { RootStackParamList } from "./routes";
 
 import WelcomeScreen from "../screens/WelcomeScreen";
 import LanguageSelectionScreen from "../screens/LanguageSelectionScreen";
@@ -22,7 +22,7 @@ import ProfileScreen from "../screens/ProfileScreen";
 import MessagesScreen from "../screens/MessagesScreen";
 import JobBoardScreen from "../screens/JobBoardScreen";
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const AppNavigator: React.FC = () => (
   <Stack.Navigator

@@ -14,13 +14,16 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import { useNavigation } from "@react-navigation/native";
-import routes from "../navigation/routes";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import routes, { RootStackParamList } from "../navigation/routes";
 import jobsData from "../data/jobsSeedData.json";
 import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 const EmployerRoleTitleScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NavigationProp>();
   const { setRoleTitle } = useProfile();
   const { language, t } = useLanguage();
   const professionalRoles = jobsData.professionalRoles;

@@ -12,11 +12,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import routes from "../navigation/routes";
+import routes, { RootStackParamList } from "../navigation/routes";
 import jobsData from "../data/jobsSeedData.json";
 
 const HeartIcon = require("../../assets/heart.png");
@@ -37,8 +38,10 @@ interface PostedJob {
   applicants: string;
 }
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 const JobBoardScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NavigationProp>();
   const [activeTab, setActiveTab] = useState("Jobs Posted");
   const [likedIds, setLikedIds] = useState<Set<number>>(new Set());
   const [showAddForm, setShowAddForm] = useState(false);

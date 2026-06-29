@@ -13,7 +13,8 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import routes from "../navigation/routes";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import routes, { RootStackParamList } from "../navigation/routes";
 import jobsData from "../data/jobsSeedData.json";
 import BottomNavigation from "../components/BottomNavigation";
 import { useLanguage } from "../context/LanguageContext";
@@ -23,7 +24,10 @@ const LocationIcon = require("../../assets/location.png");
 const ChatIcon = require("../../assets/message.png");
 
 interface YourJobsScreenProps {
-  navigation: any;
+  navigation: NativeStackNavigationProp<
+    RootStackParamList,
+    typeof routes.yourJobs
+  >;
 }
 
 type JobTab = "Sent Proposals" | "Active Jobs" | "Completed Jobs";

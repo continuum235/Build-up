@@ -1,11 +1,12 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import routes from "../navigation/routes";
+import routes, { RootStackParamList } from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
 
 const SearchIcon = require("../../assets/Search.png");
@@ -17,6 +18,14 @@ const GirlIcon = require("../../assets/Girl.png");
 interface BottomNavigationProps {
   activeTab: string;
 }
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type BottomTabRoute =
+  | typeof routes.findJobs
+  | typeof routes.yourJobs
+  | typeof routes.profile
+  | typeof routes.messages
+  | typeof routes.jobBoard;
 
 const workerTabs: { id: string; label: string }[] = [
   { id: "findJobs", label: "Find Jobs" },
@@ -32,7 +41,7 @@ const hirerTabs: { id: string; label: string }[] = [
 ];
 
 export default function BottomNavigation({ activeTab }: BottomNavigationProps) {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NavigationProp>();
   const { profile } = useProfile();
   const isEmployer = profile.roleType === "employer";
   const tabs = isEmployer ? hirerTabs : workerTabs;
@@ -119,7 +128,7 @@ export default function BottomNavigation({ activeTab }: BottomNavigationProps) {
   };
 
   const handlePress = (tabId: string) => {
-    const routeMap: Record<string, any> = {
+    const routeMap: Record<string, BottomTabRoute> = {
       findJobs: routes.findJobs,
       yourJobs: routes.yourJobs,
       profile: routes.profile,

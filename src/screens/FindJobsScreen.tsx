@@ -14,7 +14,8 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import routes from "../navigation/routes";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import routes, { RootStackParamList } from "../navigation/routes";
 import jobsData from "../data/jobsSeedData.json";
 import BottomNavigation from "../components/BottomNavigation";
 import { useLanguage } from "../context/LanguageContext";
@@ -25,7 +26,10 @@ const LocationIcon = require("../../assets/location.png");
 const VerifiedIcon = require("../../assets/tick.png");
 
 interface FindJobsScreenProps {
-  navigation: any;
+  navigation: NativeStackNavigationProp<
+    RootStackParamList,
+    typeof routes.findJobs
+  >;
 }
 
 const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {

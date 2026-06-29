@@ -8,15 +8,21 @@ import {
   StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import type { RouteProp } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import jobsData from "../data/jobsSeedData.json";
+import routes, { RootStackParamList } from "../navigation/routes";
 
 interface JobDetailsScreenProps {
-  navigation: any;
-  route: any;
+  navigation: NativeStackNavigationProp<
+    RootStackParamList,
+    typeof routes.jobDetails
+  >;
+  route: RouteProp<RootStackParamList, typeof routes.jobDetails>;
 }
 
 const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({

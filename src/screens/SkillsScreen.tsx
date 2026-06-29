@@ -14,15 +14,18 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import { useNavigation } from "@react-navigation/native";
-import routes from "../navigation/routes";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import routes, { RootStackParamList } from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
 import { hasAtLeastOne } from "../utils/validation";
 
 const suggestedSkills = ["Skill 1", "Skill 2", "Skill 3", "Skill 4"];
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 const SkillsScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NavigationProp>();
   const { profile, addSkill, removeSkill } = useProfile();
   const { t } = useLanguage();
   const { skills } = profile;

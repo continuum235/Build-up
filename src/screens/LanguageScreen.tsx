@@ -14,14 +14,17 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import { useNavigation } from "@react-navigation/native";
-import routes from "../navigation/routes";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import routes, { RootStackParamList } from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
 import { hasAtLeastOne } from "../utils/validation";
 import KeyboardSafeWrapper from "../components/KeyboardSafeWrapper";
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 const LanguageScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NavigationProp>();
   const { profile, addLanguage, removeLanguage } = useProfile();
   const { t } = useLanguage();
   const [inputText, setInputText] = useState<string>("");

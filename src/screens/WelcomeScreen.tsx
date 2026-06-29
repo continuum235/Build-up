@@ -14,10 +14,13 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import { useNavigation } from "@react-navigation/native";
-import routes from "../navigation/routes";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import routes, { RootStackParamList } from "../navigation/routes";
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const WelcomeScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NavigationProp>();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -59,10 +62,9 @@ const WelcomeScreen: React.FC = () => {
             style={styles.loginButton}
             activeOpacity={0.8}
             onPress={() =>
-              navigation.navigate(
-                routes.languageSelection as never,
-                { next: routes.login } as never,
-              )
+              navigation.navigate(routes.languageSelection, {
+                next: routes.login,
+              })
             }
           >
             <Text style={styles.loginButtonText}>Log in</Text>
@@ -73,10 +75,9 @@ const WelcomeScreen: React.FC = () => {
             style={styles.signupContainer}
             activeOpacity={0.6}
             onPress={() =>
-              navigation.navigate(
-                routes.languageSelection as never,
-                { next: routes.signup } as never,
-              )
+              navigation.navigate(routes.languageSelection, {
+                next: routes.signup,
+              })
             }
           >
             <Text style={styles.signupTextBase}>
