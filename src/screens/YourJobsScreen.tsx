@@ -16,7 +16,7 @@ import {
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import routes, { RootStackParamList } from "../navigation/routes";
 import jobsData from "../data/jobsSeedData.json";
-import BottomNavigation from "../components/BottomNavigation";
+import BottomNavigation from "../components/layout/BottomNavigation";
 import { useLanguage } from "../context/LanguageContext";
 
 const VerifiedIcon = require("../../assets/tick.png");

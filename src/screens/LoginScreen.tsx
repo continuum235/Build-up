@@ -18,7 +18,7 @@ import routes, { RootStackParamList } from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
 import { isValidEmail, isValidPassword } from "../utils/validation";
-import KeyboardSafeWrapper from "../components/KeyboardSafeWrapper";
+import KeyboardSafeWrapper from "../components/layout/KeyboardSafeWrapper";
 import Button from "../components/ui/Button";
 import TextInput from "../components/ui/TextInput";
 

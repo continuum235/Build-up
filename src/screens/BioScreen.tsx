@@ -19,7 +19,7 @@ import routes, { RootStackParamList } from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
 import { isValidBio } from "../utils/validation";
-import KeyboardSafeWrapper from "../components/KeyboardSafeWrapper";
+import KeyboardSafeWrapper from "../components/layout/KeyboardSafeWrapper";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 

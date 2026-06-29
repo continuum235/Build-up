@@ -1,8 +1,6 @@
 ## Here's my analysis:
 
 Issues Found
-❌ BroadcastJobsEmptyState.tsx — Dead/Empty File
-src/components/BroadcastJobsEmptyState.tsx is completely empty and never imported anywhere. Remove or implement it.
 ❌ LanguageContext — Module-Level Side Effects (Anti-Pattern)
 src/context/LanguageContext.tsx:21-22 calls setI18nConfig(initialLanguage) at module scope. This runs on import, not on Provider mount. Same issue in src/localization/i18n.ts:12 where i18n.locale is set at module level. Move these into the Provider or a useEffect.
 ❌ t Function from i18n.ts is Static

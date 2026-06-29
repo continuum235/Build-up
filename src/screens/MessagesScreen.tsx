@@ -16,7 +16,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import BottomNavigation from "../components/BottomNavigation";
+import BottomNavigation from "../components/layout/BottomNavigation";
 
 export default function MessagesScreen() {
   const [activeChat, setActiveChat] = useState<string | null>(null);

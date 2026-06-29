@@ -6,14 +6,14 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import routes, { RootStackParamList } from "../navigation/routes";
-import { useProfile } from "../context/ProfileContext";
+import routes, { RootStackParamList } from "../../navigation/routes";
+import { useProfile } from "../../context/ProfileContext";
 
-const SearchIcon = require("../../assets/Search.png");
-const YourJobsIcon = require("../../assets/yourjobs.png");
+const SearchIcon = require("../../../assets/Search.png");
+const YourJobsIcon = require("../../../assets/yourjobs.png");
 
-const MessageIcon = require("../../assets/message.png");
-const GirlIcon = require("../../assets/Girl.png");
+const MessageIcon = require("../../../assets/message.png");
+const GirlIcon = require("../../../assets/Girl.png");
 
 interface BottomNavigationProps {
   activeTab: string;
