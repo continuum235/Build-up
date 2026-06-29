@@ -3,28 +3,21 @@ import {
   View,
   ScrollView,
   Text,
-  Image,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   StatusBar,
   Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import routes, { RootStackParamList } from "../navigation/routes";
 import { useJobs } from "../hooks/useJobs";
-
-const HeartIcon = require("../../assets/heart.png");
-const LocationIcon = require("../../assets/location.png");
-const YourJobsIcon = require("../../assets/yourjobs.png");
-const GirlIcon = require("../../assets/Girl.png");
-const MessageIcon = require("../../assets/message.png");
+import BottomNavigation from "../components/layout/BottomNavigation";
+import JobDetails from "../components/jobs/JobDetails";
+import Button from "../components/ui/Button";
+import TextInput from "../components/ui/TextInput";
 
 interface PostedJob {
   id: number;
@@ -38,10 +31,7 @@ interface PostedJob {
   applicants: string;
 }
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-
 const JobBoardScreen: React.FC = () => {
-  const navigation = useNavigation<NavigationProp>();
   const { jobs } = useJobs();
   const [activeTab, setActiveTab] = useState("Jobs Posted");
   const [likedIds, setLikedIds] = useState<Set<number>>(new Set());
@@ -116,78 +106,45 @@ const JobBoardScreen: React.FC = () => {
   };
 
   const renderJobCard = (job: PostedJob) => (
-    <View key={job.id} style={styles.jobCard}>
-      <View style={styles.cardHeaderRow}>
-        <Text style={styles.jobTitle}>{job.title}</Text>
-        <TouchableOpacity
-          style={styles.heartButton}
-          onPress={() => toggleLike(job.id)}
-        >
-          <Image
-            source={HeartIcon}
-            style={[
-              styles.heartIcon,
-              likedIds.has(job.id) && styles.heartIconActive,
-            ]}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-      </View>
-
-      <Text style={styles.postedText}>{job.posted}</Text>
-
-      <View style={styles.locationRow}>
-        <Image
-          source={LocationIcon}
-          style={styles.locationIcon}
-          resizeMode="contain"
-        />
-        <Text style={styles.locationText}>{job.location}</Text>
-      </View>
-
-      <View style={styles.detailsRow}>
-        <View style={styles.detailBlock}>
-          <Text style={styles.detailLabel}>Budget</Text>
-          <Text style={styles.detailValue}>{job.budget}</Text>
-        </View>
-        <View style={styles.detailBlock}>
-          <Text style={styles.detailLabel}>Applicants</Text>
-          <Text style={styles.detailValue}>{job.applicants}</Text>
-        </View>
-        <View style={styles.detailBlock}>
-          <Text style={styles.detailLabel}>Experience</Text>
-          <Text style={styles.detailValue}>{job.experience}</Text>
-        </View>
-      </View>
-
-      <View style={styles.tagsRow}>
-        {job.tags.map((tag, index) => (
-          <View key={index} style={styles.tagPill}>
-            <Text style={styles.tagText}>{tag}</Text>
-          </View>
-        ))}
-      </View>
-    </View>
+    <JobDetails
+      key={job.id}
+      job={{
+        id: job.id,
+        title: job.title,
+        company: "Build Up",
+        verified: false,
+        posted: job.posted.replace(/^Posted\s+/i, ""),
+        location: job.location,
+        budget: job.budget,
+        experience: job.experience,
+        tags: job.tags,
+      }}
+      isLiked={likedIds.has(job.id)}
+      onLikePress={() => toggleLike(job.id)}
+      details={[
+        { label: "Budget", value: job.budget },
+        { label: "Applicants", value: job.applicants },
+        { label: "Experience", value: job.experience },
+      ]}
+    />
   );
 
   const renderAddJobForm = () => (
     <View style={styles.addFormContainer}>
       <Text style={styles.addFormTitle}>Post a New Job</Text>
 
-      <Text style={styles.inputLabel}>Job Title *</Text>
       <TextInput
         style={styles.textInput}
+        label="Job Title *"
         placeholder="e.g. Carpenter Required"
-        placeholderTextColor="#A4A9B6"
         value={newJob.title}
         onChangeText={(text) => setNewJob((prev) => ({ ...prev, title: text }))}
       />
 
-      <Text style={styles.inputLabel}>Location</Text>
       <TextInput
         style={styles.textInput}
+        label="Location"
         placeholder="e.g. Thane, Mumbai"
-        placeholderTextColor="#A4A9B6"
         value={newJob.location}
         onChangeText={(text) =>
           setNewJob((prev) => ({ ...prev, location: text }))
@@ -196,11 +153,10 @@ const JobBoardScreen: React.FC = () => {
 
       <View style={styles.formRow}>
         <View style={styles.formHalf}>
-          <Text style={styles.inputLabel}>Budget ($)</Text>
           <TextInput
             style={styles.textInput}
+            label="Budget ($)"
             placeholder="e.g. 1000"
-            placeholderTextColor="#A4A9B6"
             keyboardType="numeric"
             value={newJob.budget}
             onChangeText={(text) =>
@@ -209,11 +165,10 @@ const JobBoardScreen: React.FC = () => {
           />
         </View>
         <View style={styles.formHalf}>
-          <Text style={styles.inputLabel}>Experience</Text>
           <TextInput
             style={styles.textInput}
+            label="Experience"
             placeholder="e.g. Skilled"
-            placeholderTextColor="#A4A9B6"
             value={newJob.experience}
             onChangeText={(text) =>
               setNewJob((prev) => ({ ...prev, experience: text }))
@@ -222,25 +177,29 @@ const JobBoardScreen: React.FC = () => {
         </View>
       </View>
 
-      <Text style={styles.inputLabel}>Tags (comma separated)</Text>
       <TextInput
         style={styles.textInput}
+        label="Tags (comma separated)"
         placeholder="e.g. Tag 1, Tag 2"
-        placeholderTextColor="#A4A9B6"
         value={newJob.tags}
         onChangeText={(text) => setNewJob((prev) => ({ ...prev, tags: text }))}
       />
 
       <View style={styles.addFormActions}>
-        <TouchableOpacity
+        <Button
+          title="Cancel"
+          variant="outline"
           style={styles.cancelButton}
+          textStyle={styles.cancelButtonText}
           onPress={() => setShowAddForm(false)}
-        >
-          <Text style={styles.cancelButtonText}>Cancel</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.submitButton} onPress={handleAddJob}>
-          <Text style={styles.submitButtonText}>Post Job</Text>
-        </TouchableOpacity>
+        />
+        <Button
+          title="Post Job"
+          variant="secondary"
+          style={styles.submitButton}
+          textStyle={styles.submitButtonText}
+          onPress={handleAddJob}
+        />
       </View>
     </View>
   );
@@ -305,46 +264,7 @@ const JobBoardScreen: React.FC = () => {
         </View>
       </Modal>
 
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem}>
-          <Image
-            source={YourJobsIcon}
-            style={styles.navIconActive}
-            resizeMode="contain"
-          />
-          <Text style={styles.navTextActive}>Job board</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate(routes.profile)}
-        >
-          <View style={styles.profileNavAvatar}>
-            <Image
-              source={GirlIcon}
-              style={{ width: "100%", height: "100%" }}
-              resizeMode="cover"
-            />
-          </View>
-          <Text style={styles.navTextInactive}>Profile</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate(routes.messages)}
-        >
-          <Image
-            source={MessageIcon}
-            style={styles.navIconInactive}
-            resizeMode="contain"
-          />
-          <Text style={styles.navTextInactive}>Messages</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.homeIndicatorWrapper}>
-        <View style={styles.homeIndicator} />
-      </View>
+      <BottomNavigation activeTab="jobBoard" />
     </SafeAreaView>
   );
 };
@@ -556,13 +476,12 @@ const styles = StyleSheet.create({
     marginTop: hp("3%"),
   },
   cancelButton: {
-    flex: 1,
+    width: "48%",
     borderColor: "#965541",
     borderWidth: 2,
     borderRadius: wp("4%"),
     paddingVertical: hp("2%"),
     alignItems: "center",
-    marginRight: wp("3%"),
   },
   cancelButtonText: {
     color: "#965541",
@@ -570,12 +489,11 @@ const styles = StyleSheet.create({
     fontSize: wp("4%"),
   },
   submitButton: {
-    flex: 1,
+    width: "48%",
     backgroundColor: "#965541",
     borderRadius: wp("4%"),
     paddingVertical: hp("2%"),
     alignItems: "center",
-    marginLeft: wp("3%"),
   },
   submitButtonText: {
     color: "#FFFFFF",

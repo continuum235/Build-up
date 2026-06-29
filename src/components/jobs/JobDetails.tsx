@@ -10,12 +10,17 @@ export interface JobDetailsCardData {
   title: string;
   company: string;
   verified: boolean;
-  posted: string;
+  posted?: string;
   location: string;
   budget: string;
-  experience: string;
+  experience?: string;
   tags: string[];
   isLiked?: boolean;
+}
+
+interface JobDetailMetric {
+  label: string;
+  value: string;
 }
 
 interface JobDetailsProps {
@@ -23,6 +28,11 @@ interface JobDetailsProps {
   onPress?: () => void;
   onLikePress?: () => void;
   isLiked?: boolean;
+  details?: JobDetailMetric[];
+  verifiedLabel?: string;
+  postedPrefix?: string;
+  leadingContent?: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 export default function JobDetails({
@@ -30,10 +40,22 @@ export default function JobDetails({
   onPress,
   onLikePress,
   isLiked,
+  details,
+  verifiedLabel = "User Verified",
+  postedPrefix = "Posted",
+  leadingContent,
+  children,
 }: JobDetailsProps) {
   const handleLikePress = () => {
     onLikePress?.();
   };
+  const liked = isLiked ?? job.isLiked;
+  const metrics =
+    details ??
+    [
+      { label: "Budget", value: job.budget },
+      { label: "Experience", value: job.experience ?? "" },
+    ].filter((detail) => detail.value);
 
   return (
     <TouchableOpacity
@@ -41,25 +63,33 @@ export default function JobDetails({
       onPress={onPress}
       activeOpacity={0.7}
     >
+      {leadingContent}
       <View style={styles.cardHeaderRow}>
         <Text style={styles.jobTitle}>{job.title}</Text>
-        <TouchableOpacity
-          style={styles.heartButton}
-          onPress={handleLikePress}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.heartIcon, isLiked && styles.heartIconLiked]}>
-            {isLiked ? "♥" : "♡"}
-          </Text>
-        </TouchableOpacity>
+        {onLikePress && (
+          <TouchableOpacity
+            style={styles.heartButton}
+            onPress={handleLikePress}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.heartIcon, liked && styles.heartIconLiked]}>
+              {liked ? "♥" : "♡"}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.companyRow}>
         <Text style={styles.companyText}>{job.company} </Text>
         {job.verified && (
-          <Text style={styles.verifiedText}>✓ User Verified</Text>
+          <Text style={styles.verifiedText}>✓ {verifiedLabel}</Text>
         )}
-        <Text style={styles.postedText}> • Posted {job.posted}</Text>
+        {job.posted && (
+          <Text style={styles.postedText}>
+            {" "}
+            • {postedPrefix} {job.posted}
+          </Text>
+        )}
       </View>
 
       <View style={styles.locationRow}>
@@ -68,23 +98,24 @@ export default function JobDetails({
       </View>
 
       <View style={styles.detailsRow}>
-        <View style={styles.detailBlock}>
-          <Text style={styles.detailLabel}>Budget</Text>
-          <Text style={styles.detailValue}>{job.budget}</Text>
-        </View>
-        <View style={styles.detailBlock}>
-          <Text style={styles.detailLabel}>Experience</Text>
-          <Text style={styles.detailValue}>{job.experience}</Text>
-        </View>
-      </View>
-
-      <View style={styles.tagsRow}>
-        {job.tags.map((tag, index) => (
-          <View key={`${job.id}-${tag}-${index}`} style={styles.tagPill}>
-            <Text style={styles.tagText}>{tag}</Text>
+        {metrics.map((detail) => (
+          <View key={detail.label} style={styles.detailBlock}>
+            <Text style={styles.detailLabel}>{detail.label}</Text>
+            <Text style={styles.detailValue}>{detail.value}</Text>
           </View>
         ))}
       </View>
+
+      {job.tags.length > 0 && (
+        <View style={styles.tagsRow}>
+          {job.tags.map((tag, index) => (
+            <View key={`${job.id}-${tag}-${index}`} style={styles.tagPill}>
+              <Text style={styles.tagText}>{tag}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+      {children}
     </TouchableOpacity>
   );
 }

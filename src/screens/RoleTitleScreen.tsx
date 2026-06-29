@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
-  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -20,6 +19,7 @@ import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
 import { isNonEmpty } from "../utils/validation";
 import KeyboardSafeWrapper from "../components/layout/KeyboardSafeWrapper";
+import TextInput from "../components/ui/TextInput";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -71,7 +71,6 @@ const RoleTitleScreen: React.FC = () => {
           <TextInput
             style={styles.inputBox}
             placeholder={t("roleTitle.placeholder")}
-            placeholderTextColor="#A4A9B6"
             value={roleTitle}
             onChangeText={setRoleTitleInput}
           />

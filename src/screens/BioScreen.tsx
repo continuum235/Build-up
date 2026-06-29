@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
-  TextInput,
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,6 +19,7 @@ import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
 import { isValidBio } from "../utils/validation";
 import KeyboardSafeWrapper from "../components/layout/KeyboardSafeWrapper";
+import TextInput from "../components/ui/TextInput";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -73,7 +73,6 @@ const BioScreen: React.FC = () => {
             multiline
             textAlignVertical="top"
             placeholder={t("bio.placeholder")}
-            placeholderTextColor="#A4A9B6"
             value={bioText}
             onChangeText={setBioText}
           />

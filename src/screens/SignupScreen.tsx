@@ -4,7 +4,6 @@ import {
   Text,
   Image,
   TouchableOpacity,
-  TextInput,
   StyleSheet,
   StatusBar,
 } from "react-native";
@@ -20,6 +19,8 @@ import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
 import { isNonEmpty, isValidEmail, isValidPassword } from "../utils/validation";
 import KeyboardSafeWrapper from "../components/layout/KeyboardSafeWrapper";
+import Button from "../components/ui/Button";
+import TextInput from "../components/ui/TextInput";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -104,14 +105,12 @@ const SignupScreen: React.FC = () => {
           <View style={styles.inputSection}>
             <TextInput
               placeholder={t("auth.fullName")}
-              placeholderTextColor="#A4A9B6"
               value={name}
               onChangeText={setName}
               style={styles.input}
             />
             <TextInput
               placeholder={t("auth.emailPlaceholder")}
-              placeholderTextColor="#A4A9B6"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -119,7 +118,6 @@ const SignupScreen: React.FC = () => {
             />
             <TextInput
               placeholder={t("auth.passwordPlaceholderSignup")}
-              placeholderTextColor="#A4A9B6"
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -127,18 +125,19 @@ const SignupScreen: React.FC = () => {
             />
             <TextInput
               placeholder={t("auth.location")}
-              placeholderTextColor="#A4A9B6"
               value={location}
               onChangeText={setLocation}
               style={styles.input}
             />
           </View>
 
-          <TouchableOpacity style={styles.submitButton} onPress={handleSignup}>
-            <Text style={styles.submitButtonText}>
-              {t("auth.createAccount")}
-            </Text>
-          </TouchableOpacity>
+          <Button
+            title={t("auth.createAccount")}
+            onPress={handleSignup}
+            disabled={!canSubmit}
+            style={styles.submitButton}
+            textStyle={styles.submitButtonText}
+          />
 
           <Text style={styles.footerTerms}>
             {t("auth.termsPrefix")}
@@ -257,20 +256,14 @@ const styles = StyleSheet.create({
     marginBottom: hp("3%"),
   },
   input: {
-    color: "#000000",
     fontSize: wp("4%"),
-    borderColor: "#D8DADC",
     borderRadius: wp("3%"),
-    borderWidth: 1,
     padding: wp("4.5%"),
-    marginBottom: hp("1.5%"),
   },
   submitButton: {
-    alignItems: "center",
     backgroundColor: "#965541",
     borderRadius: wp("4%"),
     paddingVertical: hp("2.2%"),
-    width: "100%",
     marginBottom: hp("3%"),
   },
   submitButtonText: {

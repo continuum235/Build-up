@@ -16,12 +16,11 @@ import {
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import routes, { RootStackParamList } from "../navigation/routes";
 import BottomNavigation from "../components/layout/BottomNavigation";
+import JobDetails from "../components/jobs/JobDetails";
 import { useLanguage } from "../context/LanguageContext";
 import { useJobs } from "../hooks/useJobs";
 import type { Job } from "../services/jobsService";
 
-const VerifiedIcon = require("../../assets/tick.png");
-const LocationIcon = require("../../assets/location.png");
 const ChatIcon = require("../../assets/message.png");
 
 interface YourJobsScreenProps {
@@ -134,59 +133,34 @@ const YourJobsScreen: React.FC<YourJobsScreenProps> = ({ navigation }) => {
     const localizedJob =
       job.source.translations[currentLanguage] ?? job.source.translations.en;
     return (
-      <TouchableOpacity
+      <JobDetails
         key={`${activeTab}-${job.id}-${job.status}`}
-        style={styles.jobCard}
-        activeOpacity={0.8}
+        job={{
+          id: job.id,
+          title: localizedJob.title,
+          company: job.company,
+          verified: job.verified,
+          location: job.location,
+          budget: job.budget,
+          tags: [],
+        }}
         onPress={() =>
           navigation.navigate(routes.jobDetails, { jobId: job.id })
         }
-      >
-        <View style={styles.statusRow}>
-          <View
-            style={[
-              styles.statusDot,
-              { backgroundColor: getStatusColor(job.status) },
-            ]}
-          />
-          <Text style={styles.statusText}>{getStatusLabel(job.status)}</Text>
-        </View>
-
-        <Text style={styles.jobTitle}>{localizedJob.title}</Text>
-
-        <View style={styles.companyRow}>
-          <Text style={styles.companyName}>{job.company}</Text>
-          {job.verified && (
-            <View style={styles.verifiedBadge}>
-              <Image
-                source={VerifiedIcon}
-                style={styles.verifiedIcon}
-                resizeMode="contain"
-              />
-              <Text style={styles.verifiedText}>
-                {t("yourJobs.userVerified")}
-              </Text>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.locationBudgetRow}>
-          <View style={styles.locationWrapper}>
-            <Image
-              source={LocationIcon}
-              style={styles.locationPin}
-              resizeMode="contain"
+        verifiedLabel={t("yourJobs.userVerified")}
+        details={[{ label: t("yourJobs.budget"), value: job.budget }]}
+        leadingContent={
+          <View style={styles.statusRow}>
+            <View
+              style={[
+                styles.statusDot,
+                { backgroundColor: getStatusColor(job.status) },
+              ]}
             />
-            <Text style={styles.locationText} numberOfLines={1}>
-              {job.location}
-            </Text>
+            <Text style={styles.statusText}>{getStatusLabel(job.status)}</Text>
           </View>
-          <Text style={styles.budgetLabel}>
-            {t("yourJobs.budget")}{" "}
-            <Text style={styles.budgetValue}>{job.budget}</Text>
-          </Text>
-        </View>
-
+        }
+      >
         {job.showChat && (
           <TouchableOpacity style={styles.chatButton} activeOpacity={0.8}>
             <Image
@@ -199,7 +173,7 @@ const YourJobsScreen: React.FC<YourJobsScreenProps> = ({ navigation }) => {
             </Text>
           </TouchableOpacity>
         )}
-      </TouchableOpacity>
+      </JobDetails>
     );
   };
 

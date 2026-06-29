@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   StatusBar,
@@ -20,6 +19,7 @@ import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
 import { isValidDetails } from "../utils/validation";
 import KeyboardSafeWrapper from "../components/layout/KeyboardSafeWrapper";
+import TextInput from "../components/ui/TextInput";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -111,14 +111,12 @@ const EnterDetailsScreen: React.FC = () => {
           <TextInput
             style={styles.textInput}
             placeholder={t("details.addressLine1")}
-            placeholderTextColor="#A4A9B6"
             value={addressLine1}
             onChangeText={setAddressLine1}
           />
           <TextInput
             style={[styles.textInput, styles.textInputSpacing]}
             placeholder={t("details.addressLine2")}
-            placeholderTextColor="#A4A9B6"
             value={addressLine2}
             onChangeText={setAddressLine2}
           />
@@ -129,7 +127,6 @@ const EnterDetailsScreen: React.FC = () => {
           <TextInput
             style={styles.textInput}
             placeholder={t("details.city")}
-            placeholderTextColor="#A4A9B6"
             value={city}
             onChangeText={setCity}
           />

@@ -17,13 +17,11 @@ import {
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import routes, { RootStackParamList } from "../navigation/routes";
 import BottomNavigation from "../components/layout/BottomNavigation";
+import JobDetails from "../components/jobs/JobDetails";
 import { useLanguage } from "../context/LanguageContext";
 import { useJobs } from "../hooks/useJobs";
 
 const SearchIcon = require("../../assets/Search.png");
-const HeartIcon = require("../../assets/heart.png");
-const LocationIcon = require("../../assets/location.png");
-const VerifiedIcon = require("../../assets/tick.png");
 
 interface FindJobsScreenProps {
   navigation: NativeStackNavigationProp<
@@ -40,10 +38,7 @@ const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {
   const [activeFilter, setActiveFilter] = useState("All");
   const [showNewJobModal, setShowNewJobModal] = useState(false);
   const [likedJobIds, setLikedJobIds] = useState(
-    () =>
-      new Set<number>(
-        jobs.filter((job) => job.liked).map((job) => job.id),
-      ),
+    () => new Set<number>(jobs.filter((job) => job.liked).map((job) => job.id)),
   );
 
   const filters = ["All", ...categories];
@@ -216,87 +211,34 @@ const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {
               const localizedJob =
                 job.translations[currentLanguage] ?? job.translations.en;
               return (
-                <TouchableOpacity
+                <JobDetails
                   key={job.id}
-                  style={styles.jobCard}
-                  activeOpacity={0.8}
+                  job={{
+                    id: job.id,
+                    title: localizedJob.title,
+                    company: job.company,
+                    verified: job.verified,
+                    posted: localizedJob.postedTime,
+                    location: job.location,
+                    budget: `$${job.budget}`,
+                    experience: localizedJob.experience,
+                    tags: localizedJob.tags,
+                  }}
+                  isLiked={isLiked}
+                  verifiedLabel={t("findJobs.userVerified")}
+                  postedPrefix={t("findJobs.postedPrefix")}
                   onPress={() =>
                     navigation.navigate(routes.jobDetails, { jobId: job.id })
                   }
-                >
-                  <View style={styles.cardHeader}>
-                    <Text style={styles.jobTitle}>{localizedJob.title}</Text>
-                    <TouchableOpacity
-                      style={styles.heartButton}
-                      onPress={() => toggleLike(job.id)}
-                    >
-                      <Image
-                        source={HeartIcon}
-                        resizeMode="contain"
-                        style={[
-                          styles.heartIcon,
-                          isLiked
-                            ? styles.heartIconActive
-                            : styles.heartIconInactive,
-                        ]}
-                      />
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={styles.companyRow}>
-                    <Text style={styles.companyName}>{job.company}</Text>
-                    {job.verified && (
-                      <View style={styles.verifiedBadge}>
-                        <Image
-                          source={VerifiedIcon}
-                          resizeMode="contain"
-                          style={styles.verifiedIcon}
-                        />
-                        <Text style={styles.verifiedText}>
-                          {t("findJobs.userVerified")}
-                        </Text>
-                      </View>
-                    )}
-                    <Text style={styles.postedText}>
-                      {" "}
-                      - {t("findJobs.postedPrefix")} {localizedJob.postedTime}
-                    </Text>
-                  </View>
-
-                  <View style={styles.locationRow}>
-                    <Image
-                      source={LocationIcon}
-                      resizeMode="contain"
-                      style={styles.locationIcon}
-                    />
-                    <Text style={styles.locationText}>{job.location}</Text>
-                  </View>
-
-                  <View style={styles.detailsRow}>
-                    <View style={styles.detailBlock}>
-                      <Text style={styles.detailLabel}>
-                        {t("findJobs.budget")}
-                      </Text>
-                      <Text style={styles.detailValue}>${job.budget}</Text>
-                    </View>
-                    <View style={styles.detailBlock}>
-                      <Text style={styles.detailLabel}>
-                        {t("findJobs.experience")}
-                      </Text>
-                      <Text style={styles.detailValue}>
-                        {localizedJob.experience}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.tagsRow}>
-                    {localizedJob.tags.map((tag, idx) => (
-                      <View key={`${job.id}-${idx}`} style={styles.tagChip}>
-                        <Text style={styles.tagText}>{tag}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </TouchableOpacity>
+                  onLikePress={() => toggleLike(job.id)}
+                  details={[
+                    { label: t("findJobs.budget"), value: `$${job.budget}` },
+                    {
+                      label: t("findJobs.experience"),
+                      value: localizedJob.experience,
+                    },
+                  ]}
+                />
               );
             })}
         </View>

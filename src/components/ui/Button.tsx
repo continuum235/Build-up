@@ -5,12 +5,15 @@ import {
   ActivityIndicator,
   TouchableOpacityProps,
   StyleSheet,
+  StyleProp,
+  TextStyle,
 } from "react-native";
 
 interface ButtonProps extends TouchableOpacityProps {
   title: string;
   variant?: "primary" | "secondary" | "outline" | "social";
   loading?: boolean;
+  textStyle?: StyleProp<TextStyle>;
 }
 
 export default function Button({
@@ -19,11 +22,18 @@ export default function Button({
   loading,
   disabled,
   children,
+  textStyle,
+  style,
   ...props
 }: ButtonProps) {
   return (
     <TouchableOpacity
-      style={[styles.button, styles[variant], disabled && styles.disabled]}
+      style={[
+        styles.button,
+        styles[variant],
+        style,
+        disabled && styles.disabled,
+      ]}
       disabled={disabled || loading}
       activeOpacity={0.7}
       {...props}
@@ -33,7 +43,9 @@ export default function Button({
       ) : (
         <>
           {children}
-          <Text style={[styles.text, styles[`text_${variant}`]]}>{title}</Text>
+          <Text style={[styles.text, styles[`text_${variant}`], textStyle]}>
+            {title}
+          </Text>
         </>
       )}
     </TouchableOpacity>
