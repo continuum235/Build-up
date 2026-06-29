@@ -16,9 +16,9 @@ import {
 } from "react-native-responsive-screen";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import routes, { RootStackParamList } from "../navigation/routes";
-import jobsData from "../data/jobsSeedData.json";
 import BottomNavigation from "../components/layout/BottomNavigation";
 import { useLanguage } from "../context/LanguageContext";
+import { useJobs } from "../hooks/useJobs";
 
 const SearchIcon = require("../../assets/Search.png");
 const HeartIcon = require("../../assets/heart.png");
@@ -34,6 +34,7 @@ interface FindJobsScreenProps {
 
 const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {
   const { language, t } = useLanguage();
+  const { jobs, categories, categoryTranslations } = useJobs();
   const [searchText, setSearchText] = useState("");
   const [activeTab, setActiveTab] = useState("Broadcasted Jobs");
   const [activeFilter, setActiveFilter] = useState("All");
@@ -41,11 +42,11 @@ const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {
   const [likedJobIds, setLikedJobIds] = useState(
     () =>
       new Set<number>(
-        jobsData.jobs.filter((job) => job.liked).map((job) => job.id),
+        jobs.filter((job) => job.liked).map((job) => job.id),
       ),
   );
 
-  const filters = ["All", ...jobsData.categories];
+  const filters = ["All", ...categories];
   const tabs = [
     { id: "Best Matches", label: t("findJobs.bestMatches") },
     { id: "Broadcasted Jobs", label: t("findJobs.broadcastedJobs") },
@@ -55,14 +56,14 @@ const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {
   const isBroadcastTab = activeTab === "Broadcasted Jobs";
   const isLikedTab = activeTab === "Liked Jobs";
   const currentLanguage = language as "en" | "hi";
-  const broadcastJob = jobsData.jobs[0];
+  const broadcastJob = jobs[0];
   const localizedBroadcastJob =
     broadcastJob.translations[currentLanguage] ?? broadcastJob.translations.en;
 
   const getCategoryLabel = (category: string) =>
-    jobsData.categoryTranslations[
-      category as keyof typeof jobsData.categoryTranslations
-    ]?.[currentLanguage] ?? category;
+    categoryTranslations[category as keyof typeof categoryTranslations]?.[
+      currentLanguage
+    ] ?? category;
 
   const toggleLike = (jobId: number) => {
     setLikedJobIds((prev) => {
@@ -76,7 +77,7 @@ const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {
     });
   };
 
-  const filteredJobs = jobsData.jobs.filter((job) => {
+  const filteredJobs = jobs.filter((job) => {
     if (isLikedTab && !likedJobIds.has(job.id)) {
       return false;
     }

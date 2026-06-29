@@ -16,9 +16,9 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import routes, { RootStackParamList } from "../navigation/routes";
-import jobsData from "../data/jobsSeedData.json";
 import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
+import { useJobs } from "../hooks/useJobs";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -26,7 +26,7 @@ const EmployerRoleTitleScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { setRoleTitle } = useProfile();
   const { language, t } = useLanguage();
-  const professionalRoles = jobsData.professionalRoles;
+  const { professionalRoles } = useJobs();
 
   // State to hold the selected role
   const [selectedRoleId, setSelectedRoleId] = useState(

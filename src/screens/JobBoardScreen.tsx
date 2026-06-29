@@ -18,7 +18,7 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import routes, { RootStackParamList } from "../navigation/routes";
-import jobsData from "../data/jobsSeedData.json";
+import { useJobs } from "../hooks/useJobs";
 
 const HeartIcon = require("../../assets/heart.png");
 const LocationIcon = require("../../assets/location.png");
@@ -42,6 +42,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const JobBoardScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const { jobs } = useJobs();
   const [activeTab, setActiveTab] = useState("Jobs Posted");
   const [likedIds, setLikedIds] = useState<Set<number>>(new Set());
   const [showAddForm, setShowAddForm] = useState(false);
@@ -54,7 +55,7 @@ const JobBoardScreen: React.FC = () => {
   });
   const [customJobs, setCustomJobs] = useState<PostedJob[]>([]);
 
-  const seedJobs: PostedJob[] = jobsData.jobs.map((job) => {
+  const seedJobs: PostedJob[] = jobs.map((job) => {
     const localized = job.translations.en;
     return {
       id: job.id,

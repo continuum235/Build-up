@@ -14,7 +14,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import jobsData from "../data/jobsSeedData.json";
+import { useJobs } from "../hooks/useJobs";
 import routes, { RootStackParamList } from "../navigation/routes";
 
 interface JobDetailsScreenProps {
@@ -30,7 +30,8 @@ const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({
   route,
 }) => {
   const { jobId } = route.params;
-  const job = jobsData.jobs.find((j) => j.id === jobId);
+  const { getJobById } = useJobs();
+  const job = getJobById(jobId);
 
   if (!job) {
     return (

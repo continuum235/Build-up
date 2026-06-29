@@ -9,10 +9,8 @@ The t exported from src/localization/i18n.ts:18 is a closure over the module-lev
 jobsSeedData.json is imported raw in FindJobsScreen.tsx, YourJobsScreen.tsx, EmployerRoleTitleScreen.tsx, JobDetailsScreen.tsx. Couples screens to raw JSON. Should go through a service/hook layer.
 ⚠️ ProfileContext — Single Massive State Object
 All profile fields in one useState<Profile> object means any field change re-renders all consumers. Acceptable for this app size, but splitting into smaller contexts (e.g., AuthContext, ProfileFormContext) would scale better.
-⚠️ Redundant bottomNav prop-drilling
-BottomNavigation receives navigation as a prop from every screen. It could call useNavigation() directly.
+⚠️ Redundant prop-drilling
 
----
 
 Suggested Folder Structure
 src/

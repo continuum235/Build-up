@@ -15,9 +15,10 @@ import {
 } from "react-native-responsive-screen";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import routes, { RootStackParamList } from "../navigation/routes";
-import jobsData from "../data/jobsSeedData.json";
 import BottomNavigation from "../components/layout/BottomNavigation";
 import { useLanguage } from "../context/LanguageContext";
+import { useJobs } from "../hooks/useJobs";
+import type { Job } from "../services/jobsService";
 
 const VerifiedIcon = require("../../assets/tick.png");
 const LocationIcon = require("../../assets/location.png");
@@ -37,7 +38,7 @@ type SupportedLanguage = "en" | "hi";
 interface JobCardData {
   id: number;
   status: JobStatus;
-  source: (typeof jobsData.jobs)[number];
+  source: Job;
   company: string;
   verified: boolean;
   location: string;
@@ -46,7 +47,7 @@ interface JobCardData {
 }
 
 const buildJobCard = (
-  job: (typeof jobsData.jobs)[number],
+  job: Job,
   status: JobStatus,
   showChat: boolean,
 ): JobCardData => ({
@@ -62,24 +63,25 @@ const buildJobCard = (
 
 const YourJobsScreen: React.FC<YourJobsScreenProps> = ({ navigation }) => {
   const { language, t } = useLanguage();
+  const { jobs } = useJobs();
   const [activeTab, setActiveTab] = useState<JobTab>("Sent Proposals");
   const currentLanguage = language as SupportedLanguage;
 
   const jobsByTab: Record<JobTab, JobCardData[]> = {
     "Sent Proposals": [
-      buildJobCard(jobsData.jobs[0], "Accepted", true),
-      buildJobCard(jobsData.jobs[1], "standby", false),
-      buildJobCard(jobsData.jobs[2], "Rejected", false),
+      buildJobCard(jobs[0], "Accepted", true),
+      buildJobCard(jobs[1], "standby", false),
+      buildJobCard(jobs[2], "Rejected", false),
     ],
     "Active Jobs": [
-      buildJobCard(jobsData.jobs[0], "Active", true),
-      buildJobCard(jobsData.jobs[3], "standby", true),
-      buildJobCard(jobsData.jobs[4], "Accepted", true),
+      buildJobCard(jobs[0], "Active", true),
+      buildJobCard(jobs[3], "standby", true),
+      buildJobCard(jobs[4], "Accepted", true),
     ],
     "Completed Jobs": [
-      buildJobCard(jobsData.jobs[1], "Completed", false),
-      buildJobCard(jobsData.jobs[5], "Completed", false),
-      buildJobCard(jobsData.jobs[8], "Completed", false),
+      buildJobCard(jobs[1], "Completed", false),
+      buildJobCard(jobs[5], "Completed", false),
+      buildJobCard(jobs[8], "Completed", false),
     ],
   };
 
