@@ -15,7 +15,6 @@ interface TextInputProps extends RNTextInputProps {
 export default function TextInput({
   error,
   label,
-  className = "",
   style,
   ...props
 }: TextInputProps) {

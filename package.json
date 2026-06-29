@@ -21,11 +21,9 @@
     "expo-localization": "~56.0.6",
     "expo-status-bar": "~56.0.4",
     "i18n-js": "^4.5.0",
-    "nativewind": "^5.0.0-preview.4",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-native": "^0.86.0",
-    "react-native-css": "^3.0.7",
     "react-native-gesture-handler": "^3.0.2",
     "react-native-reanimated": "^4.3.1",
     "react-native-responsive-screen": "^1.4.2",
@@ -35,12 +33,9 @@
     "react-native-worklets": "^0.9.2"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.3.1",
     "@types/react": "~19.2.14",
     "eslint-config-prettier": "^10.1.8",
-    "postcss": "^8.5.15",
     "prettier": "^3.8.4",
-    "tailwindcss": "^4.3.1",
     "typescript": "~6.0.3"
   },
   "overrides": {

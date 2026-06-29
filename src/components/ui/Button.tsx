@@ -18,7 +18,6 @@ export default function Button({
   variant = "primary",
   loading,
   disabled,
-  className = "",
   children,
   ...props
 }: ButtonProps) {
