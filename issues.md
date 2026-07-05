@@ -109,3 +109,203 @@ Quick Wins
   Next Quality Step
   The best next move is to create src/features/jobs/ and migrate the job-related screen logic there first. That will make it much easier to later replace jobsSeedData.json with real API calls without
   rewriting the screens.
+
+
+  From server/, start the backend:
+
+  npm run dev
+
+  Then verify in two steps.
+
+  1. Public health check:
+
+  curl http://localhost:3000/health
+
+  Expected:
+
+  {"status":"ok"}
+
+  2. Clerk-protected route:
+
+  Get a Clerk session token from the Expo app using getToken(), then call:
+
+
+  Expected success response:
+
+  {
+    "user": {
+      "id": "...",
+      "clerkId": "user_...",
+      "email": "...",
+    }
+  }
+
+  You can also check the current synced user:
+
+  curl http://localhost:3000/auth/me \
+    -H "Authorization: Bearer YOUR_CLERK_TOKEN"
+
+  If you call /auth/me or /auth/sync without the bearer token, you should get:
+
+  {"message":"Unauthorized"}
+
+  That confirms Clerk middleware is protecting the route.
+
+ Implemented so far in the backend:
+
+  - Express server entrypoint: server/src/server.ts
+  - Clerk middleware mounted globally with clerkMiddleware()
+  - Prisma client setup using Neon adapter for Prisma 7
+  - Auth routes:
+      - GET /health
+      - POST /auth/sync
+      - GET /auth/me
+
+  - Auth middleware:
+      - requireAuth
+      - reads Clerk auth from bearer token
+      - sets req.auth.userId
+
+  - Role middleware:
+      - requireRole(role)
+      - finds local user by clerkId
+      - checks HIRER or WORKER
+      - sets req.currentUser
+
+  - Auth controller:
+      - syncs Clerk user into PostgreSQL using Prisma
+      - trusts Clerk for clerkId, email, and name
+      - accepts only app-specific role from client
+
+  - Server TypeScript config
+  - Server ESLint config
+  - Scripts:
+      - npm run dev
+      - npm run build
+      - npm run lint
+      - npm run lint:fix
+      - npm start
+
+  Not implemented yet:
+
+  - Job CRUD routes/controllers
+  - Application routes/controllers
+  - Engagement/review routes
+  - Frontend Clerk integration
+  - Calling /auth/sync from Expo after login
+
+  So right now the backend can verify Clerk tokens and create/update your local User row. Full marketplace CRUD is the next backend step.
+
+
+  Code Quality Assessment
+This is a clean, well-structured implementation. Here's the breakdown:
+Aspect	Grade	Notes
+File organization	✅	Controllers, middleware, routes, lib — proper separation
+TypeScript usage	✅	Proper types, global augmentation, isRole type guard
+Error handling	✅	401/400/404/403/500 responses, error middleware at app level
+Security	✅	Clerk middleware globally, requireAuth on protected routes, role-based access
+DB layer	✅	Prisma with Neon adapter, upsert pattern for sync, proper selects (no leaks)
+Overall: Production-quality starter. No blockers.
+Minor Improvements (optional)
+1. Redundant auth checks — auth.controller.ts:25 and auth.controller.ts:69 check req.auth?.userId which is already guaranteed by requireAuth middleware. Remove them to keep controllers "skinny" and trust your middleware.
+2. Add input validation — Consider Zod for POST /auth/sync body validation instead of the manual isRole check. Scales better as more routes are added.
+3. Prisma client singleton — Already done in lib/prisma.ts 👍. Just ensure it's not re-created on hot reloads in dev (fine since tsx watch re-runs the module).
+
+
+How to Proceed (Backend First)
+The natural order, each building on the previous:
+Phase 1 — Job CRUD (/jobs)
+- Create routes/job.routes.ts → controllers/job.controller.ts
+- GET /jobs — list with filters (status, category, location) — public 
+- GET /jobs/:id — public
+- POST /jobs — HIRER only (requireAuth + requireRole("HIRER")) 
+- PATCH /jobs/:id — HIRER only (owns the job) 
+- DELETE /jobs/:id — HIRER only (owns the job) 
+- Implement pagination and query params for filtering
+Phase 2 — Application CRUD (/applications)
+- POST /jobs/:jobId/apply — WORKER only, checks job is OPEN, prevents duplicate
+- GET /jobs/:jobId/applications — HIRER who owns the job
+- PATCH /applications/:id — HIRER accepts/rejects
+- GET /workers/me/applications — WORKER sees their own
+Phase 3 — Engagements & Reviews
+- POST /applications/:id/engage — HIRER creates engagement from accepted application
+- PATCH /engagements/:id — complete/cancel
+- POST /engagements/:id/review — both parties can review, prevents self-review
+- GET /users/:id/reviews — public reviews for a user
+Phase 4 — Frontend Clerk Integration
+- Add @clerk/clerk-expo to the Expo project
+- Wrap root with <ClerkProvider publishableKey={...}>
+- Add sign-in/sign-up screens using Clerk components
+- Call /auth/sync after successful auth (in useEffect after useAuth().isSignedIn)
+- Protect routes with Clerk's useAuth() or <SignedIn> component
+Suggested File Structure for Phases 1–3
+src/
+  routes/
+    auth.routes.ts     (existing)
+    job.routes.ts      ← new
+    application.routes.ts  ← new
+    engagement.routes.ts   ← new
+    review.routes.ts       ← new
+  controllers/
+    auth.controller.ts     (existing)
+    job.controller.ts      ← new
+    application.controller.ts  ← new
+    engagement.controller.ts   ← new
+    review.controller.ts       ← new
+  middleware/
+    auth.ts              (existing)
+    requireRole.ts       (existing)
+    validate.ts          ← new (optional Zod helper)
+Start now?
+I can begin implementing Phase 1 (Job CRUD) as soon as you're ready. It follows the exact same patterns as the auth routes — new router, new controller, requireAuth + requireRole middleware, Prisma queries. Want me to start?
+
+
+
+
+Start the server first:
+cd server && npm run dev
+Then verify each endpoint in another terminal:
+# 1. Public list
+curl http://localhost:3000/jobs
+
+# 2. Pagination + filters
+curl "http://localhost:3000/jobs?page=1&limit=5&category=PLUMBER&location=Mumbai"
+
+# 3. Single job (replace :id with an actual ID)
+curl http://localhost:3000/jobs/JOB_ID
+
+# 4. Create job (HIRER only — needs a Clerk token)
+curl -X POST http://localhost:3000/jobs \
+  -H "Authorization: Bearer YOUR_CLERK_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Fix sink",
+    "description": "Kitchen sink leaking",
+    "location": "Mumbai",
+    "budget": 5000,
+    "budgetType": "FIXED",
+    "experience": 2,
+    "category": "PLUMBER",
+    "startDate": "2026-07-10"
+  }'
+
+# 5. Update job (HIRER owner only)
+curl -X PATCH http://localhost:3000/jobs/JOB_ID \
+  -H "Authorization: Bearer YOUR_CLERK_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Fix kitchen sink"}'
+
+# 6. Delete job (HIRER owner only)
+curl -X DELETE http://localhost:3000/jobs/JOB_ID \
+  -H "Authorization: Bearer YOUR_CLERK_TOKEN"
+
+# 7. Unauthorized access
+curl -X POST http://localhost:3000/jobs \
+  -H "Content-Type: application/json" \
+  -d '{"title":"test"}'
+# → {"message":"Unauthorized"}
+For the HIRER-only routes, you first need a Clerk session token. Get one from:
+- Your Expo app after implementing Clerk (not yet done), or
+- Clerk dashboard → Users → your test user → copy a session token, or
+- Use Clerk's API key directly to create a test token
+Want me to start the server and run the checks now?
