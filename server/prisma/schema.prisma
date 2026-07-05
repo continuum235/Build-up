@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -19,12 +14,11 @@ model User {
 
   role Role
 
-  jobs               Job[]         @relation("HirerJobs")
-  applications       Application[] @relation("WorkerApplications")
-  engagements        Engagement[]  @relation("WorkerEngagements")
-  activeEngagements  Engagement[]  @relation("ActiveWorkerEngagement")
-  reviewsGiven       Review[]      @relation("ReviewAuthor")
-  reviewsReceived    Review[]      @relation("ReviewSubject")
+  jobs            Job[]          @relation("HirerJobs")
+  engagements     Engagement[]   @relation("WorkerEngagements")
+  dismissals      JobDismissal[]
+  reviewsGiven    Review[]       @relation("ReviewAuthor")
+  reviewsReceived Review[]       @relation("ReviewSubject")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -46,9 +40,9 @@ model Job {
   hirerId String
   hirer   User   @relation("HirerJobs", fields: [hirerId], references: [id], onDelete: Cascade)
 
-  applications Application[]
-  engagements  Engagement[]
-  reviews      Review[]
+  engagement Engagement?
+  dismissals  JobDismissal[]
+  reviews     Review[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -59,46 +53,15 @@ model Job {
   @@index([location])
 }
 
-model Application {
-  id String @id @default(cuid())
-
-  workerId String
-  worker   User   @relation("WorkerApplications", fields: [workerId], references: [id], onDelete: Cascade)
-
-  jobId String
-  job   Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
-
-  status ApplicationStatus @default(PENDING)
-
-  engagement Engagement?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([workerId, jobId])
-  @@index([workerId])
-  @@index([jobId])
-  @@index([status])
-}
-
 model Engagement {
   id String @id @default(cuid())
 
   workerId String
   worker   User   @relation("WorkerEngagements", fields: [workerId], references: [id], onDelete: Cascade)
 
-  jobId String
+  jobId String @unique
   job   Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
-  applicationId String?      @unique
-  application   Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
-
-  // Set this to workerId while status is ACTIVE, then null it when completed or cancelled.
-  activeWorkerId String?
-  activeWorker   User?   @relation("ActiveWorkerEngagement", fields: [activeWorkerId], references: [id], onDelete: SetNull)
-
-  startDate DateTime
-  endDate   DateTime?
   status    EngagementStatus @default(ACTIVE)
 
   reviews Review[]
@@ -106,10 +69,24 @@ model Engagement {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([activeWorkerId])
+  @@index([workerId])
+  @@index([status])
+}
+
+model JobDismissal {
+  id String @id @default(cuid())
+
+  workerId String
+  worker   User   @relation(fields: [workerId], references: [id], onDelete: Cascade)
+
+  jobId String
+  job   Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([workerId, jobId])
   @@index([workerId])
   @@index([jobId])
-  @@index([status])
 }
 
 model Review {
@@ -147,12 +124,6 @@ enum JobStatus {
   OPEN
   CLOSED
   FILLED
-}
-
-enum ApplicationStatus {
-  PENDING
-  ACCEPTED
-  REJECTED
 }
 
 enum EngagementStatus {

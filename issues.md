@@ -309,3 +309,86 @@ For the HIRER-only routes, you first need a Clerk session token. Get one from:
 - Clerk dashboard → Users → your test user → copy a session token, or
 - Use Clerk's API key directly to create a test token
 Want me to start the server and run the checks now?
+
+Here's the screen breakdown by category:
+Onboarding (pre-role selection):
+Screen
+WelcomeScreen
+LanguageSelectionScreen
+LoginScreen
+SignupScreen
+RoleTypeScreen
+Employee (jobSeeker) flow — after selecting "jobSeeker":
+- RoleTitleScreen → UploadScreen → LanguageScreen → SkillsScreen → BioScreen → HourlyRateScreen → EnterDetailsScreen
+Hirer (employer) flow — after selecting "employer":
+- EmployerRoleTitleScreen → then merges into the same shared screens: UploadScreen → LanguageScreen → SkillsScreen → BioScreen → HourlyRateScreen → EnterDetailsScreen
+Post-onboarding (shared by both roles):
+- FindJobsScreen — Browse jobs
+- JobDetailsScreen — Job detail view
+- YourJobsScreen — User's jobs (applied/posted)
+- JobBoardScreen — Job board listing
+- ProfileScreen — Profile management
+- MessagesScreen — Messaging
+The two flows diverge only at the first step after role selection (RoleTitleScreen vs EmployerRoleTitleScreen), then converge through the rest of profile setup. Want me to detail what any of these screens contain?
+
+
+Based on your goal, here are the redefined phases for a worker-choice marketplace (Uber/Zomato model), not a hirer-controlled job portal:
+Phase 1 — Job CRUD ✅ (Already exists)
+GET /jobs, GET /jobs/:id, POST /jobs, PATCH /jobs/:id, DELETE /jobs/:id
+- Hirer posts jobs with wage, location, category
+- Workers browse open jobs publicly
+Phase 2 — Refactor: Remove Applications → Worker Choice
+This is the core shift. Tear out the Application model entirely:
+- POST /jobs/:jobId/accept — Worker claims a job → creates Engagement directly, marks Job as FILLED
+- POST /jobs/:jobId/reject — Worker dismisses a job → creates JobDismissal so it doesn't reappear
+- GET /workers/me/jobs — Worker sees their active engagements + available open jobs (minus dismissed)
+- GET /hirers/me/jobs — Hirer sees their posted jobs and which worker took them
+Schema changes: drop Application, add JobDismissal, simplify Engagement (no applicationId/activeWorkerId — just a direct link from Job to Engagement).
+Phase 3 — Engagements & Reviews
+- PATCH /engagements/:id — Complete or cancel an engagement
+- POST /engagements/:id/review — Both parties rate each other (no self-review)
+- GET /users/:id/reviews — Public profile reviews
+Phase 4 — Frontend with Clerk
+- Add @clerk/clerk-expo to Expo project
+- Sign-in/sign-up screens
+- POST /auth/sync after successful auth
+- Worker-facing job board (see open jobs, accept/reject)
+- Hirer-facing job management (post, edit, see who took the job)
+The key difference from the original plan: Phase 2 is not "Application CRUD" — it's "Worker Accept/Reject", putting the power to choose in the worker's hands, exactly like Uber/Zomato. Want me to start implementing Phase 2?
+
+
+Phase 2 is implemented and verified (TypeScript compiles, lint passes, migration applied). Here's what changed:
+Schema changes (server/prisma/schema.prisma)
+- Removed Application model and ApplicationStatus enum
+- Removed applications relation from User and Job
+- Simplified Engagement — dropped applicationId, activeWorkerId, startDate, endDate; now a clean 1:1 with Job via jobId @unique
+- Added JobDismissal model with @@unique([workerId, jobId]) — one dismissal per worker per job
+New files
+File	Purpose
+src/controllers/worker.controller.ts	acceptJob, rejectJob, getMyWorkerJobs
+src/controllers/hirer.controller.ts	getMyHirerJobs
+src/routes/worker.routes.ts	GET /workers/me/jobs
+src/routes/hirer.routes.ts	GET /hirers/me/jobs
+Modified files
+File	Change
+src/routes/job.routes.ts	Added POST /jobs/:jobId/accept and POST /jobs/:jobId/reject (both require WORKER role)
+src/server.ts	Registered /workers and /hirers routers
+prisma/migrations/	Fresh migration 20260705181600_worker_choice_marketplace
+Final API surface
+Method	Endpoint	Auth	Role
+GET	/jobs	—	Public
+GET	/jobs/:id	—	Public
+POST	/jobs	✓	HIRER
+PATCH	/jobs/:id	✓	HIRER
+DELETE	/jobs/:id	✓	HIRER
+POST	/jobs/:jobId/accept	✓	WORKER
+POST	/jobs/:jobId/reject	✓	WORKER
+GET	/workers/me/jobs	✓	WORKER
+GET	/hirers/me/jobs	✓	HIRER
+POST	/auth/sync	✓	—
+GET	/auth/me	✓	—
+Worker flow
+1. Worker calls GET /workers/me/jobs — gets their active engagement + all open jobs (minus dismissed)
+2. Worker calls POST /jobs/:jobId/accept — creates Engagement, marks job FILLED (fails if they already have an active engagement or previously rejected it)
+3. Worker calls POST /jobs/:jobId/reject — creates JobDismissal, hides it from their feed
+The hirer's only power is posting the job with clear terms — they never select/reject workers. Ready for Phase 3 whenever you are.
