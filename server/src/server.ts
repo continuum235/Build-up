@@ -3,8 +3,10 @@ import { clerkMiddleware } from "@clerk/express";
 import cors from "cors";
 import express from "express";
 import { authRouter } from "./routes/auth.routes";
+import { engagementRouter } from "./routes/engagement.routes";
 import { hirerRouter } from "./routes/hirer.routes";
 import { jobRouter } from "./routes/job.routes";
+import { userRouter } from "./routes/user.routes";
 import { workerRouter } from "./routes/worker.routes";
 
 const app = express();
@@ -19,7 +21,9 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/auth", authRouter);
+app.use("/engagements", engagementRouter);
 app.use("/jobs", jobRouter);
+app.use("/users", userRouter);
 app.use("/workers", workerRouter);
 app.use("/hirers", hirerRouter);
 
