@@ -4,6 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "start": "node dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -11,14 +16,27 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@clerk/backend": "^2.13.0",
+    "@clerk/express": "^1.7.54",
+    "@neondatabase/serverless": "^1.1.0",
     "@prisma/adapter-neon": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "prisma": "^7.8.0"
+    "prisma": "^7.8.0",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "@eslint/js": "^9.39.4",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^24.12.0",
+    "@types/ws": "^8.18.1",
+    "eslint": "^9.39.4",
+    "nodemon": "^3.1.14",
+    "tsx": "^4.21.0",
+    "typescript-eslint": "^8.49.0",
+    "typescript": "^5.9.3"
   }
 }
