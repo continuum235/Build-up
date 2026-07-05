@@ -38,3 +38,74 @@ Quick Wins
 4. Move module-level side effects: Put setI18nConfig() inside the LanguageProvider component
 5. Remove NativeWind if you're not using it (or migrate to it consistently)
 6. Create a useJobs hook to wrap seed data access, making it easy to swap with a real API later
+
+
+• Folder structure is decent for the current size. src/screens, src/components, src/context, src/hooks, src/services, src/navigation, src/localization is a good React Native base. The bigger issue is that
+  some files are starting to mix UI, mock data rules, state transitions, and formatting logic.
+
+  Highest Impact
+
+  1. Move job/application/business logic out of screens.
+      - src/screens/FindJobsScreen.tsx:75 filters jobs inline.
+      - src/screens/JobBoardScreen.tsx:48 maps seed jobs and creates custom jobs inline.
+      - src/screens/YourJobsScreen.tsx:69 hardcodes proposal/active/completed jobs.
+
+     Suggested structure:
+
+     src/features/jobs/
+       components/
+       hooks/
+       services/
+       types.ts
+       utils.ts
+     src/features/profile/
+     src/features/applications/
+     src/features/engagements/
+
+  2. Introduce shared domain types.
+     Right now frontend job states like "standby" / "Accepted" and Prisma enums like PENDING, ACCEPTED, ACTIVE can drift. Add shared frontend types in something like:
+
+     src/types/domain.ts
+
+     Use ApplicationStatus, EngagementStatus, JobStatus, Role consistently.
+
+  3. Do not keep passwords in profile state.
+     src/context/ProfileContext.tsx:12 stores password. Once Clerk/auth is connected, remove this from app state entirely. Auth credentials should not live in a reusable profile context.
+
+  4. Split large screens into smaller components.
+     FindJobsScreen and JobBoardScreen are doing too much. Extract:
+
+     JobTabs.tsx
+     JobFilterChips.tsx
+     JobSearchBar.tsx
+     AddJobModal.tsx
+     BroadcastJobModal.tsx
+     EmptyState.tsx
+
+  5. Add an API/server structure before backend grows.
+     Since Prisma now exists, server should move beyond only prisma/:
+
+     server/src/
+       app.ts
+       db.ts
+       routes/
+         jobs.routes.ts
+         applications.routes.ts
+         engagements.routes.ts
+       services/
+         jobs.service.ts
+         applications.service.ts
+         engagements.service.ts
+       validators/
+
+  Good So Far
+
+  - npm run lint passes.
+  - npx tsc --noEmit passes.
+  - Navigation and localization are organized clearly.
+  - JobDetails is a good reusable component foundation.
+  - Prisma schema is now a better fit for the marketplace model.
+
+  Next Quality Step
+  The best next move is to create src/features/jobs/ and migrate the job-related screen logic there first. That will make it much easier to later replace jobsSeedData.json with real API calls without
+  rewriting the screens.

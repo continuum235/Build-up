@@ -10,3 +10,173 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model User {
+  id      String @id @default(cuid())
+  clerkId String @unique
+  name    String
+  email   String @unique
+
+  role Role
+
+  jobs               Job[]         @relation("HirerJobs")
+  applications       Application[] @relation("WorkerApplications")
+  engagements        Engagement[]  @relation("WorkerEngagements")
+  activeEngagements  Engagement[]  @relation("ActiveWorkerEngagement")
+  reviewsGiven       Review[]      @relation("ReviewAuthor")
+  reviewsReceived    Review[]      @relation("ReviewSubject")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Job {
+  id          String @id @default(cuid())
+  title       String
+  description String
+  location    String
+  budget      Decimal
+  budgetType  BudgetType
+  experience  Int
+  category    JobCategory
+  startDate   DateTime
+  endDate     DateTime?
+  status      JobStatus @default(OPEN)
+
+  hirerId String
+  hirer   User   @relation("HirerJobs", fields: [hirerId], references: [id], onDelete: Cascade)
+
+  applications Application[]
+  engagements  Engagement[]
+  reviews      Review[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([hirerId])
+  @@index([status])
+  @@index([category])
+  @@index([location])
+}
+
+model Application {
+  id String @id @default(cuid())
+
+  workerId String
+  worker   User   @relation("WorkerApplications", fields: [workerId], references: [id], onDelete: Cascade)
+
+  jobId String
+  job   Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  status ApplicationStatus @default(PENDING)
+
+  engagement Engagement?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([workerId, jobId])
+  @@index([workerId])
+  @@index([jobId])
+  @@index([status])
+}
+
+model Engagement {
+  id String @id @default(cuid())
+
+  workerId String
+  worker   User   @relation("WorkerEngagements", fields: [workerId], references: [id], onDelete: Cascade)
+
+  jobId String
+  job   Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  applicationId String?      @unique
+  application   Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+
+  // Set this to workerId while status is ACTIVE, then null it when completed or cancelled.
+  activeWorkerId String?
+  activeWorker   User?   @relation("ActiveWorkerEngagement", fields: [activeWorkerId], references: [id], onDelete: SetNull)
+
+  startDate DateTime
+  endDate   DateTime?
+  status    EngagementStatus @default(ACTIVE)
+
+  reviews Review[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([activeWorkerId])
+  @@index([workerId])
+  @@index([jobId])
+  @@index([status])
+}
+
+model Review {
+  id      String @id @default(cuid())
+  rating  Int
+  comment String?
+
+  jobId String
+  job   Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  engagementId String
+  engagement   Engagement @relation(fields: [engagementId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   User   @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  subjectId String
+  subject   User   @relation("ReviewSubject", fields: [subjectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([engagementId, authorId, subjectId])
+  @@index([jobId])
+  @@index([authorId])
+  @@index([subjectId])
+}
+
+enum Role {
+  HIRER
+  WORKER
+}
+
+enum JobStatus {
+  OPEN
+  CLOSED
+  FILLED
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum EngagementStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum BudgetType {
+  HOURLY
+  DAILY
+  FIXED
+}
+
+enum JobCategory {
+  CARPENTER
+  ELECTRICIAN
+  PLUMBER
+  PAINTER
+  CLEANER
+  GARDENER
+  MASON
+  DRIVER
+  COOK
+  SECURITY
+  OTHER
+}

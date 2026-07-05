@@ -3,3 +3,6 @@
 node_modules
 AGENTS.md
 .crush
+.agents
+.codex
+.github
