@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   ScrollView,
@@ -34,7 +34,6 @@ interface YourJobsScreenProps {
 }
 
 type JobTab = "Active Jobs" | "Completed Jobs";
-type SupportedLanguage = "en" | "hi";
 
 interface EngagementItem {
   id: string;
@@ -43,7 +42,7 @@ interface EngagementItem {
 }
 
 const YourJobsScreen: React.FC<YourJobsScreenProps> = ({ navigation }) => {
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
   const { getMyWorkerJobs, updateEngagement } = useApi();
   const [activeTab, setActiveTab] = useState<JobTab>("Active Jobs");
   const [engagements, setEngagements] = useState<EngagementItem[]>([]);
@@ -56,10 +55,7 @@ const YourJobsScreen: React.FC<YourJobsScreenProps> = ({ navigation }) => {
   }>({ visible: false, engagementId: "" });
   const [cancelReason, setCancelReason] = useState("");
 
-  const currentLanguage = language as SupportedLanguage;
-
-  const fetchJobs = () => {
-    setLoading(true);
+  const fetchJobs = useCallback(() => {
     getMyWorkerJobs()
       .then((data: Record<string, unknown>) => {
         setEngagements(
@@ -68,11 +64,11 @@ const YourJobsScreen: React.FC<YourJobsScreenProps> = ({ navigation }) => {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  };
+  }, [getMyWorkerJobs]);
 
   useEffect(() => {
     fetchJobs();
-  }, []);
+  }, [fetchJobs]);
 
   const activeEngagements = engagements.filter((e) => e.status === "ACTIVE");
   const completedEngagements = engagements.filter((e) => e.status === "COMPLETED");

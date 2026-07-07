@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
-  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -80,7 +79,6 @@ const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {
   const { jobs: seedJobs, categories, categoryTranslations } = useJobs();
   const { getMyWorkerJobs, acceptJob, rejectJob } = useApi();
   const [apiJobs, setApiJobs] = useState<Record<string, unknown>[]>([]);
-  const [loadingJobs, setLoadingJobs] = useState(true);
   const [actingOnJob, setActingOnJob] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [activeTab, setActiveTab] = useState("Broadcasted Jobs");
@@ -89,19 +87,15 @@ const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {
 
   useEffect(() => {
     let cancelled = false;
-    setLoadingJobs(true);
     getMyWorkerJobs()
       .then((data) => {
         if (!cancelled) {
           setApiJobs((data as { openJobs: Record<string, unknown>[] }).openJobs ?? []);
         }
       })
-      .catch(() => {})
-      .finally(() => {
-        if (!cancelled) setLoadingJobs(false);
-      });
+      .catch(() => {});
     return () => { cancelled = true; };
-  }, []);
+  }, [getMyWorkerJobs]);
 
   const jobs = [...seedJobs, ...apiJobs.map(mapApiJob)];
   const [likedJobIds, setLikedJobIds] = useState<Set<string | number>>(

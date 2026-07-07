@@ -47,12 +47,11 @@ const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({
   const seedJob = typeof jobId === "number" ? getJobById(jobId) : undefined;
   const { createOrFindConversation } = useApi();
   const [apiJob, setApiJob] = useState<Record<string, unknown> | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(!seedJob && typeof jobId === "string");
   const [messaging, setMessaging] = useState(false);
 
   useEffect(() => {
     if (seedJob || typeof jobId !== "string") return;
-    setLoading(true);
     fetch(`${process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000"}/jobs/${jobId}`)
       .then((r) => r.json())
       .then((data) => setApiJob((data as { job: Record<string, unknown> }).job ?? null))

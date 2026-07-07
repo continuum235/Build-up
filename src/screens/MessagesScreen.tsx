@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   FlatList,
@@ -7,7 +7,6 @@ import {
   StyleSheet,
   StatusBar,
   ActivityIndicator,
-  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
@@ -48,13 +47,7 @@ const MessagesScreen: React.FC = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadConversations();
-    }, []),
-  );
-
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     setLoading(true);
     try {
       const data = await listConversations();
@@ -64,7 +57,13 @@ const MessagesScreen: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [listConversations]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadConversations();
+    }, [loadConversations]),
+  );
 
   const renderItem = ({ item }: { item: Conversation }) => {
     const lastMsg = item.messages[0];

@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
-  ActivityIndicator,
   Modal,
   Image,
 } from "react-native";

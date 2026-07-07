@@ -45,21 +45,22 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
-    loadMessages();
-  }, [conversationId]);
-
-  const loadMessages = async () => {
-    try {
-      const data = await getConversationMessages(conversationId);
-      const res = data as { messages: Message[]; currentUserId: string };
-      setMessages(res.messages ?? []);
-      setCurrentUserId(res.currentUserId);
-    } catch {
-      // silent
-    } finally {
-      setLoading(false);
-    }
-  };
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await getConversationMessages(conversationId);
+        if (cancelled) return;
+        const res = data as { messages: Message[]; currentUserId: string };
+        setMessages(res.messages ?? []);
+        setCurrentUserId(res.currentUserId);
+      } catch {
+        // silent
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [conversationId, getConversationMessages]);
 
   const handleSend = async () => {
     const text = inputText.trim();
