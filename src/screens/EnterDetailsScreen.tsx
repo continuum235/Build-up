@@ -6,6 +6,7 @@ import {
   StyleSheet,
   StatusBar,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -18,6 +19,7 @@ import routes, { RootStackParamList } from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
 import { isValidDetails } from "../utils/validation";
+import { useApi } from "../services/api";
 import KeyboardSafeWrapper from "../components/layout/KeyboardSafeWrapper";
 import TextInput from "../components/ui/TextInput";
 
@@ -27,6 +29,7 @@ const EnterDetailsScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { profile, setDetails } = useProfile();
   const { t } = useLanguage();
+  const { updateProfile } = useApi();
   const [country] = useState<string>(profile.details.country);
   const [addressLine1, setAddressLine1] = useState<string>(
     profile.details.addressLine1,
@@ -35,8 +38,9 @@ const EnterDetailsScreen: React.FC = () => {
     profile.details.addressLine2,
   );
   const [city, setCity] = useState<string>(profile.details.city);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const updatedDetails = {
       country,
       addressLine1,
@@ -50,19 +54,28 @@ const EnterDetailsScreen: React.FC = () => {
     }
 
     setDetails(updatedDetails);
-    const payload = {
-      ...profile,
-      details: updatedDetails,
-    };
+    setSubmitting(true);
 
-    console.log("Profile submit:", payload);
-    alert("Profile saved. Check console for details.");
-    const destRoute =
-      profile.roleType === "employer" ? routes.jobBoard : routes.profile;
-    navigation.reset({
-      index: 0,
-      routes: [{ name: destRoute }],
-    });
+    try {
+      await updateProfile({
+        country: updatedDetails.country,
+        addressLine1: updatedDetails.addressLine1,
+        addressLine2: updatedDetails.addressLine2,
+        city: updatedDetails.city,
+        onboardingComplete: true,
+      });
+
+      const destRoute =
+        profile.roleType === "employer" ? routes.jobBoard : routes.profile;
+      navigation.reset({
+        index: 0,
+        routes: [{ name: destRoute }],
+      });
+    } catch {
+      alert("Failed to save profile. Please check your connection and try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -88,80 +101,63 @@ const EnterDetailsScreen: React.FC = () => {
         scrollStyle={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
-        <View style={styles.avatarRow}>
-          <View style={styles.avatarCircle}>
-            <Text style={styles.avatarText}>U</Text>
-          </View>
+        <View style={styles.textSection}>
+          <Text style={styles.mainHeading}>{t("details.heading")}</Text>
+          <Text style={styles.subHeading}>{t("details.subtitle")}</Text>
         </View>
 
-        <View style={styles.inputSection}>
+        <View style={styles.formSection}>
           <Text style={styles.inputLabel}>{t("details.country")}</Text>
-          <TouchableOpacity style={styles.selectInput} activeOpacity={0.8}>
-            <Text style={styles.selectText}>{country}</Text>
-            <Image
-              source={require("../../assets/Drop-down-arrow.png")}
-              resizeMode="contain"
-              style={styles.selectIcon}
-            />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.inputSection}>
-          <Text style={styles.inputLabel}>{t("details.address")}</Text>
           <TextInput
-            style={styles.textInput}
-            placeholder={t("details.addressLine1")}
+            placeholder={t("details.countryPlaceholder")}
+            value={country}
+            editable={false}
+            style={styles.input}
+          />
+
+          <Text style={styles.inputLabel}>{t("details.address1")}</Text>
+          <TextInput
+            placeholder={t("details.address1Placeholder")}
             value={addressLine1}
             onChangeText={setAddressLine1}
+            style={styles.input}
           />
+
+          <Text style={styles.inputLabel}>{t("details.address2")}</Text>
           <TextInput
-            style={[styles.textInput, styles.textInputSpacing]}
-            placeholder={t("details.addressLine2")}
+            placeholder={t("details.address2Placeholder")}
             value={addressLine2}
             onChangeText={setAddressLine2}
+            style={styles.input}
           />
-        </View>
 
-        <View style={styles.inputSection}>
           <Text style={styles.inputLabel}>{t("details.city")}</Text>
           <TextInput
-            style={styles.textInput}
-            placeholder={t("details.city")}
+            placeholder={t("details.cityPlaceholder")}
             value={city}
             onChangeText={setCity}
+            style={styles.input}
           />
         </View>
 
         <View style={{ flex: 1 }} />
 
-        <TouchableOpacity style={styles.primaryButton} onPress={handleSubmit}>
-          <Text style={styles.primaryButtonText}>{t("details.button")}</Text>
-        </TouchableOpacity>
+        {submitting ? (
+          <View style={styles.submittingContainer}>
+            <ActivityIndicator size="large" color="#965541" />
+            <Text style={styles.submittingText}>Saving profile...</Text>
+          </View>
+        ) : (
+          <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
+            <Text style={styles.submitBtnText}>{t("details.submit")}</Text>
+          </TouchableOpacity>
+        )}
       </KeyboardSafeWrapper>
-
-      <View style={styles.progressContainer}>
-        <View style={styles.progressTrack}>
-          <View style={styles.progressFill} />
-        </View>
-      </View>
-
-      <View style={styles.bottomNav}>
-        <Text style={styles.stepText}>1/n</Text>
-        <View style={styles.navArrowsContainer}>
-          <TouchableOpacity
-            style={styles.arrowButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.arrowText}>{"<"}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.arrowButton} onPress={handleSubmit}>
-            <Text style={styles.arrowText}>{">"}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
     </SafeAreaView>
   );
 };
+
+export default EnterDetailsScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -193,67 +189,42 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: wp("8%"),
-    paddingTop: hp("1%"),
+    paddingTop: hp("2%"),
     paddingBottom: hp("3%"),
   },
-  avatarRow: {
-    alignItems: "center",
-    marginBottom: hp("3%"),
+  textSection: {
+    marginBottom: hp("5%"),
   },
-  avatarCircle: {
-    width: wp("26%"),
-    height: wp("26%"),
-    borderRadius: wp("13%"),
-    backgroundColor: "#F3C2FF",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: {
-    fontSize: wp("8%"),
+  mainHeading: {
+    color: "#965541",
+    fontSize: wp("7.5%"),
     fontWeight: "bold",
-    color: "#7A3D64",
+    marginBottom: hp("2%"),
   },
-  inputSection: {
-    marginBottom: hp("2.5%"),
+  subHeading: {
+    color: "#1E1E1E",
+    fontSize: wp("3.8%"),
+    lineHeight: wp("5.5%"),
+    opacity: 0.8,
+  },
+  formSection: {
+    marginBottom: hp("4%"),
   },
   inputLabel: {
     color: "#1E1E1E",
-    fontSize: wp("4.5%"),
+    fontSize: wp("4%"),
     fontWeight: "bold",
     marginBottom: hp("1%"),
+    marginTop: hp("2%"),
   },
-  selectInput: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderColor: "#D8DADC",
+  input: {
+    fontSize: wp("4%"),
     borderRadius: wp("3%"),
     borderWidth: 1,
-    paddingHorizontal: wp("4%"),
-    paddingVertical: hp("1.8%"),
-  },
-  selectText: {
-    color: "#1E1E1E",
-    fontSize: wp("4%"),
-  },
-  selectIcon: {
-    width: wp("4%"),
-    height: wp("4%"),
-    tintColor: "#965541",
-  },
-  textInput: {
     borderColor: "#D8DADC",
-    borderRadius: wp("3%"),
-    borderWidth: 1,
-    paddingHorizontal: wp("4%"),
-    paddingVertical: hp("1.8%"),
-    color: "#1E1E1E",
-    fontSize: wp("4%"),
+    padding: wp("4%"),
   },
-  textInputSpacing: {
-    marginTop: hp("1.5%"),
-  },
-  primaryButton: {
+  submitBtn: {
     alignItems: "center",
     backgroundColor: "#965541",
     borderRadius: wp("4%"),
@@ -261,57 +232,18 @@ const styles = StyleSheet.create({
     width: "100%",
     marginBottom: hp("2%"),
   },
-  primaryButtonText: {
+  submitBtnText: {
     color: "#FFFFFF",
     fontSize: wp("4.5%"),
     fontWeight: "bold",
   },
-  progressContainer: {
-    backgroundColor: "#E6E6E6",
-    width: "100%",
-    height: hp("0.5%"),
-  },
-  progressTrack: {
-    width: "100%",
-    height: "100%",
-  },
-  progressFill: {
-    backgroundColor: "#965541",
-    width: "100%",
-    height: "100%",
-    borderRadius: wp("1%"),
-  },
-  bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  submittingContainer: {
     alignItems: "center",
-    backgroundColor: "#F2E1DA",
-    paddingHorizontal: wp("8%"),
-    paddingTop: hp("2.5%"),
-    paddingBottom: hp("4%"),
+    paddingVertical: hp("2%"),
   },
-  stepText: {
+  submittingText: {
     color: "#965541",
-    fontSize: wp("7%"),
-    fontWeight: "bold",
-  },
-  navArrowsContainer: {
-    flexDirection: "row",
-  },
-  arrowButton: {
-    backgroundColor: "#965541",
-    width: wp("12%"),
-    height: wp("10%"),
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: wp("2%"),
-    marginLeft: wp("2%"),
-  },
-  arrowText: {
-    color: "#FFFFFF",
-    fontSize: wp("5%"),
-    fontWeight: "bold",
+    fontSize: wp("4%"),
+    marginTop: hp("1%"),
   },
 });
-
-export default EnterDetailsScreen;

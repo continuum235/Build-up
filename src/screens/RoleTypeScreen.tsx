@@ -7,6 +7,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -18,6 +19,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import routes, { RootStackParamList } from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
+import { useApi } from "../services/api";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -25,11 +27,23 @@ const RoleTypeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { profile, setRoleType } = useProfile();
   const { t } = useLanguage();
+  const { updateProfile } = useApi();
   const [selectedRole, setSelectedRole] = useState<string>(profile.roleType);
+  const [saving, setSaving] = useState(false);
 
-  const handleSelect = (roleType: string) => {
+  const handleSelect = async (roleType: string) => {
     setSelectedRole(roleType);
     setRoleType(roleType);
+
+    const dbRole = roleType === "employer" ? "HIRER" : "WORKER";
+    setSaving(true);
+    try {
+      await updateProfile({ role: dbRole });
+    } catch {
+      // optimistic — data still saved in ProfileContext
+    } finally {
+      setSaving(false);
+    }
 
     if (roleType === "employer") {
       navigation.navigate(routes.employerRoleTitle);
@@ -62,6 +76,10 @@ const RoleTypeScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {saving && (
+          <ActivityIndicator size="small" color="#965541" style={{ marginBottom: hp("2%") }} />
+        )}
+
         <View style={styles.textSection}>
           <Text style={styles.mainQuestion}>{t("roleType.question")}</Text>
           <Text style={styles.subText}>{t("roleType.subtitle")}</Text>
@@ -120,6 +138,8 @@ const RoleTypeScreen: React.FC = () => {
     </SafeAreaView>
   );
 };
+
+export default RoleTypeScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -223,5 +243,3 @@ const styles = StyleSheet.create({
     borderRadius: wp("1%"),
   },
 });
-
-export default RoleTypeScreen;

@@ -12,7 +12,7 @@ declare global {
         clerkId: string;
         email: string;
         name: string;
-        role: Role;
+        role: Role | null;
       };
     }
   }

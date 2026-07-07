@@ -5,8 +5,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
-  TextInput,
+  TextInput as RNTextInput,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -19,6 +20,7 @@ import routes, { RootStackParamList } from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
 import { isValidHourlyRate } from "../utils/validation";
+import { useApi } from "../services/api";
 import KeyboardSafeWrapper from "../components/layout/KeyboardSafeWrapper";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -27,14 +29,24 @@ const HourlyRateScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { profile, setHourlyRate } = useProfile();
   const { t } = useLanguage();
+  const { updateProfile } = useApi();
   const [rate, setRate] = useState<string>(profile.hourlyRate || "15");
+  const [saving, setSaving] = useState(false);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!isValidHourlyRate(rate)) {
       alert(t("validation.validRate"));
       return;
     }
     setHourlyRate(rate);
+    setSaving(true);
+    try {
+      await updateProfile({ hourlyRate: parseInt(rate, 10) });
+    } catch {
+      // optimistic
+    } finally {
+      setSaving(false);
+    }
     navigation.navigate(routes.enterDetails);
   };
 
@@ -66,31 +78,28 @@ const HourlyRateScreen: React.FC = () => {
           <Text style={styles.subHeading}>{t("hourlyRate.subtitle")}</Text>
         </View>
 
-        <View style={styles.inputSection}>
-          <Text style={styles.inputLabel}>{t("hourlyRate.label")}</Text>
-          <Text style={styles.inputNote}>{t("hourlyRate.note")}</Text>
-
-          <View style={styles.rateRow}>
-            <View style={styles.rateInputWrapper}>
-              <Text style={styles.ratePrefix}>₹</Text>
-              <TextInput
-                style={styles.rateInput}
-                value={rate}
-                onChangeText={setRate}
-                keyboardType="numeric"
-                placeholder="0"
-                placeholderTextColor="#A4A9B6"
-              />
-            </View>
-            <Text style={styles.rateSuffix}>/hr</Text>
-          </View>
+        <View style={styles.rateInputContainer}>
+          <Text style={styles.currencySymbol}>₹</Text>
+          <RNTextInput
+            style={styles.rateInput}
+            value={rate}
+            onChangeText={setRate}
+            keyboardType="numeric"
+            placeholder="15"
+            placeholderTextColor="#A4A9B6"
+          />
+          <Text style={styles.rateSuffix}>/hr</Text>
         </View>
 
         <View style={{ flex: 1 }} />
 
-        <TouchableOpacity style={styles.primaryButton} onPress={handleNext}>
-          <Text style={styles.primaryButtonText}>{t("hourlyRate.button")}</Text>
-        </TouchableOpacity>
+        {saving ? (
+          <ActivityIndicator size="large" color="#965541" />
+        ) : (
+          <TouchableOpacity style={styles.nextBtn} onPress={handleNext}>
+            <Text style={styles.nextBtnText}>{t("common.next")}</Text>
+          </TouchableOpacity>
+        )}
       </KeyboardSafeWrapper>
 
       <View style={styles.progressContainer}>
@@ -98,24 +107,11 @@ const HourlyRateScreen: React.FC = () => {
           <View style={styles.progressFill} />
         </View>
       </View>
-
-      <View style={styles.bottomNav}>
-        <Text style={styles.stepText}>6/6</Text>
-        <View style={styles.navArrowsContainer}>
-          <TouchableOpacity
-            style={styles.arrowButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.arrowText}>{"<"}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.arrowButton} onPress={handleNext}>
-            <Text style={styles.arrowText}>{">"}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
     </SafeAreaView>
   );
 };
+
+export default HourlyRateScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -130,8 +126,7 @@ const styles = StyleSheet.create({
     paddingVertical: hp("2%"),
   },
   backBtn: {
-    padding: wp("5%"),
-    width: wp("20%"),
+    padding: wp("1%"),
   },
   backIcon: {
     width: wp("8%"),
@@ -143,7 +138,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   headerSpacer: {
-    width: wp("10%"),
+    width: wp("8%"),
   },
   scrollView: {
     flex: 1,
@@ -155,66 +150,49 @@ const styles = StyleSheet.create({
     paddingBottom: hp("3%"),
   },
   textSection: {
-    marginBottom: hp("4%"),
+    marginBottom: hp("5%"),
   },
   mainHeading: {
     color: "#965541",
-    fontSize: wp("8%"),
-    lineHeight: wp("10.5%"),
+    fontSize: wp("7.5%"),
+    fontWeight: "bold",
     marginBottom: hp("2%"),
   },
   subHeading: {
     color: "#1E1E1E",
-    fontSize: wp("4%"),
-    lineHeight: wp("6%"),
-    opacity: 0.9,
+    fontSize: wp("3.8%"),
+    lineHeight: wp("5.5%"),
+    opacity: 0.8,
   },
-  inputSection: {
-    marginBottom: hp("3%"),
+  rateInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: hp("4%"),
   },
-  inputLabel: {
-    color: "#1E1E1E",
-    fontSize: wp("4.5%"),
+  currencySymbol: {
+    color: "#965541",
+    fontSize: wp("8%"),
     fontWeight: "bold",
-    marginBottom: hp("0.5%"),
-  },
-  inputNote: {
-    color: "#1E1E1E",
-    fontSize: wp("3.6%"),
-    opacity: 0.7,
-    marginBottom: hp("1.5%"),
-  },
-  rateRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  rateInputWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderColor: "#D8DADC",
-    borderRadius: wp("3%"),
-    borderWidth: 1,
-    paddingHorizontal: wp("4%"),
-    paddingVertical: hp("1.4%"),
-    flex: 1,
-  },
-  ratePrefix: {
-    fontSize: wp("4.5%"),
-    color: "#1E1E1E",
     marginRight: wp("2%"),
-    fontWeight: "bold",
   },
   rateInput: {
-    flex: 1,
-    fontSize: wp("4.5%"),
-    color: "#1E1E1E",
+    borderBottomColor: "#D8DADC",
+    borderBottomWidth: 2,
+    color: "#965541",
+    fontSize: wp("10%"),
+    fontWeight: "bold",
+    textAlign: "center",
+    minWidth: wp("25%"),
+    paddingVertical: hp("1%"),
   },
   rateSuffix: {
-    marginLeft: wp("4%"),
-    fontSize: wp("4.5%"),
-    color: "#1E1E1E",
+    color: "#A4A9B6",
+    fontSize: wp("5%"),
+    fontWeight: "600",
+    marginLeft: wp("2%"),
   },
-  primaryButton: {
+  nextBtn: {
     alignItems: "center",
     backgroundColor: "#965541",
     borderRadius: wp("4%"),
@@ -222,7 +200,7 @@ const styles = StyleSheet.create({
     width: "100%",
     marginBottom: hp("2%"),
   },
-  primaryButtonText: {
+  nextBtnText: {
     color: "#FFFFFF",
     fontSize: wp("4.5%"),
     fontWeight: "bold",
@@ -238,41 +216,8 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     backgroundColor: "#965541",
-    width: "100%",
+    width: "55%",
     height: "100%",
     borderRadius: wp("1%"),
   },
-  bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#F2E1DA",
-    paddingHorizontal: wp("8%"),
-    paddingTop: hp("2.5%"),
-    paddingBottom: hp("4%"),
-  },
-  stepText: {
-    color: "#965541",
-    fontSize: wp("7%"),
-    fontWeight: "bold",
-  },
-  navArrowsContainer: {
-    flexDirection: "row",
-  },
-  arrowButton: {
-    backgroundColor: "#965541",
-    width: wp("12%"),
-    height: wp("10%"),
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: wp("2%"),
-    marginLeft: wp("2%"),
-  },
-  arrowText: {
-    color: "#FFFFFF",
-    fontSize: wp("5%"),
-    fontWeight: "bold",
-  },
 });
-
-export default HourlyRateScreen;

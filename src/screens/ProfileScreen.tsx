@@ -6,17 +6,27 @@ import {
   Image,
   StyleSheet,
   StatusBar,
+  TouchableOpacity,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
+import { useAuth } from "@clerk/clerk-expo";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import BottomNavigation from "../components/layout/BottomNavigation";
+import routes, { RootStackParamList } from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 const ProfileScreen: React.FC = () => {
+  const navigation = useNavigation<NavigationProp>();
+  const { signOut } = useAuth();
   const { profile } = useProfile();
   const { t } = useLanguage();
   const isEmployer = profile.roleType === "employer";
@@ -120,6 +130,25 @@ const ProfileScreen: React.FC = () => {
           </View>
         </View>
       </ScrollView>
+
+      <TouchableOpacity
+        style={styles.logoutButton}
+        onPress={() => {
+          Alert.alert("Log out", "Are you sure you want to log out?", [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Log out",
+              style: "destructive",
+              onPress: async () => {
+                await signOut();
+                navigation.reset({ index: 0, routes: [{ name: routes.welcome }] });
+              },
+            },
+          ]);
+        }}
+      >
+        <Text style={styles.logoutText}>Log out</Text>
+      </TouchableOpacity>
 
       <BottomNavigation activeTab="profile" />
     </SafeAreaView>
@@ -239,6 +268,20 @@ const styles = StyleSheet.create({
   },
   documentTextActive: {
     color: "#965541",
+  },
+  logoutButton: {
+    alignItems: "center",
+    paddingVertical: hp("2%"),
+    marginHorizontal: wp("6%"),
+    marginBottom: hp("1%"),
+    borderColor: "#E5E5E5",
+    borderWidth: 1,
+    borderRadius: wp("3%"),
+  },
+  logoutText: {
+    color: "#FF3B30",
+    fontSize: wp("4%"),
+    fontWeight: "600",
   },
 });
 

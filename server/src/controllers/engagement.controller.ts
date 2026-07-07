@@ -1,3 +1,4 @@
+import type { EngagementStatus } from "@prisma/client";
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 
@@ -37,7 +38,7 @@ export async function updateEngagement(req: Request, res: Response) {
   const updates = [
     prisma.engagement.update({
       where: { id: engagementId },
-      data: { status },
+      data: { status: status as EngagementStatus },
     }),
   ];
 
@@ -46,7 +47,7 @@ export async function updateEngagement(req: Request, res: Response) {
       prisma.job.update({
         where: { id: engagement.jobId },
         data: { status: "OPEN" },
-      }),
+      }) as never,
     );
   }
 

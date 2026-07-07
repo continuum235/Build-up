@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -18,6 +19,7 @@ import routes, { RootStackParamList } from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
 import { isNonEmpty } from "../utils/validation";
+import { useApi } from "../services/api";
 import KeyboardSafeWrapper from "../components/layout/KeyboardSafeWrapper";
 import TextInput from "../components/ui/TextInput";
 
@@ -27,14 +29,24 @@ const RoleTitleScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { profile, setRoleTitle } = useProfile();
   const { t } = useLanguage();
+  const { updateProfile } = useApi();
   const [roleTitle, setRoleTitleInput] = useState<string>(profile.roleTitle);
+  const [saving, setSaving] = useState(false);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!isNonEmpty(roleTitle)) {
       alert(t("validation.enterRole"));
       return;
     }
     setRoleTitle(roleTitle.trim());
+    setSaving(true);
+    try {
+      await updateProfile({ roleTitle: roleTitle.trim() });
+    } catch {
+      // optimistic
+    } finally {
+      setSaving(false);
+    }
     navigation.navigate(routes.upload);
   };
 
@@ -78,9 +90,13 @@ const RoleTitleScreen: React.FC = () => {
 
         <View style={{ flex: 1 }} />
 
-        <TouchableOpacity style={styles.addButton} onPress={handleNext}>
-          <Text style={styles.addButtonText}>{t("roleTitle.button")}</Text>
-        </TouchableOpacity>
+        {saving ? (
+          <ActivityIndicator size="large" color="#965541" />
+        ) : (
+          <TouchableOpacity style={styles.addButton} onPress={handleNext}>
+            <Text style={styles.addButtonText}>{t("roleTitle.button")}</Text>
+          </TouchableOpacity>
+        )}
       </KeyboardSafeWrapper>
 
       <View style={styles.progressContainer}>
@@ -106,6 +122,8 @@ const RoleTitleScreen: React.FC = () => {
     </SafeAreaView>
   );
 };
+
+export default RoleTitleScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -231,5 +249,3 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
-
-export default RoleTitleScreen;

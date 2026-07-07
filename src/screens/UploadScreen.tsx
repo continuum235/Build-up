@@ -7,6 +7,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -18,6 +19,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import routes, { RootStackParamList } from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
+import { useApi } from "../services/api";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -25,14 +27,24 @@ const UploadScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { profile, toggleDocument } = useProfile();
   const { t } = useLanguage();
+  const { updateProfile } = useApi();
   const { documents } = profile;
+  const [saving, setSaving] = React.useState(false);
 
   const canContinue = documents.aadhaar || documents.doc1 || documents.doc2;
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!canContinue) {
       alert(t("validation.uploadDoc"));
       return;
+    }
+    setSaving(true);
+    try {
+      await updateProfile({ documents });
+    } catch {
+      // optimistic
+    } finally {
+      setSaving(false);
     }
     navigation.navigate(routes.languages);
   };
@@ -61,7 +73,6 @@ const UploadScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-
       <View style={styles.headerRow}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -73,48 +84,43 @@ const UploadScreen: React.FC = () => {
             style={styles.backIcon}
           />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t("upload.title")}</Text>
+        <Text style={styles.headerTitle}>{t("profile.headerTitle")}</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.heroCard}>
-          <Image
-            source={require("../../assets/Search.png")}
-            resizeMode="contain"
-            style={styles.heroIcon}
-          />
-          <Text style={styles.title}>{t("upload.heroTitle")}</Text>
-          <Text style={styles.subtitle}>{t("upload.heroSubtitle")}</Text>
+        <View style={styles.textSection}>
+          <Text style={styles.heading}>{t("upload.heading")}</Text>
+          <Text style={styles.subHeading}>{t("upload.subtitle")}</Text>
         </View>
 
         <View style={styles.uploadSection}>
-          <View style={styles.uploadRow}>
-            <Text style={styles.documentName}>{t("upload.aadhaar")}</Text>
-            {renderUploadButton("aadhaar")}
-          </View>
-
-          <View style={styles.uploadRow}>
-            <Text style={styles.documentName}>{t("upload.otherDoc")}</Text>
-            {renderUploadButton("doc1")}
-          </View>
-
-          <View style={styles.uploadRow}>
-            <Text style={styles.documentName}>{t("upload.otherDoc")}</Text>
-            {renderUploadButton("doc2")}
-          </View>
+          {renderUploadButton("aadhaar")}
+          {renderUploadButton("doc1")}
+          {renderUploadButton("doc2")}
         </View>
 
-        <TouchableOpacity style={styles.primaryButton} onPress={handleContinue}>
-          <Text style={styles.primaryButtonText}>{t("upload.continue")}</Text>
-        </TouchableOpacity>
+        <View style={{ flex: 1 }} />
+
+        {saving ? (
+          <ActivityIndicator size="large" color="#965541" />
+        ) : (
+          <TouchableOpacity style={styles.continueBtn} onPress={handleContinue}>
+            <Text style={styles.continueBtnText}>
+              {t("common.continue")}
+            </Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
 };
+
+export default UploadScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -144,91 +150,72 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: wp("8%"),
-    paddingTop: hp("3%"),
+    paddingTop: hp("2%"),
     paddingBottom: hp("5%"),
   },
-  heroCard: {
-    alignItems: "center",
-    backgroundColor: "#FFF5F0",
-    borderRadius: wp("6%"),
-    paddingVertical: hp("4%"),
-    paddingHorizontal: wp("6%"),
-    marginBottom: hp("4%"),
+  textSection: {
+    marginBottom: hp("5%"),
   },
-  heroIcon: {
-    width: wp("18%"),
-    height: wp("18%"),
+  heading: {
+    color: "#965541",
+    fontSize: wp("7.5%"),
+    fontWeight: "bold",
     marginBottom: hp("2%"),
   },
-  title: {
-    color: "#965541",
-    fontSize: wp("6%"),
-    fontWeight: "bold",
-    marginBottom: hp("1%"),
-  },
-  subtitle: {
+  subHeading: {
     color: "#1E1E1E",
-    fontSize: wp("4%"),
-    textAlign: "center",
-    lineHeight: wp("6%"),
+    fontSize: wp("3.8%"),
+    lineHeight: wp("5.5%"),
     opacity: 0.8,
   },
   uploadSection: {
-    marginBottom: hp("5%"),
-  },
-  uploadRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: hp("2.5%"),
-  },
-  documentName: {
-    color: "#1E1E1E",
-    fontSize: wp("4.5%"),
-    fontWeight: "bold",
-    flex: 1,
+    marginBottom: hp("4%"),
   },
   uploadBtn: {
     flexDirection: "row",
     alignItems: "center",
-    borderColor: "#965541",
-    borderRadius: wp("4%"),
-    borderWidth: 2,
-    paddingVertical: hp("1%"),
-    paddingHorizontal: wp("6%"),
+    justifyContent: "center",
+    borderColor: "#D8DADC",
+    borderRadius: wp("3%"),
+    borderWidth: 1,
+    paddingVertical: hp("4%"),
+    marginBottom: hp("2.5%"),
+    backgroundColor: "#FAFAFA",
   },
   uploadBtnActive: {
-    backgroundColor: "#965541",
+    borderColor: "#965541",
+    backgroundColor: "#FFF5F0",
   },
   uploadIcon: {
-    width: wp("5%"),
-    height: wp("5%"),
+    width: wp("6%"),
+    height: wp("6%"),
+    tintColor: "#A4A9B6",
     marginRight: wp("2%"),
-    tintColor: "#965541",
   },
   uploadIconActive: {
-    tintColor: "#FFFFFF",
+    tintColor: "#965541",
   },
   uploadBtnText: {
-    color: "#965541",
-    fontSize: wp("3.5%"),
-    fontWeight: "bold",
+    color: "#6F7685",
+    fontSize: wp("4%"),
+    fontWeight: "700",
   },
   uploadBtnTextActive: {
-    color: "#FFFFFF",
+    color: "#965541",
   },
-  primaryButton: {
-    backgroundColor: "#1E1E1E",
-    borderRadius: wp("4%"),
-    paddingVertical: hp("2%"),
+  continueBtn: {
     alignItems: "center",
+    backgroundColor: "#965541",
+    borderRadius: wp("4%"),
+    paddingVertical: hp("2.2%"),
+    width: "100%",
+    marginBottom: hp("2%"),
   },
-  primaryButtonText: {
+  continueBtnText: {
     color: "#FFFFFF",
     fontSize: wp("4.5%"),
     fontWeight: "bold",
   },
 });
-
-export default UploadScreen;

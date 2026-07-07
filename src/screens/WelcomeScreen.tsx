@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   View,
   ScrollView,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -14,13 +15,48 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import { useNavigation } from "@react-navigation/native";
+import { useAuth } from "@clerk/clerk-expo";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import routes, { RootStackParamList } from "../navigation/routes";
+import { useApi } from "../services/api";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const WelcomeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const { isSignedIn, isLoaded } = useAuth();
+  const { getMe } = useApi();
+  const handled = useRef(false);
+
+  useEffect(() => {
+    if (!isLoaded || handled.current) return;
+    handled.current = true;
+
+    if (!isSignedIn) return;
+
+    getMe()
+      .then(({ user }) => {
+        if (user.onboardingComplete) {
+          const dest = user.role === "HIRER" ? routes.jobBoard : routes.findJobs;
+          navigation.reset({ index: 0, routes: [{ name: dest }] });
+        } else {
+          navigation.replace(routes.roleType);
+        }
+      })
+      .catch(() => {
+        // Backend unreachable but user is signed in via Clerk — 
+        // send to onboarding anyway. Data will sync when API is back.
+        navigation.replace(routes.roleType);
+      });
+  }, [isLoaded, isSignedIn, getMe, navigation]);
+
+  if (!isLoaded) {
+    return (
+      <SafeAreaView style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" color="#965541" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -32,7 +68,6 @@ const WelcomeScreen: React.FC = () => {
         style={styles.scrollView}
       >
         <View style={styles.innerContainer}>
-          {/* TITLE SECTION */}
           <View style={styles.titleWrapper}>
             <View style={styles.titleBoxSolid}>
               <Text style={styles.titleText}>build</Text>
@@ -42,14 +77,12 @@ const WelcomeScreen: React.FC = () => {
             </View>
           </View>
 
-          {/* MAIN HERO GRAPHIC (Hexagon) */}
           <Image
             source={require("../../assets/hexagon.png")}
             style={styles.heroImage}
             resizeMode="contain"
           />
 
-          {/* TEXT SECTION */}
           <View style={styles.textSection}>
             <Text style={styles.headline}>A good headline</Text>
             <Text style={styles.subheadline}>
@@ -57,7 +90,6 @@ const WelcomeScreen: React.FC = () => {
             </Text>
           </View>
 
-          {/* LOGIN BUTTON */}
           <TouchableOpacity
             style={styles.loginButton}
             activeOpacity={0.8}
@@ -70,7 +102,6 @@ const WelcomeScreen: React.FC = () => {
             <Text style={styles.loginButtonText}>Log in</Text>
           </TouchableOpacity>
 
-          {/* SIGN UP REDIRECT */}
           <TouchableOpacity
             style={styles.signupContainer}
             activeOpacity={0.6}
@@ -97,6 +128,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F2E1DA",
   },
+  centered: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
   scrollView: {
     flex: 1,
   },
@@ -108,8 +143,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: hp("5%"),
   },
-
-  /* LOGO TITLE */
   titleWrapper: {
     flexDirection: "row",
     alignItems: "center",
@@ -123,7 +156,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: wp("3%"),
   },
   titleBoxOutline: {
-    backgroundColor: "#EAD4CD", // Tinted background for 'up'
+    backgroundColor: "#EAD4CD",
     paddingVertical: hp("0.5%"),
     paddingHorizontal: wp("3%"),
   },
@@ -133,8 +166,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textTransform: "lowercase",
   },
-
-  /* TYPOGRAPHY */
   textSection: {
     alignItems: "center",
     marginBottom: hp("5%"),
@@ -153,8 +184,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: wp("6.5%"),
   },
-
-  /* BUTTONS */
   loginButton: {
     backgroundColor: "#1E1E1E",
     borderRadius: wp("4%"),
@@ -182,6 +211,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   signupTextBlue: {
-    color: "#007AFF", // Standard iOS blue link color
+    color: "#007AFF",
   },
 });

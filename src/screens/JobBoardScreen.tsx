@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
+  ActivityIndicator,
   Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -14,6 +15,7 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import { useJobs } from "../hooks/useJobs";
+import { useApi } from "../services/api";
 import BottomNavigation from "../components/layout/BottomNavigation";
 import JobDetails from "../components/jobs/JobDetails";
 import Button from "../components/ui/Button";
@@ -44,6 +46,8 @@ const JobBoardScreen: React.FC = () => {
     tags: "",
   });
   const [customJobs, setCustomJobs] = useState<PostedJob[]>([]);
+  const [posting, setPosting] = useState(false);
+  const { createJob } = useApi();
 
   const seedJobs: PostedJob[] = jobs.map((job) => {
     const localized = job.translations.en;
@@ -75,8 +79,23 @@ const JobBoardScreen: React.FC = () => {
     });
   };
 
-  const handleAddJob = () => {
+  const handleAddJob = async () => {
     if (!newJob.title.trim()) return;
+    setPosting(true);
+    try {
+      await createJob({
+        title: newJob.title,
+        description: newJob.title,
+        location: newJob.location || "Not specified",
+        budget: parseInt(newJob.budget, 10) || 0,
+        budgetType: "FIXED",
+        experience: 0,
+        category: "OTHER",
+        startDate: new Date().toISOString(),
+      });
+    } catch {
+      // job still added locally below
+    }
     const job: PostedJob = {
       id: Date.now(),
       title: newJob.title,
@@ -101,6 +120,7 @@ const JobBoardScreen: React.FC = () => {
       experience: "",
       tags: "",
     });
+    setPosting(false);
     setShowAddForm(false);
     setActiveTab("Jobs Posted");
   };
@@ -194,11 +214,12 @@ const JobBoardScreen: React.FC = () => {
           onPress={() => setShowAddForm(false)}
         />
         <Button
-          title="Post Job"
+          title={posting ? "Posting..." : "Post Job"}
           variant="secondary"
           style={styles.submitButton}
           textStyle={styles.submitButtonText}
           onPress={handleAddJob}
+          disabled={posting}
         />
       </View>
     </View>

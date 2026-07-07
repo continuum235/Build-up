@@ -27,9 +27,6 @@ const getInitialLanguage = (): string => {
   return normalizeLocale(deviceLocale);
 };
 
-const initialLanguage = getInitialLanguage();
-setI18nConfig(initialLanguage);
-
 interface LanguageProviderProps {
   children: ReactNode;
 }
@@ -37,7 +34,11 @@ interface LanguageProviderProps {
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({
   children,
 }) => {
-  const [language, setLanguageState] = useState<string>(initialLanguage);
+  const [language, setLanguageState] = useState<string>(() => {
+    const initial = getInitialLanguage();
+    setI18nConfig(initial);
+    return initial;
+  });
 
   const setLanguage = (nextLanguage: string) => {
     const normalized = normalizeLocale(nextLanguage);

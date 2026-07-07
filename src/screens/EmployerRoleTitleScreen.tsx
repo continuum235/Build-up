@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -19,6 +20,7 @@ import routes, { RootStackParamList } from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
 import { useJobs } from "../hooks/useJobs";
+import { useApi } from "../services/api";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -27,12 +29,13 @@ const EmployerRoleTitleScreen: React.FC = () => {
   const { setRoleTitle } = useProfile();
   const { language, t } = useLanguage();
   const { professionalRoles } = useJobs();
+  const { updateProfile } = useApi();
 
-  // State to hold the selected role
   const [selectedRoleId, setSelectedRoleId] = useState(
     professionalRoles[0]?.id ?? "",
   );
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const selectedRole =
     professionalRoles.find((role) => role.id === selectedRoleId) ??
     professionalRoles[0];
@@ -41,11 +44,20 @@ const EmployerRoleTitleScreen: React.FC = () => {
     selectedRole?.label.en ??
     "";
 
-  const handleAddExpertise = () => {
+  const handleAddExpertise = async () => {
     if (!selectedRole) {
       return;
     }
-    setRoleTitle(selectedRole.label.en);
+    const title = selectedRole.label.en;
+    setRoleTitle(title);
+    setSaving(true);
+    try {
+      await updateProfile({ roleTitle: title });
+    } catch {
+      // optimistic
+    } finally {
+      setSaving(false);
+    }
     navigation.navigate(routes.upload);
   };
 
@@ -143,14 +155,18 @@ const EmployerRoleTitleScreen: React.FC = () => {
         <View style={{ flex: 1 }} />
 
         {/* ADD EXPERTISE BUTTON */}
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={handleAddExpertise}
-        >
-          <Text style={styles.primaryButtonText}>
-            {t("common.addExpertise")}
-          </Text>
-        </TouchableOpacity>
+        {saving ? (
+          <ActivityIndicator size="large" color="#965541" />
+        ) : (
+          <TouchableOpacity
+            style={styles.primaryButton}
+            onPress={handleAddExpertise}
+          >
+            <Text style={styles.primaryButtonText}>
+              {t("common.addExpertise")}
+            </Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
 
       {/* PROGRESS BAR */}

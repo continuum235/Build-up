@@ -39,7 +39,7 @@ export type RootStackParamList = {
   [routes.hourlyRate]: undefined;
   [routes.enterDetails]: undefined;
   [routes.findJobs]: undefined;
-  [routes.jobDetails]: { jobId: number };
+  [routes.jobDetails]: { jobId: string | number };
   [routes.yourJobs]: undefined;
   [routes.profile]: undefined;
   [routes.messages]: undefined;

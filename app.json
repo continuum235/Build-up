@@ -26,6 +26,12 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-localization", "expo-status-bar"]
+    "scheme": "build-up",
+    "plugins": [
+      "expo-localization",
+      "expo-status-bar",
+      "expo-secure-store",
+      "expo-web-browser"
+    ]
   }
 }

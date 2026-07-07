@@ -1,0 +1,61 @@
+import { useAuth } from "@clerk/clerk-expo";
+
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
+
+export function useApi() {
+  const { getToken } = useAuth();
+
+  const apiFetch = async (path: string, options?: RequestInit) => {
+    const token = await getToken();
+    const res = await fetch(`${BASE_URL}${path}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options?.headers,
+      },
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message ?? "Request failed");
+    }
+    return data;
+  };
+
+  const syncUser = (role?: string) =>
+    apiFetch("/auth/sync", {
+      method: "POST",
+      body: JSON.stringify(role ? { role } : {}),
+    });
+
+  const getMe = () => apiFetch("/auth/me");
+
+  const updateProfile = (data: Record<string, unknown>) =>
+    apiFetch("/users/me", {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+
+  const listJobs = (params?: Record<string, string>) => {
+    const qs = params ? `?${new URLSearchParams(params).toString()}` : "";
+    return apiFetch(`/jobs${qs}`);
+  };
+
+  const createJob = (data: {
+    title: string;
+    description: string;
+    location: string;
+    budget: number;
+    budgetType: string;
+    experience: number;
+    category: string;
+    startDate: string;
+    endDate?: string;
+  }) =>
+    apiFetch("/jobs", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+
+  return { apiFetch, syncUser, getMe, updateProfile, listJobs, createJob };
+}

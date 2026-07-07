@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -13,11 +14,12 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import { useNavigation } from "@react-navigation/native";
+import { useSignUp, useOAuth } from "@clerk/clerk-expo";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import routes, { RootStackParamList } from "../navigation/routes";
-import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
 import { isNonEmpty, isValidEmail, isValidPassword } from "../utils/validation";
+import { useApi } from "../services/api";
 import KeyboardSafeWrapper from "../components/layout/KeyboardSafeWrapper";
 import Button from "../components/ui/Button";
 import TextInput from "../components/ui/TextInput";
@@ -26,12 +28,16 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const SignupScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const { profile, setAuth } = useProfile();
   const { t } = useLanguage();
-  const [name, setName] = useState<string>(profile.auth.name);
-  const [email, setEmail] = useState<string>(profile.auth.email);
-  const [password, setPassword] = useState<string>(profile.auth.password);
-  const [location, setLocation] = useState<string>(profile.auth.location);
+  const { signUp, setActive } = useSignUp();
+  const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
+  const { syncUser } = useApi();
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [location, setLocation] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const canSubmit =
     isNonEmpty(name) &&
@@ -39,13 +45,57 @@ const SignupScreen: React.FC = () => {
     isValidPassword(password, 8) &&
     isNonEmpty(location);
 
-  const handleSignup = () => {
-    if (!canSubmit) {
+  const handleSignup = async () => {
+    if (!canSubmit || !signUp) {
       alert(t("validation.invalidSignup"));
       return;
     }
-    setAuth({ name, email, password, location });
-    navigation.navigate(routes.roleType);
+    setLoading(true);
+    try {
+      const result = await signUp.create({
+        emailAddress: email,
+        password,
+        firstName: name.split(" ")[0],
+        lastName: name.split(" ").slice(1).join(" ") || undefined,
+      });
+
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+        await syncUser().catch(() => {});
+        navigation.replace(routes.roleType);
+      } else {
+        alert("Please check your email for a verification code.");
+      }
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : (err as { errors?: { message: string }[] })?.errors?.[0]?.message ?? "Signup failed";
+      alert(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    if (!startOAuthFlow) return;
+    setLoading(true);
+    try {
+      const { createdSessionId, setActive: setActiveOAuth } = await startOAuthFlow();
+      if (createdSessionId && setActiveOAuth) {
+        await setActiveOAuth({ session: createdSessionId });
+        await syncUser().catch(() => {});
+        navigation.replace(routes.roleType);
+      }
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : (err as { errors?: { message: string }[] })?.errors?.[0]?.message ?? "Google signup failed";
+      alert(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -84,7 +134,8 @@ const SignupScreen: React.FC = () => {
           <View style={styles.socialSection}>
             <TouchableOpacity
               style={styles.socialButton}
-              onPress={() => alert("Google Login")}
+              onPress={handleGoogle}
+              disabled={loading}
             >
               <Image
                 source={require("../../assets/Google-logo.png")}
@@ -131,13 +182,17 @@ const SignupScreen: React.FC = () => {
             />
           </View>
 
-          <Button
-            title={t("auth.createAccount")}
-            onPress={handleSignup}
-            disabled={!canSubmit}
-            style={styles.submitButton}
-            textStyle={styles.submitButtonText}
-          />
+          {loading ? (
+            <ActivityIndicator size="large" color="#965541" style={{ marginVertical: hp("2%") }} />
+          ) : (
+            <Button
+              title={t("auth.createAccount")}
+              onPress={handleSignup}
+              disabled={!canSubmit}
+              style={styles.submitButton}
+              textStyle={styles.submitButtonText}
+            />
+          )}
 
           <Text style={styles.footerTerms}>
             {t("auth.termsPrefix")}
@@ -148,6 +203,8 @@ const SignupScreen: React.FC = () => {
     </SafeAreaView>
   );
 };
+
+export default SignupScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -279,5 +336,3 @@ const styles = StyleSheet.create({
     lineHeight: wp("5%"),
   },
 });
-
-export default SignupScreen;

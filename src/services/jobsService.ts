@@ -10,8 +10,10 @@ export const getJobsData = (): JobsData => jobsSeedData;
 
 export const getJobs = (): Job[] => jobsSeedData.jobs;
 
-export const getJobById = (jobId: number): Job | undefined =>
-  jobsSeedData.jobs.find((job) => job.id === jobId);
+export const getJobById = (jobId: number | string): Job | undefined => {
+  if (typeof jobId === "string") return undefined;
+  return jobsSeedData.jobs.find((job) => job.id === jobId);
+};
 
 export const getJobCategories = (): JobCategory[] => jobsSeedData.categories;
 

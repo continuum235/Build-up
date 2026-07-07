@@ -6,7 +6,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
-  TextInput,
+  TextInput as RNTextInput,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -19,6 +20,7 @@ import routes, { RootStackParamList } from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
 import { hasAtLeastOne } from "../utils/validation";
+import { useApi } from "../services/api";
 import KeyboardSafeWrapper from "../components/layout/KeyboardSafeWrapper";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -27,7 +29,9 @@ const LanguageScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { profile, addLanguage, removeLanguage } = useProfile();
   const { t } = useLanguage();
+  const { updateProfile } = useApi();
   const [inputText, setInputText] = useState<string>("");
+  const [saving, setSaving] = useState(false);
   const { languages } = profile;
 
   const handleAddLanguage = () => {
@@ -43,10 +47,18 @@ const LanguageScreen: React.FC = () => {
     setInputText("");
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!hasAtLeastOne(languages)) {
       alert(t("validation.addLanguage"));
       return;
+    }
+    setSaving(true);
+    try {
+      await updateProfile({ languages });
+    } catch {
+      // optimistic
+    } finally {
+      setSaving(false);
     }
     navigation.navigate(routes.skills);
   };
@@ -75,65 +87,43 @@ const LanguageScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.textSection}>
-          <Text style={styles.mainHeading}>{t("languages.heading")}</Text>
-          <Text style={styles.subHeading}>{t("languages.subtitle")}</Text>
+          <Text style={styles.mainHeading}>{t("language.heading")}</Text>
+          <Text style={styles.subHeading}>{t("language.subtitle")}</Text>
         </View>
 
-        <View style={styles.inputSection}>
-          <Text style={styles.inputLabel}>{t("languages.label")}</Text>
-          <Text style={styles.inputNote}>{t("languages.note")}</Text>
+        <View style={styles.inputRow}>
+          <RNTextInput
+            style={styles.textInput}
+            placeholder={t("language.placeholder")}
+            placeholderTextColor="#A4A9B6"
+            value={inputText}
+            onChangeText={setInputText}
+          />
+          <TouchableOpacity style={styles.addBtn} onPress={handleAddLanguage}>
+            <Text style={styles.addBtnText}>{t("common.add")}</Text>
+          </TouchableOpacity>
+        </View>
 
-          <View style={styles.chipInputContainer}>
-            {languages.map((lang) => (
-              <TouchableOpacity
-                key={lang}
-                style={styles.chip}
-                onPress={() => removeLanguage(lang)}
-              >
-                <Text style={styles.chipText}>{lang}</Text>
-                <Image
-                  source={require("../../assets/Drop-down-arrow.png")}
-                  style={styles.chipIcon}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-            ))}
-
-            {languages.length < 3 && (
-              <TextInput
-                style={styles.textInput}
-                placeholder={t("languages.placeholder")}
-                placeholderTextColor="#A4A9B6"
-                value={inputText}
-                onChangeText={setInputText}
-                onSubmitEditing={handleAddLanguage}
-              />
-            )}
-          </View>
-
-          {languages.length < 3 && (
-            <View style={styles.addLanguageRow}>
-              <TouchableOpacity
-                style={[
-                  styles.addLanguageButton,
-                  !inputText.trim() && styles.addLanguageButtonDisabled,
-                ]}
-                onPress={handleAddLanguage}
-                disabled={!inputText.trim()}
-              >
-                <Text style={styles.addLanguageButtonText}>
-                  {t("languages.addButton")}
-                </Text>
+        <View style={styles.chipContainer}>
+          {languages.map((lang) => (
+            <View key={lang} style={styles.chip}>
+              <Text style={styles.chipText}>{lang}</Text>
+              <TouchableOpacity onPress={() => removeLanguage(lang)}>
+                <Text style={styles.chipRemove}>×</Text>
               </TouchableOpacity>
             </View>
-          )}
+          ))}
         </View>
 
         <View style={{ flex: 1 }} />
 
-        <TouchableOpacity style={styles.addButton} onPress={handleNext}>
-          <Text style={styles.addButtonText}>{t("languages.button")}</Text>
-        </TouchableOpacity>
+        {saving ? (
+          <ActivityIndicator size="large" color="#965541" />
+        ) : (
+          <TouchableOpacity style={styles.nextBtn} onPress={handleNext}>
+            <Text style={styles.nextBtnText}>{t("common.next")}</Text>
+          </TouchableOpacity>
+        )}
       </KeyboardSafeWrapper>
 
       <View style={styles.progressContainer}>
@@ -141,32 +131,11 @@ const LanguageScreen: React.FC = () => {
           <View style={styles.progressFill} />
         </View>
       </View>
-
-      <View style={styles.bottomNav}>
-        <Text style={styles.stepText}>3/6</Text>
-        <View style={{ flexDirection: "row" }}>
-          <TouchableOpacity
-            style={styles.arrowButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Image
-              source={require("../../assets/Back-button.png")}
-              style={styles.navIcon}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.arrowButton} onPress={handleNext}>
-            <Image
-              source={require("../../assets/Next-page-logo.png")}
-              style={styles.navIcon}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
     </SafeAreaView>
   );
 };
+
+export default LanguageScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -202,12 +171,12 @@ const styles = StyleSheet.create({
     paddingBottom: hp("3%"),
   },
   textSection: {
-    marginBottom: hp("4%"),
+    marginBottom: hp("5%"),
   },
   mainHeading: {
     color: "#965541",
     fontSize: wp("7.5%"),
-    lineHeight: wp("10%"),
+    fontWeight: "bold",
     marginBottom: hp("2%"),
   },
   subHeading: {
@@ -216,80 +185,62 @@ const styles = StyleSheet.create({
     lineHeight: wp("5.5%"),
     opacity: 0.8,
   },
-  inputSection: {
+  inputRow: {
+    flexDirection: "row",
     marginBottom: hp("2%"),
   },
-  inputLabel: {
-    color: "#1E1E1E",
-    fontSize: wp("4.5%"),
-    fontWeight: "bold",
-    marginBottom: hp("0.5%"),
-  },
-  inputNote: {
-    color: "#666",
-    fontSize: wp("3.2%"),
-    marginBottom: hp("1.5%"),
-  },
-  chipInputContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "center",
+  textInput: {
+    flex: 1,
     borderColor: "#D8DADC",
     borderRadius: wp("3%"),
     borderWidth: 1,
-    padding: wp("3%"),
-    minHeight: hp("7%"),
+    paddingVertical: hp("2%"),
+    paddingHorizontal: wp("4%"),
+    color: "#000000",
+    fontSize: wp("4%"),
+    backgroundColor: "#FFFFFF",
+    marginRight: wp("2%"),
+  },
+  addBtn: {
+    backgroundColor: "#965541",
+    borderRadius: wp("3%"),
+    paddingHorizontal: wp("5%"),
+    justifyContent: "center",
+  },
+  addBtnText: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
+    fontSize: wp("4%"),
+  },
+  chipContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginBottom: hp("3%"),
   },
   chip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#965541",
-    borderRadius: wp("4%"),
-    paddingVertical: hp("1%"),
+    backgroundColor: "#FFF5F0",
+    borderColor: "#965541",
+    borderRadius: wp("3%"),
+    borderWidth: 1,
+    paddingVertical: hp("0.8%"),
     paddingHorizontal: wp("3%"),
     marginRight: wp("2%"),
     marginBottom: hp("1%"),
   },
   chipText: {
-    color: "#FFFFFF",
-    fontSize: wp("3.5%"),
-    fontWeight: "bold",
+    color: "#965541",
+    fontSize: wp("3.8%"),
+    fontWeight: "700",
     marginRight: wp("2%"),
   },
-  chipIcon: {
-    width: wp("3.5%"),
-    height: wp("3.5%"),
-    tintColor: "#FFFFFF",
-    transform: [{ rotate: "-90deg" }],
+  chipRemove: {
+    color: "#965541",
+    fontSize: wp("5%"),
+    fontWeight: "bold",
   },
-  textInput: {
-    flex: 1,
-    minWidth: wp("20%"),
-    color: "#000000",
-    fontSize: wp("4%"),
-    paddingVertical: hp("1%"),
-    marginBottom: hp("1%"),
-  },
-  addLanguageRow: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: hp("1%"),
-  },
-  addLanguageButton: {
-    backgroundColor: "#965541",
-    borderRadius: wp("3.5%"),
-    paddingVertical: hp("1.2%"),
-    paddingHorizontal: wp("5%"),
-  },
-  addLanguageButtonDisabled: {
-    opacity: 0.5,
-  },
-  addLanguageButtonText: {
-    color: "#FFFFFF",
-    fontSize: wp("3.6%"),
-    fontWeight: "600",
-  },
-  addButton: {
+  nextBtn: {
     alignItems: "center",
     backgroundColor: "#965541",
     borderRadius: wp("4%"),
@@ -297,7 +248,7 @@ const styles = StyleSheet.create({
     width: "100%",
     marginBottom: hp("2%"),
   },
-  addButtonText: {
+  nextBtnText: {
     color: "#FFFFFF",
     fontSize: wp("4.5%"),
     fontWeight: "bold",
@@ -313,38 +264,8 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     backgroundColor: "#965541",
-    width: "65%",
+    width: "55%",
     height: "100%",
     borderRadius: wp("1%"),
   },
-  bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#F2E1DA",
-    paddingHorizontal: wp("8%"),
-    paddingTop: hp("2.5%"),
-    paddingBottom: hp("4%"),
-  },
-  stepText: {
-    color: "#965541",
-    fontSize: wp("7%"),
-    fontWeight: "bold",
-  },
-  arrowButton: {
-    backgroundColor: "#965541",
-    width: wp("12%"),
-    height: wp("10%"),
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: wp("2%"),
-    marginLeft: wp("2%"),
-  },
-  navIcon: {
-    width: wp("6%"),
-    height: wp("6%"),
-    tintColor: "#FFFFFF",
-  },
 });
-
-export default LanguageScreen;

@@ -9,7 +9,6 @@ import React, {
 interface Auth {
   name: string;
   email: string;
-  password: string;
   location: string;
 }
 
@@ -60,7 +59,6 @@ const initialProfile: Profile = {
   auth: {
     name: "",
     email: "",
-    password: "",
     location: "",
   },
   roleType: "",

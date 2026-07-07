@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -19,6 +20,7 @@ import routes, { RootStackParamList } from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
 import { hasAtLeastOne } from "../utils/validation";
+import { useApi } from "../services/api";
 
 const suggestedSkills = ["Skill 1", "Skill 2", "Skill 3", "Skill 4"];
 
@@ -28,7 +30,9 @@ const SkillsScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { profile, addSkill, removeSkill } = useProfile();
   const { t } = useLanguage();
+  const { updateProfile } = useApi();
   const { skills } = profile;
+  const [saving, setSaving] = React.useState(false);
 
   const handleAddSkill = (skill: string) => {
     if (skills.length >= 3) {
@@ -38,10 +42,18 @@ const SkillsScreen: React.FC = () => {
     addSkill(skill);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!hasAtLeastOne(skills)) {
       alert(t("validation.addSkill"));
       return;
+    }
+    setSaving(true);
+    try {
+      await updateProfile({ skills });
+    } catch {
+      // optimistic
+    } finally {
+      setSaving(false);
     }
     navigation.navigate(routes.bio);
   };
@@ -75,50 +87,50 @@ const SkillsScreen: React.FC = () => {
           <Text style={styles.subHeading}>{t("skills.subtitle")}</Text>
         </View>
 
-        <View style={styles.inputSection}>
-          <Text style={styles.inputLabel}>{t("skills.label")}</Text>
-          <Text style={styles.inputNote}>{t("skills.note")}</Text>
-
-          <View style={styles.selectedBox}>
-            {skills.length === 0 && (
-              <Text style={styles.placeholderText}>
-                {t("skills.placeholder")}
-              </Text>
-            )}
-            {skills.map((skill) => (
-              <TouchableOpacity
-                key={skill}
-                style={styles.selectedChip}
-                onPress={() => removeSkill(skill)}
-              >
-                <Text style={styles.selectedChipText}>{skill}</Text>
-                <Image
-                  source={require("../../assets/Drop-down-arrow.png")}
-                  style={styles.chipIcon}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-            ))}
+        <View style={styles.skillsSection}>
+          <Text style={styles.skillsLabel}>{t("skills.suggested")}</Text>
+          <View style={styles.skillsRow}>
+            {suggestedSkills.map((skill) => {
+              const isSelected = skills.includes(skill);
+              return (
+                <TouchableOpacity
+                  key={skill}
+                  style={[
+                    styles.skillChip,
+                    isSelected && styles.skillChipSelected,
+                  ]}
+                  onPress={() =>
+                    isSelected ? removeSkill(skill) : handleAddSkill(skill)
+                  }
+                >
+                  <Text
+                    style={[
+                      styles.skillChipText,
+                      isSelected && styles.skillChipTextSelected,
+                    ]}
+                  >
+                    {skill}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
-
-          <View style={styles.suggestedContainer}>
-            {suggestedSkills.map((skill) => (
-              <TouchableOpacity
-                key={skill}
-                style={styles.suggestedChip}
-                onPress={() => handleAddSkill(skill)}
-              >
-                <Text style={styles.suggestedChipText}>{skill}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          {skills.length > 0 && (
+            <Text style={styles.selectedCount}>
+              {skills.length}/3 {t("skills.selected")}
+            </Text>
+          )}
         </View>
 
         <View style={{ flex: 1 }} />
 
-        <TouchableOpacity style={styles.addButton} onPress={handleNext}>
-          <Text style={styles.addButtonText}>{t("skills.button")}</Text>
-        </TouchableOpacity>
+        {saving ? (
+          <ActivityIndicator size="large" color="#965541" />
+        ) : (
+          <TouchableOpacity style={styles.nextBtn} onPress={handleNext}>
+            <Text style={styles.nextBtnText}>{t("skills.continue")}</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
 
       <View style={styles.progressContainer}>
@@ -126,32 +138,11 @@ const SkillsScreen: React.FC = () => {
           <View style={styles.progressFill} />
         </View>
       </View>
-
-      <View style={styles.bottomNav}>
-        <Text style={styles.stepText}>4/6</Text>
-        <View style={styles.navArrowsContainer}>
-          <TouchableOpacity
-            style={styles.arrowButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Image
-              source={require("../../assets/Back-button.png")}
-              style={styles.navIcon}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.arrowButton} onPress={handleNext}>
-            <Image
-              source={require("../../assets/Next-page-logo.png")}
-              style={styles.navIcon}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
     </SafeAreaView>
   );
 };
+
+export default SkillsScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -187,92 +178,59 @@ const styles = StyleSheet.create({
     paddingBottom: hp("3%"),
   },
   textSection: {
-    marginBottom: hp("3%"),
+    marginBottom: hp("4%"),
   },
   mainHeading: {
     color: "#965541",
-    fontSize: wp("8%"),
-    lineHeight: wp("10.5%"),
+    fontSize: wp("7.5%"),
+    fontWeight: "bold",
     marginBottom: hp("2%"),
   },
   subHeading: {
     color: "#1E1E1E",
-    fontSize: wp("4%"),
-    lineHeight: wp("6%"),
-    opacity: 0.9,
-  },
-  inputSection: {
-    marginBottom: hp("3%"),
-  },
-  inputLabel: {
-    color: "#1E1E1E",
-    fontSize: wp("4.5%"),
-    fontWeight: "bold",
-    marginBottom: hp("0.5%"),
-  },
-  inputNote: {
-    color: "#666",
-    fontSize: wp("3.2%"),
-    marginBottom: hp("1.5%"),
-  },
-  selectedBox: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "center",
-    borderColor: "#D8DADC",
-    borderRadius: wp("3%"),
-    borderWidth: 1,
-    padding: wp("3%"),
-    minHeight: hp("8%"),
-    marginBottom: hp("2.5%"),
-  },
-  placeholderText: {
-    color: "#A4A9B6",
     fontSize: wp("3.8%"),
-    padding: wp("2%"),
+    lineHeight: wp("5.5%"),
+    opacity: 0.8,
   },
-  selectedChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#965541",
-    borderRadius: wp("6%"),
-    paddingVertical: hp("1.2%"),
-    paddingHorizontal: wp("4%"),
-    marginRight: wp("2%"),
-    marginBottom: hp("1%"),
+  skillsSection: {
+    marginBottom: hp("4%"),
   },
-  selectedChipText: {
-    color: "#FFFFFF",
-    fontSize: wp("3.8%"),
-    fontWeight: "600",
-    marginRight: wp("2%"),
-  },
-  chipIcon: {
-    width: wp("3.5%"),
-    height: wp("3.5%"),
-    tintColor: "#FFFFFF",
-    transform: [{ rotate: "-90deg" }],
-  },
-  suggestedContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  suggestedChip: {
-    borderColor: "#965541",
-    borderWidth: 1.5,
-    backgroundColor: "#FFFFFF",
-    borderRadius: wp("6%"),
-    paddingVertical: hp("1.2%"),
-    paddingHorizontal: wp("4%"),
-    marginRight: wp("2.5%"),
-    marginBottom: hp("1.5%"),
-  },
-  suggestedChipText: {
+  skillsLabel: {
     color: "#965541",
-    fontSize: wp("3.8%"),
+    fontSize: wp("4%"),
+    fontWeight: "600",
+    marginBottom: hp("2%"),
+  },
+  skillsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  skillChip: {
+    borderColor: "#965541",
+    borderRadius: wp("3%"),
+    borderWidth: 1.5,
+    paddingVertical: hp("1.5%"),
+    paddingHorizontal: wp("5%"),
+    marginRight: wp("3%"),
+    marginBottom: hp("2%"),
+  },
+  skillChipSelected: {
+    backgroundColor: "#965541",
+  },
+  skillChipText: {
+    color: "#965541",
+    fontSize: wp("4%"),
+    fontWeight: "700",
+  },
+  skillChipTextSelected: {
+    color: "#FFFFFF",
+  },
+  selectedCount: {
+    color: "#965541",
+    fontSize: wp("3.5%"),
     fontWeight: "600",
   },
-  addButton: {
+  nextBtn: {
     alignItems: "center",
     backgroundColor: "#965541",
     borderRadius: wp("4%"),
@@ -280,7 +238,7 @@ const styles = StyleSheet.create({
     width: "100%",
     marginBottom: hp("2%"),
   },
-  addButtonText: {
+  nextBtnText: {
     color: "#FFFFFF",
     fontSize: wp("4.5%"),
     fontWeight: "bold",
@@ -296,41 +254,8 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     backgroundColor: "#965541",
-    width: "75%",
+    width: "55%",
     height: "100%",
     borderRadius: wp("1%"),
   },
-  bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#F2E1DA",
-    paddingHorizontal: wp("8%"),
-    paddingTop: hp("2.5%"),
-    paddingBottom: hp("4%"),
-  },
-  stepText: {
-    color: "#965541",
-    fontSize: wp("7%"),
-    fontWeight: "bold",
-  },
-  navArrowsContainer: {
-    flexDirection: "row",
-  },
-  arrowButton: {
-    backgroundColor: "#965541",
-    width: wp("12%"),
-    height: wp("10%"),
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: wp("2%"),
-    marginLeft: wp("2%"),
-  },
-  navIcon: {
-    width: wp("6%"),
-    height: wp("6%"),
-    tintColor: "#FFFFFF",
-  },
 });
-
-export default SkillsScreen;

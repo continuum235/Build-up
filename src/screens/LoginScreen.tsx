@@ -7,17 +7,19 @@ import {
   SafeAreaView,
   StatusBar,
   StyleSheet,
+  ActivityIndicator,
 } from "react-native";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import { useNavigation } from "@react-navigation/native";
+import { useSignIn, useOAuth } from "@clerk/clerk-expo";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import routes, { RootStackParamList } from "../navigation/routes";
-import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
 import { isValidEmail, isValidPassword } from "../utils/validation";
+import { useApi } from "../services/api";
 import KeyboardSafeWrapper from "../components/layout/KeyboardSafeWrapper";
 import Button from "../components/ui/Button";
 import TextInput from "../components/ui/TextInput";
@@ -26,20 +28,60 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const LoginScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const { profile, setAuth } = useProfile();
   const { t } = useLanguage();
-  const [email, setEmail] = useState<string>(profile.auth.email);
-  const [password, setPassword] = useState<string>(profile.auth.password);
+  const { signIn, setActive } = useSignIn();
+  const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
+  const { syncUser } = useApi();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const canSubmit = isValidEmail(email) && isValidPassword(password);
 
-  const handleLogin = () => {
-    if (!canSubmit) {
+  const handleLogin = async () => {
+    if (!canSubmit || !signIn) {
       alert(t("validation.invalidLogin"));
       return;
     }
-    setAuth({ email, password });
-    navigation.navigate(routes.roleType);
+    setLoading(true);
+    try {
+      const result = await signIn.create({ identifier: email, password });
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+        await syncUser().catch(() => {});
+        navigation.replace(routes.roleType);
+      }
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : (err as { errors?: { message: string }[] })?.errors?.[0]?.message ?? "Login failed";
+      alert(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    if (!startOAuthFlow) return;
+    setLoading(true);
+    try {
+      const { createdSessionId, setActive: setActiveOAuth } = await startOAuthFlow();
+      if (createdSessionId && setActiveOAuth) {
+        await setActiveOAuth({ session: createdSessionId });
+        await syncUser().catch(() => {});
+        navigation.replace(routes.roleType);
+      }
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : (err as { errors?: { message: string }[] })?.errors?.[0]?.message ?? "Google login failed";
+      alert(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -91,11 +133,15 @@ const LoginScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
 
-          <Button
-            title={t("auth.loginButton")}
-            onPress={handleLogin}
-            disabled={!canSubmit}
-          />
+          {loading ? (
+            <ActivityIndicator size="large" color="#965541" style={{ marginVertical: hp("2%") }} />
+          ) : (
+            <Button
+              title={t("auth.loginButton")}
+              onPress={handleLogin}
+              disabled={!canSubmit}
+            />
+          )}
 
           <View style={styles.dividerContainer}>
             <View style={styles.dividerLine} />
@@ -104,7 +150,11 @@ const LoginScreen: React.FC = () => {
           </View>
 
           <View style={styles.socialContainer}>
-            <TouchableOpacity style={styles.socialButton}>
+            <TouchableOpacity
+              style={styles.socialButton}
+              onPress={handleGoogle}
+              disabled={loading}
+            >
               <Image
                 source={require("../../assets/Google-logo.png")}
                 style={styles.socialIcon}
@@ -126,6 +176,8 @@ const LoginScreen: React.FC = () => {
     </SafeAreaView>
   );
 };
+
+export default LoginScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -240,5 +292,3 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
-
-export default LoginScreen;

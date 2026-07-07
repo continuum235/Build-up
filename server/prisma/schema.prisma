@@ -12,7 +12,19 @@ model User {
   name    String
   email   String @unique
 
-  role Role
+  role Role?
+
+  roleTitle        String?
+  bio              String?
+  hourlyRate       Int?
+  languages        Json?
+  skills           Json?
+  documents        Json?
+  country          String?
+  addressLine1     String?
+  addressLine2     String?
+  city             String?
+  onboardingComplete Boolean @default(false)
 
   jobs            Job[]          @relation("HirerJobs")
   engagements     Engagement[]   @relation("WorkerEngagements")

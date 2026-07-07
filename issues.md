@@ -392,3 +392,475 @@ Worker flow
 2. Worker calls POST /jobs/:jobId/accept — creates Engagement, marks job FILLED (fails if they already have an active engagement or previously rejected it)
 3. Worker calls POST /jobs/:jobId/reject — creates JobDismissal, hides it from their feed
 The hirer's only power is posting the job with clear terms — they never select/reject workers. Ready for Phase 3 whenever you are.
+
+
+
+1. What's Implemented
+Frontend (Expo/React Native) — ~18 screens, fully built UI:
+- Onboarding: Welcome, Language Selection, Login, Signup, Role Type (job seeker vs hirer), Role Title (free-text for seeker, dropdown for hirer)
+- Profile Setup (7 screens): Document upload toggles, Languages (up to 3), Skills (up to 3), Bio (min 100 chars), Hourly Rate, Address Details — all feeding into a single ProfileContext
+- Main App (5 screens): FindJobs (search + filter + like + broadcast modal), JobDetails, YourJobs (proposals/active/completed tabs), JobBoard (employer posts + manages), Messages (dummy inbox + chat), Profile
+- Infrastructure: i18n (EN/HI with 178 keys each), typed navigation (20 routes), reusable components (Button, TextInput, JobDetails, BottomNavigation), responsive styling via react-native-responsive-screen
+
+
+Backend (Express + Prisma + PostgreSQL/Neon) — full marketplace API:
+- Auth: Clerk JWT verification, POST /auth/sync (upserts user from Clerk into DB), GET /auth/me
+- Job CRUD: GET /jobs (paginated, filterable), GET /jobs/:id, POST/PATCH/DELETE /jobs (hirer-only with ownership checks)
+- Worker Choice (Uber model): POST /jobs/:jobId/accept (creates Engagement, fills job), POST /jobs/:jobId/reject (creates JobDismissal), GET /workers/me/jobs, GET /hirers/me/jobs
+- Engagements & Reviews: PATCH /engagements/:id (complete/cancel), POST /engagements/:id/review (rating 1-5, prevents self-review), GET /users/:id/reviews
+- DB Schema (5 models): User, Job (with Decimal budget, enums for status/category/budgetType), Engagement (1:1 with Job), JobDismissal (unique per worker+job), Review (unique per engagement+author+subject)
+Key gap: The frontend and backend are completely disconnected. The frontend reads from jobsSeedData.json and stores everything in local context. The backend has a production-quality API that nothing calls.
+
+
+2. Code Rating: 7/10
+Backend: ~8.5/10 — Clean separation (routes/controllers/middleware/lib), proper TypeScript, Clerk middleware, Prisma with Neon adapter, error handling, role-based access. Minor nits: manual validation instead of Zod, some redundant null checks after middleware guarantees.
+Frontend: ~6/10 — Good navigation and i18n setup, decent component extraction (JobDetails, Button, TextInput). But screens are too large (FindJobsScreen is 735 lines), all data is static from a JSON file, no loading/error states, navigation: any in places, module-level side effects in LanguageContext, password stored in ProfileContext.
+
+3. Suggested Improvements (Priority Order)
+Priority	Improvement
+P0	Connect frontend to backend (see section 4)
+P0	Integrate Clerk on frontend (@clerk/clerk-expo)
+P0	Replace seed data with real API calls
+P0	Submit profile to backend on EnterDetailsScreen
+P1	Split large screens into components
+P1	Add loading/error states across screens
+P1	Add Zod validation on backend
+P1	Remove password from ProfileContext
+P2	Add tests
+P2	Fix LanguageContext module-level side effects
+P2	Add real file upload (UploadScreen)
+P3	Add WebSocket for real-time messaging
+P3	Compute average rating on User
+
+
+4. How to Connect Frontend ↔ Backend
+Here's the step-by-step plan:
+Step 1: Add Clerk to Frontend
+npm install @clerk/clerk-expo
+Wrap App.tsx with <ClerkProvider publishableKey="...">. Replace LoginScreen/SignupScreen with Clerk's <SignIn /> / <SignUp /> components (or use their hooks: useSignIn, useSignUp).
+Step 2: Create an API Service Layer
+Create src/services/api.ts with a base fetcher that attaches the Clerk JWT:
+import { useAuth } from "@clerk/clerk-expo";
+
+const BASE_URL = "http://YOUR_MACHINE_IP:3000"; // or ngrok/ deployed URL
+
+export function useApi() {
+  const { getToken } = useAuth();
+
+  const apiFetch = async (path: string, options?: RequestInit) => {
+    const token = await getToken();
+    return fetch(`${BASE_URL}${path}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options?.headers,
+      },
+    });
+  };
+
+  return { apiFetch };
+}
+Step 3: Sync Auth on Login
+After Clerk signs in, call:
+await apiFetch("/auth/sync", {
+  method: "POST",
+  body: JSON.stringify({ role: profile.roleType === "employer" ? "HIRER" : "WORKER" }),
+});
+Step 4: Swap Seed Data for API Calls
+Replace useJobs hook to call the API instead of reading JSON:
+export function useJobs() {
+  const { apiFetch } = useApi();
+  const [jobs, setJobs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    apiFetch("/jobs?status=OPEN")
+      .then(res => res.json())
+      .then(data => setJobs(data.jobs))
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  return { jobs, categories, isLoading, error: null, ... };
+}
+Step 5: Submit Profile on EnterDetailsScreen
+Replace console.log(payload) with:
+await apiFetch("/auth/sync", {  // or a dedicated PATCH /users/me
+  method: "PATCH",
+  body: JSON.stringify({
+    name: profile.auth.name,
+    languages: profile.languages,
+    skills: profile.skills,
+    bio: profile.bio,
+    hourlyRate: profile.hourlyRate,
+    location: `${profile.details.city}, ${profile.details.country}`,
+  }),
+});
+Step 6: Wire Worker Actions
+- Accept job → POST /jobs/:id/accept (FindJobsScreen → on like/accept)
+- Reject job → POST /jobs/:id/reject
+- Fetch worker's jobs → GET /workers/me/jobs (YourJobsScreen)
+- Post a job (hirer) → POST /jobs (JobBoardScreen)
+
+
+Step 7: Network Config
+For development, set BASE_URL to your machine's LAN IP (Expo on phone needs this). Use @expo/ngrok (already in deps) for tunneling. The server's CORS is already configured via app.use(cors()) — no changes needed there.
+Bottom line: The backend is production-ready and well-structured. The frontend is pixel-complete but has zero real data flow. The #1 priority is connecting them via Clerk auth + the API service layer outlined above. That unlocks the entire marketplace flow end-to-end.
+
+
+
+
+Plan: Connect Frontend ↔ Backend with Clerk Auth + Onboarding
+Overview
+Currently: Two disconnected apps. Frontend stores everything in local state, backend has a production API that nothing calls.
+Goal: Real auth via Clerk, onboarding that persists to DB, then role-based main tabs.
+Phase 1 — Backend: Extend User Model & API
+Schema changes (server/prisma/schema.prisma):
+- Make role nullable (Role?)
+- Add profile fields: roleTitle, bio, hourlyRate (Int), languages (Json), skills (Json), documents (Json), country, addressLine1, addressLine2, city, onboardingComplete (Boolean, default false)
+Modified endpoints:
+- POST /auth/sync — make role optional (creates user without role initially), return all fields including onboardingComplete
+- GET /auth/me — return all new profile fields + onboardingComplete
+New endpoint:
+- PATCH /users/me — update any profile field (role, roleTitle, bio, hourlyRate, languages, skills, documents, address fields, onboardingComplete). No requireRole — just requireAuth, since role might not be set yet.
+Generate migration:
+cd server && npx prisma migrate dev --name add_onboarding_fields
+Phase 2 — Frontend: Clerk Auth Integration
+Install:
+npm install @clerk/clerk-expo expo-secure-store
+Files to create:
+File	Purpose
+src/services/api.ts	Authenticated fetch wrapper using Clerk's getToken(), base URL config
+src/services/authService.ts	syncUser(), getMe(), updateProfile() methods
+Files to modify:
+File	What changes
+App.tsx	Wrap with <ClerkProvider publishableKey={...}>, add token cache via expo-secure-store
+WelcomeScreen.tsx	On mount, check useAuth().isSignedIn. If signed in, call GET /auth/me. If onboardingComplete, skip to main tabs by role. If not, go to RoleTypeScreen. If not signed in, show existing welcome UI.
+LoginScreen.tsx	Replace fake auth with useSignIn() hook. Email/password → signIn.create(). Google → useOAuth("oauth_google").startOAuthFlow(). On success → call /auth/sync, check onboarding status, redirect.
+SignupScreen.tsx	Replace fake signup with useSignUp() hook. Same Google OAuth + email/password flow.
+ProfileContext.tsx	Remove password from Auth interface and state
+Clerk flow for Google OAuth:
+const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
+// In button handler:
+const { createdSessionId, setActive } = await startOAuthFlow();
+if (createdSessionId) {
+  await setActive({ session: createdSessionId });
+  // → redirect to onboarding or main tabs
+}
+Phase 3 — Wire Onboarding to Backend
+Strategy: accumulate locally (existing ProfileContext), submit at end.
+This minimizes changes to the 7 onboarding screens — they still just update ProfileContext and navigate forward, exactly as they do now.
+The only screen that changes is EnterDetailsScreen (final onboarding step):
+// Replace console.log with:
+const payload = {
+  role: profile.roleType === "employer" ? "HIRER" : "WORKER",
+  roleTitle: profile.roleTitle,
+  bio: profile.bio,
+  hourlyRate: parseInt(profile.hourlyRate),
+  languages: profile.languages,
+  skills: profile.skills,
+  documents: profile.documents,
+  country: profile.details.country,
+  addressLine1: profile.details.addressLine1,
+  addressLine2: profile.details.addressLine2,
+  city: profile.details.city,
+  onboardingComplete: true,
+};
+await apiFetch("/users/me", {
+  method: "PATCH",
+  body: JSON.stringify(payload),
+});
+What about document upload? Currently upload is just boolean toggles. We keep it as-is for now (store booleans in DB). Real file upload can be added later.
+Phase 4 — Role-Based Routing After Onboarding
+WelcomeScreen as auth gate:
+App opens → WelcomeScreen loads
+  ├─ Clerk useAuth().isSignedIn = false → show login/signup buttons (existing UI)
+  └─ Clerk useAuth().isSignedIn = true → call GET /auth/me
+       ├─ onboardingComplete = true → navigate to main tabs
+       │    ├─ role = "HIRER" → jobBoard
+       │    └─ role = "WORKER" → findJobs
+       └─ onboardingComplete = false → navigate to RoleTypeScreen
+BottomNavigation already has role-aware tabs — just verify it uses the right role source (DB, not local context).
+Key Decisions (need your input):
+1. Submit strategy: Submit all onboarding data at once on the final screen (simpler, existing screens barely change) OR submit per-screen as the user goes (data persists if app closes)?
+2. Email/password signup: Do you want Clerk-hosted email/password signup AND Google, or just Google OAuth?
+3. Custom UI vs Clerk UI: Keep your existing custom Login/Signup screen designs but wire them to Clerk hooks, or use Clerk's pre-built <SignIn /> / <SignUp /> components?
+4. Document upload: Keep the boolean toggle approach for now, or integrate real file upload (expo-image-picker + upload to storage)?
+My recommendation: batch submit at end + keep custom UI + both email/password and Google + booleans for now. This gives you the fastest path to a working integrated app with minimal UI disruption
+
+
+
+Complete Implementation Plan
+File Inventory — Every File That Changes
+🔧 Backend (4 files + 1 migration)
+1. server/prisma/schema.prisma — Extend User model
+model User {
+  id      String @id @default(cuid())
+  clerkId String @unique
+  name    String
+  email   String @unique
+  role    Role?                    // ← made nullable
+
+  // New onboarding fields:
+  roleTitle        String?
+  bio              String?
+  hourlyRate       Int?
+  languages        Json?
+  skills           Json?
+  documents        Json?
+  country          String?
+  addressLine1     String?
+  addressLine2     String?
+  city             String?
+  onboardingComplete Boolean @default(false)
+
+  // ... existing relations unchanged
+}
+Then: cd server && npx prisma migrate dev --name add_onboarding_fields
+2. server/src/controllers/auth.controller.ts — Role optional
+- syncUser: Make role optional. If not provided, create user with role: null. Return all new fields (roleTitle, bio, hourlyRate, languages, skills, documents, country, addressLine1, addressLine2, city, onboardingComplete).
+- getMe: Same expanded select — return all fields.
+3. server/src/controllers/user.controller.ts — Add patchUser
+New controller:
+export async function patchUser(req: Request, res: Response) {
+  // requireAuth already guarantees req.auth.userId
+  // Accept any subset: role, roleTitle, bio, hourlyRate, 
+  //   languages, skills, documents, country, addressLine1, 
+  //   addressLine2, city, onboardingComplete
+  // Validate role if provided (must be HIRER or WORKER)
+  // Validate hourlyRate if provided (positive int)
+  // Prisma upsert update with only provided fields
+  // Return updated user
+}
+4. server/src/routes/user.routes.ts — Add route
+userRouter.patch("/me", requireAuth, patchUser);
+5. server/src/types/express.d.ts — No changes needed
+patchUser only needs req.auth.userId (from requireAuth), not req.currentUser. The requireRole middleware provides currentUser but patchUser doesn't use it.
+🎨 Frontend (17 files)
+New file 1: src/services/api.ts
+Creates the bridge between frontend and backend:
+// Uses Clerk's useAuth().getToken() to get JWT
+// Provides:
+//   apiFetch(path, options)  — raw fetch with auth headers
+//   syncUser(role?)          — POST /auth/sync
+//   getMe()                  — GET /auth/me
+//   updateProfile(data)      — PATCH /users/me
+//   getJobs(params)          — GET /jobs
+//   acceptJob(jobId)         — POST /jobs/:jobId/accept
+//   rejectJob(jobId)         — POST /jobs/:jobId/reject
+//   ... (more as needed)
+Base URL configured via process.env.EXPO_PUBLIC_API_URL or hardcoded dev IP.
+Modified 1: App.tsx
+import { ClerkProvider } from "@clerk/clerk-expo";
+import * as SecureStore from "expo-secure-store";
+
+const tokenCache = {
+  getToken(key) { return SecureStore.getItemAsync(key); },
+  saveToken(key, value) { return SecureStore.setItemAsync(key, value); },
+};
+
+export default function App() {
+  return (
+    <ClerkProvider 
+      publishableKey="pk_test_..." 
+      tokenCache={tokenCache}
+    >
+      <LanguageProvider>
+        <ProfileProvider>
+          <NavigationContainer>
+            <AppNavigator />
+          </NavigationContainer>
+        </ProfileProvider>
+      </LanguageProvider>
+    </ClerkProvider>
+  );
+}
+Also add "scheme": "build-up" to app.json for OAuth redirect.
+Modified 2: src/screens/WelcomeScreen.tsx — Auth gate
+Add to the top of the component:
+const { isSignedIn, isLoaded } = useAuth();
+const { getMe } = useApi();
+
+useEffect(() => {
+  if (!isLoaded) return;
+  if (isSignedIn) {
+    getMe().then(({ user }) => {
+      if (user.onboardingComplete) {
+        const dest = user.role === "HIRER" ? routes.jobBoard : routes.findJobs;
+        navigation.reset({ index: 0, routes: [{ name: dest }] });
+      } else {
+        navigation.replace(routes.roleType);
+      }
+    });
+  }
+}, [isLoaded, isSignedIn]);
+While loading (!isLoaded), show nothing or a splash screen. If not signed in, show existing welcome UI.
+Modified 3: src/screens/LoginScreen.tsx — Clerk hooks
+Replace login logic:
+const { signIn, setActive } = useSignIn();
+const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
+const { syncUser } = useApi();
+const [loading, setLoading] = useState(false);
+
+const handleLogin = async () => {
+  setLoading(true);
+  try {
+    const result = await signIn.create({ identifier: email, password });
+    if (result.status === "complete") {
+      await setActive({ session: result.createdSessionId });
+      await syncUser(); // create user in DB (no role yet)
+      navigation.replace(routes.roleType);
+    }
+  } catch (err) {
+    alert(err.errors?.[0]?.message || "Login failed");
+  } finally {
+    setLoading(false);
+  }
+};
+
+const handleGoogle = async () => {
+  try {
+    const { createdSessionId, setActive: setActive_ } = await startOAuthFlow();
+    if (createdSessionId) {
+      await setActive_({ session: createdSessionId });
+      await syncUser();
+      navigation.replace(routes.roleType);
+    }
+  } catch (err) {
+    alert(err.errors?.[0]?.message || "Google login failed");
+  }
+};
+Keep the existing UI. Wire handleLogin to the Login button's onPress. Wire handleGoogle to the Google button's onPress. Disable buttons and show ActivityIndicator while loading is true.
+Modified 4: src/screens/SignupScreen.tsx — Clerk hooks
+Same pattern using useSignUp():
+const { signUp, setActive } = useSignUp();
+const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
+
+const handleSignup = async () => {
+  setLoading(true);
+  try {
+    const result = await signUp.create({
+      emailAddress: email,
+      password,
+      firstName: name,
+    });
+    // Depending on Clerk strategy, may need email verification.
+    // For dev, could use "email_link" or skip verification.
+    if (result.status === "complete") {
+      await setActive({ session: result.createdSessionId });
+      await syncUser();
+      navigation.replace(routes.roleType);
+    } else {
+      // Handle verification if needed (e.g., send email code)
+    }
+  } catch (err) {
+    alert(err.errors?.[0]?.message || "Signup failed");
+  } finally {
+    setLoading(false);
+  }
+};
+Same Google OAuth handler as LoginScreen.
+Modified 5-12: All 8 onboarding screens — Add API call on submit
+Pattern (add to every screen's "next" handler):
+const { updateProfile } = useApi();
+const [saving, setSaving] = useState(false);
+
+// In existing handleNext / handleSelect / handleContinue:
+const handler = async () => {
+  // Existing validation...
+  
+  setSaving(true);
+  try {
+    await updateProfile({ fieldName: value });
+    // Navigate on success
+  } catch {
+    // API failed — still navigate (optimistic). 
+    // Data is safe in ProfileContext; final screen re-syncs.
+  } finally {
+    setSaving(false);
+  }
+  // Navigate regardless (optimistic UI)
+  navigation.navigate(nextRoute);
+};
+Screens and their API payloads:
+Screen	Handler
+RoleTypeScreen	handleSelect
+RoleTitleScreen	handleNext
+EmployerRoleTitleScreen	handleAddExpertise
+UploadScreen	handleContinue
+LanguageScreen	handleNext
+SkillsScreen	handleNext
+BioScreen	handleNext
+HourlyRateScreen	handleNext
+Each call is fire-and-forget (optimistic — navigate immediately, API in background). If any fails, it'll be re-sent on the next screen's call (since ProfileContext still has the latest state and the final screen does a full sync).
+Modified 13: src/screens/EnterDetailsScreen.tsx — Final submission
+This is the critical sync point:
+const { updateProfile } = useApi();
+const [submitting, setSubmitting] = useState(false);
+
+const handleSubmit = async () => {
+  if (!isValidDetails(...)) return alert(...);
+  
+  setDetails(updatedDetails);
+  setSubmitting(true);
+  
+  try {
+    // Send ALL accumulated profile data + complete onboarding
+    await updateProfile({
+      country: updatedDetails.country,
+      addressLine1: updatedDetails.addressLine1,
+      addressLine2: updatedDetails.addressLine2,
+      city: updatedDetails.city,
+      onboardingComplete: true,
+    });
+    
+    // Navigate to role-appropriate main screen
+    const dest = profile.roleType === "employer" ? routes.jobBoard : routes.profile;
+    navigation.reset({ index: 0, routes: [{ name: dest }] });
+  } catch (err) {
+    alert("Failed to save profile. Check your connection and try again.");
+  } finally {
+    setSubmitting(false);
+  }
+};
+This is pessimistic — shows loading, blocks navigation until API succeeds, with retry on failure.
+Modified 14: src/context/ProfileContext.tsx — Remove password
+- Delete password from Auth interface
+- Delete password from initialProfile.auth
+- Remove password from any references (LoginScreen, SignupScreen no longer store it since Clerk handles it)
+🔄 Data Flow Diagram
+WelcomeScreen
+  ├─ Not signed in → LoginScreen / SignupScreen
+  │    ├─ Clerk email/password auth
+  │    ├─ Clerk Google OAuth
+  │    └─ POST /auth/sync → creates user in DB (no role)
+  │
+  └─ Signed in → GET /auth/me
+       ├─ onboardingComplete = true → main tabs (HIRER→jobBoard, WORKER→findJobs)
+       └─ onboardingComplete = false → RoleTypeScreen
+            │
+            ├─ RoleTypeScreen → PATCH /users/me { role }
+            ├─ RoleTitle → PATCH /users/me { roleTitle }
+            ├─ Upload → PATCH /users/me { documents }
+            ├─ Language → PATCH /users/me { languages }
+            ├─ Skills → PATCH /users/me { skills }
+            ├─ Bio → PATCH /users/me { bio }
+            ├─ HourlyRate → PATCH /users/me { hourlyRate }
+            └─ EnterDetails → PATCH /users/me { address + onboardingComplete: true }
+                              └─ → main tabs (role-based)
+⚠️ Key Design Decisions
+Decision	Choice	Rationale
+Submission timing	Optimistic per-screen, pessimistic at end	Per-screen is instant (save to context + fire API). Final screen waits for API before marking complete. Best UX + data safety.
+Auth persistence	expo-secure-store via Clerk's tokenCache	Industry standard for mobile token storage
+OAuth redirect	Custom scheme build-up:// in app.json	Required for Clerk OAuth to return to app
+Error handling	Toast/alert on failure, retry via final screen	Simple, user-visible, no data loss
+Password storage	Clerk only — never in ProfileContext	Security best practice
+📦 Dependencies to Add
+npm install @clerk/clerk-expo expo-secure-store expo-web-browser expo-auth-session
+Want me to start implementing? I'll go in this order:
+1. Backend schema + migration + controllers/routes
+2. Frontend: add Clerk deps + api.ts + App.tsx
+3. Frontend: LoginScreen + SignupScreen
+4. Frontend: WelcomeScreen auth gate
+5. Frontend: all 9 onboarding screens
+6. Cleanup: remove password from ProfileContext

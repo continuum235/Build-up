@@ -6,6 +6,7 @@ import {
   StyleSheet,
   StatusBar,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -18,6 +19,7 @@ import routes, { RootStackParamList } from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
 import { isValidBio } from "../utils/validation";
+import { useApi } from "../services/api";
 import KeyboardSafeWrapper from "../components/layout/KeyboardSafeWrapper";
 import TextInput from "../components/ui/TextInput";
 
@@ -27,14 +29,24 @@ const BioScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { profile, setBio } = useProfile();
   const { t } = useLanguage();
+  const { updateProfile } = useApi();
   const [bioText, setBioText] = useState<string>(profile.bio);
+  const [saving, setSaving] = useState(false);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!isValidBio(bioText)) {
       alert(t("validation.bioLength"));
       return;
     }
     setBio(bioText);
+    setSaving(true);
+    try {
+      await updateProfile({ bio: bioText });
+    } catch {
+      // optimistic
+    } finally {
+      setSaving(false);
+    }
     navigation.navigate(routes.hourlyRate);
   };
 
@@ -66,23 +78,26 @@ const BioScreen: React.FC = () => {
           <Text style={styles.subHeading}>{t("bio.subtitle")}</Text>
         </View>
 
-        <View style={styles.inputSection}>
-          <Text style={styles.inputLabel}>{t("bio.label")}</Text>
-          <TextInput
-            style={styles.bioInput}
-            multiline
-            textAlignVertical="top"
-            placeholder={t("bio.placeholder")}
-            value={bioText}
-            onChangeText={setBioText}
-          />
-        </View>
+        <TextInput
+          placeholder={t("bio.placeholder")}
+          value={bioText}
+          onChangeText={setBioText}
+          multiline
+          style={styles.bioInput}
+        />
+        <Text style={styles.charCount}>
+          {bioText.length}/100 {t("bio.minChars")}
+        </Text>
 
         <View style={{ flex: 1 }} />
 
-        <TouchableOpacity style={styles.primaryButton} onPress={handleNext}>
-          <Text style={styles.primaryButtonText}>{t("bio.button")}</Text>
-        </TouchableOpacity>
+        {saving ? (
+          <ActivityIndicator size="large" color="#965541" />
+        ) : (
+          <TouchableOpacity style={styles.nextBtn} onPress={handleNext}>
+            <Text style={styles.nextBtnText}>{t("common.next")}</Text>
+          </TouchableOpacity>
+        )}
       </KeyboardSafeWrapper>
 
       <View style={styles.progressContainer}>
@@ -90,24 +105,11 @@ const BioScreen: React.FC = () => {
           <View style={styles.progressFill} />
         </View>
       </View>
-
-      <View style={styles.bottomNav}>
-        <Text style={styles.stepText}>5/6</Text>
-        <View style={styles.navArrowsContainer}>
-          <TouchableOpacity
-            style={styles.arrowButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.arrowText}>{"<"}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.arrowButton} onPress={handleNext}>
-            <Text style={styles.arrowText}>{">"}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
     </SafeAreaView>
   );
 };
+
+export default BioScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -122,8 +124,7 @@ const styles = StyleSheet.create({
     paddingVertical: hp("2%"),
   },
   backBtn: {
-    padding: wp("5%"),
-    width: wp("20%"),
+    padding: wp("1%"),
   },
   backIcon: {
     width: wp("8%"),
@@ -135,7 +136,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   headerSpacer: {
-    width: wp("10%"),
+    width: wp("8%"),
   },
   scrollView: {
     flex: 1,
@@ -147,40 +148,38 @@ const styles = StyleSheet.create({
     paddingBottom: hp("3%"),
   },
   textSection: {
-    marginBottom: hp("3%"),
+    marginBottom: hp("4%"),
   },
   mainHeading: {
     color: "#965541",
-    fontSize: wp("8%"),
-    lineHeight: wp("10.5%"),
+    fontSize: wp("7.5%"),
+    fontWeight: "bold",
     marginBottom: hp("2%"),
   },
   subHeading: {
     color: "#1E1E1E",
-    fontSize: wp("4%"),
-    lineHeight: wp("6%"),
-    opacity: 0.9,
-  },
-  inputSection: {
-    marginBottom: hp("3%"),
-  },
-  inputLabel: {
-    color: "#1E1E1E",
-    fontSize: wp("4.5%"),
-    fontWeight: "bold",
-    marginBottom: hp("1.5%"),
+    fontSize: wp("3.8%"),
+    lineHeight: wp("5.5%"),
+    opacity: 0.8,
   },
   bioInput: {
     borderColor: "#D8DADC",
     borderRadius: wp("3%"),
     borderWidth: 1,
     padding: wp("4%"),
-    minHeight: hp("20%"),
     color: "#000000",
     fontSize: wp("4%"),
+    minHeight: hp("20%"),
+    textAlignVertical: "top",
     backgroundColor: "#FFFFFF",
   },
-  primaryButton: {
+  charCount: {
+    color: "#A4A9B6",
+    fontSize: wp("3.2%"),
+    marginTop: hp("1%"),
+    marginBottom: hp("3%"),
+  },
+  nextBtn: {
     alignItems: "center",
     backgroundColor: "#965541",
     borderRadius: wp("4%"),
@@ -188,7 +187,7 @@ const styles = StyleSheet.create({
     width: "100%",
     marginBottom: hp("2%"),
   },
-  primaryButtonText: {
+  nextBtnText: {
     color: "#FFFFFF",
     fontSize: wp("4.5%"),
     fontWeight: "bold",
@@ -204,41 +203,8 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     backgroundColor: "#965541",
-    width: "85%",
+    width: "55%",
     height: "100%",
     borderRadius: wp("1%"),
   },
-  bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#F2E1DA",
-    paddingHorizontal: wp("8%"),
-    paddingTop: hp("2.5%"),
-    paddingBottom: hp("4%"),
-  },
-  stepText: {
-    color: "#965541",
-    fontSize: wp("7%"),
-    fontWeight: "bold",
-  },
-  navArrowsContainer: {
-    flexDirection: "row",
-  },
-  arrowButton: {
-    backgroundColor: "#965541",
-    width: wp("12%"),
-    height: wp("10%"),
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: wp("2%"),
-    marginLeft: wp("2%"),
-  },
-  arrowText: {
-    color: "#FFFFFF",
-    fontSize: wp("5%"),
-    fontWeight: "bold",
-  },
 });
-
-export default BioScreen;

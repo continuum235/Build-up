@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   ScrollView,
@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -20,6 +21,7 @@ import BottomNavigation from "../components/layout/BottomNavigation";
 import JobDetails from "../components/jobs/JobDetails";
 import { useLanguage } from "../context/LanguageContext";
 import { useJobs } from "../hooks/useJobs";
+import { useApi } from "../services/api";
 
 const SearchIcon = require("../../assets/Search.png");
 
@@ -30,15 +32,79 @@ interface FindJobsScreenProps {
   >;
 }
 
+function relativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins} min ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} hr ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days} day${days > 1 ? "s" : ""} ago`;
+}
+
+function mapApiJob(j: Record<string, unknown>) {
+  const hirer = j.hirer as { name?: string } | undefined;
+  const title = String(j.title ?? "");
+  return {
+    id: String(j.id),
+    title,
+    company: hirer?.name ?? "Build Up",
+    verified: false,
+    location: String(j.location ?? ""),
+    budget: Number(j.budget ?? 0),
+    applicants: "0",
+    category: String(j.category ?? "OTHER"),
+    liked: false,
+    translations: {
+      en: {
+        title,
+        postedTime: relativeTime(String(j.createdAt ?? new Date().toISOString())),
+        experience: `${j.experience ?? 0} years`,
+        tags: [] as string[],
+        description: String(j.description ?? ""),
+      },
+      hi: {
+        title,
+        postedTime: relativeTime(String(j.createdAt ?? new Date().toISOString())),
+        experience: `${j.experience ?? 0} years`,
+        tags: [] as string[],
+        description: String(j.description ?? ""),
+      },
+    },
+  };
+}
+
 const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {
   const { language, t } = useLanguage();
-  const { jobs, categories, categoryTranslations } = useJobs();
+  const { jobs: seedJobs, categories, categoryTranslations } = useJobs();
+  const { listJobs } = useApi();
+  const [apiJobs, setApiJobs] = useState<Record<string, unknown>[]>([]);
+  const [loadingJobs, setLoadingJobs] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [activeTab, setActiveTab] = useState("Broadcasted Jobs");
   const [activeFilter, setActiveFilter] = useState("All");
   const [showNewJobModal, setShowNewJobModal] = useState(false);
-  const [likedJobIds, setLikedJobIds] = useState(
-    () => new Set<number>(jobs.filter((job) => job.liked).map((job) => job.id)),
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingJobs(true);
+    listJobs()
+      .then((data) => {
+        if (!cancelled) {
+          setApiJobs((data as { jobs: Record<string, unknown>[] }).jobs ?? []);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoadingJobs(false);
+      });
+    return () => { cancelled = true; };
+  }, [listJobs]);
+
+  const jobs = [...seedJobs, ...apiJobs.map(mapApiJob)];
+  const [likedJobIds, setLikedJobIds] = useState<Set<string | number>>(
+    () => new Set(jobs.filter((job) => "liked" in job && job.liked).map((job) => job.id)),
   );
 
   const filters = ["All", ...categories];
@@ -60,7 +126,7 @@ const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {
       currentLanguage
     ] ?? category;
 
-  const toggleLike = (jobId: number) => {
+  const toggleLike = (jobId: string | number) => {
     setLikedJobIds((prev) => {
       const next = new Set(prev);
       if (next.has(jobId)) {

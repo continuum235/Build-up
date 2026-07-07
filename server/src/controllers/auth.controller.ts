@@ -3,7 +3,7 @@ import type { Request, Response } from "express";
 import { clerkClient } from "../lib/clerk";
 import { prisma } from "../lib/prisma";
 
-function isRole(value: unknown): value is Role {
+export function isRole(value: unknown): value is Role {
   return typeof value === "string" && Object.values(Role).includes(value as Role);
 }
 
@@ -21,16 +21,34 @@ function getDisplayName(user: Awaited<ReturnType<typeof clerkClient.users.getUse
   return fullName || user.username || "User";
 }
 
+const USER_SELECT = {
+  id: true,
+  clerkId: true,
+  email: true,
+  name: true,
+  role: true,
+  roleTitle: true,
+  bio: true,
+  hourlyRate: true,
+  languages: true,
+  skills: true,
+  documents: true,
+  country: true,
+  addressLine1: true,
+  addressLine2: true,
+  city: true,
+  onboardingComplete: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
 export async function syncUser(req: Request, res: Response) {
   if (!req.auth?.userId) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  const { role } = req.body as { role?: unknown };
-
-  if (!isRole(role)) {
-    return res.status(400).json({ message: "role must be HIRER or WORKER" });
-  }
+  const { role: rawRole } = req.body as { role?: unknown };
+  const role = rawRole && isRole(rawRole) ? (rawRole as Role) : undefined;
 
   const clerkUser = await clerkClient.users.getUser(req.auth.userId);
   const email = getPrimaryEmail(clerkUser);
@@ -45,21 +63,14 @@ export async function syncUser(req: Request, res: Response) {
       clerkId: req.auth.userId,
       email,
       name: getDisplayName(clerkUser),
-      role,
+      ...(role ? { role } : {}),
     },
     update: {
       email,
       name: getDisplayName(clerkUser),
+      ...(role ? { role } : {}),
     },
-    select: {
-      id: true,
-      clerkId: true,
-      email: true,
-      name: true,
-      role: true,
-      createdAt: true,
-      updatedAt: true,
-    },
+    select: USER_SELECT,
   });
 
   return res.status(200).json({ user });
@@ -72,15 +83,7 @@ export async function getMe(req: Request, res: Response) {
 
   const user = await prisma.user.findUnique({
     where: { clerkId: req.auth.userId },
-    select: {
-      id: true,
-      clerkId: true,
-      email: true,
-      name: true,
-      role: true,
-      createdAt: true,
-      updatedAt: true,
-    },
+    select: USER_SELECT,
   });
 
   if (!user) {
