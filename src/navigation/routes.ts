@@ -10,7 +10,6 @@ const routes = {
   languages: "languages",
   skills: "skills",
   bio: "bio",
-  hourlyRate: "hourlyRate",
   enterDetails: "enterDetails",
   findJobs: "findJobs",
   jobDetails: "jobDetails",
@@ -36,7 +35,6 @@ export type RootStackParamList = {
   [routes.languages]: undefined;
   [routes.skills]: undefined;
   [routes.bio]: undefined;
-  [routes.hourlyRate]: undefined;
   [routes.enterDetails]: undefined;
   [routes.findJobs]: undefined;
   [routes.jobDetails]: { jobId: string | number };

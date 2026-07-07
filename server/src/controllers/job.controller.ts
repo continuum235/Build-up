@@ -12,7 +12,7 @@ const VALID_BUDGET_TYPES = ["HOURLY", "DAILY", "FIXED"] as const;
 
 const JOB_REQUIRED_FIELDS = [
   "title", "description", "location", "budget", "budgetType",
-  "experience", "category", "startDate",
+  "experience", "category", "startDate", "minWage",
 ] as const;
 
 function isEnum<T extends string>(valid: readonly T[], value: unknown): value is T {
@@ -115,6 +115,21 @@ export async function createJob(req: Request, res: Response) {
     return res.status(400).json({ message: "budget must be a positive number" });
   }
 
+  if (typeof body.minWage !== "number" || body.minWage <= 0) {
+    return res.status(400).json({ message: "minWage must be a positive number" });
+  }
+
+  const positions = body.positions !== undefined ? Number(body.positions) : 1;
+  if (!Number.isInteger(positions) || positions < 1) {
+    return res.status(400).json({ message: "positions must be a positive integer" });
+  }
+
+  if (body.budget < body.minWage * positions) {
+    return res.status(400).json({
+      message: `budget (${body.budget}) must be at least minWage (${body.minWage}) × positions (${positions}) = ${body.minWage * positions}`,
+    });
+  }
+
   if (typeof body.experience !== "number" || body.experience < 0) {
     return res.status(400).json({ message: "experience must be a non-negative number" });
   }
@@ -139,10 +154,12 @@ export async function createJob(req: Request, res: Response) {
       location: asString(body.location),
       budget: body.budget as number,
       budgetType: body.budgetType as BudgetType,
+      minWage: body.minWage as number,
       experience: body.experience as number,
       category: body.category as JobCategory,
       startDate,
       endDate,
+      positions,
       hirerId: req.currentUser!.id,
     },
     include: {
@@ -184,6 +201,12 @@ export async function updateJob(req: Request, res: Response) {
     }
     data.budget = body.budget;
   }
+  if (body.minWage !== undefined) {
+    if (typeof body.minWage !== "number" || body.minWage <= 0) {
+      return res.status(400).json({ message: "minWage must be a positive number" });
+    }
+    data.minWage = body.minWage;
+  }
   if (body.budgetType !== undefined) {
     if (!isEnum(VALID_BUDGET_TYPES, body.budgetType)) {
       return res.status(400).json({ message: `budgetType must be one of: ${VALID_BUDGET_TYPES.join(", ")}` });
@@ -195,6 +218,13 @@ export async function updateJob(req: Request, res: Response) {
       return res.status(400).json({ message: "experience must be a non-negative number" });
     }
     data.experience = body.experience;
+  }
+  if (body.positions !== undefined) {
+    const p = Number(body.positions);
+    if (!Number.isInteger(p) || p < 1) {
+      return res.status(400).json({ message: "positions must be a positive integer" });
+    }
+    data.positions = p;
   }
   if (body.category !== undefined) {
     if (!isEnum(VALID_CATEGORIES, body.category)) {

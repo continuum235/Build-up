@@ -43,6 +43,7 @@ model Job {
   location    String
   budget      Decimal
   budgetType  BudgetType
+  minWage     Decimal?
   experience  Int
   category    JobCategory
   startDate   DateTime

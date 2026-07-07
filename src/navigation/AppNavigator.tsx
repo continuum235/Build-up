@@ -13,7 +13,6 @@ import EmployerRoleTitleScreen from "../screens/EmployerRoleTitleScreen";
 import LanguageScreen from "../screens/LanguageScreen";
 import SkillsScreen from "../screens/SkillsScreen";
 import BioScreen from "../screens/BioScreen";
-import HourlyRateScreen from "../screens/HourlyRateScreen";
 import EnterDetailsScreen from "../screens/EnterDetailsScreen";
 import FindJobsScreen from "../screens/FindJobsScreen";
 import YourJobsScreen from "../screens/YourJobsScreen";
@@ -46,7 +45,6 @@ const AppNavigator: React.FC = () => (
     <Stack.Screen name={routes.languages} component={LanguageScreen} />
     <Stack.Screen name={routes.skills} component={SkillsScreen} />
     <Stack.Screen name={routes.bio} component={BioScreen} />
-    <Stack.Screen name={routes.hourlyRate} component={HourlyRateScreen} />
     <Stack.Screen name={routes.enterDetails} component={EnterDetailsScreen} />
     <Stack.Screen name={routes.findJobs} component={FindJobsScreen} />
     <Stack.Screen name={routes.yourJobs} component={YourJobsScreen} />

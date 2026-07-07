@@ -47,7 +47,7 @@ const BioScreen: React.FC = () => {
     } finally {
       setSaving(false);
     }
-    navigation.navigate(routes.hourlyRate);
+    navigation.navigate(routes.enterDetails);
   };
 
   return (

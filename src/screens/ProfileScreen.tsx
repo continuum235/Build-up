@@ -87,14 +87,6 @@ const ProfileScreen: React.FC = () => {
               </Text>
             </View>
 
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{t("profile.rateTitle")}</Text>
-              <Text style={styles.detailText}>
-                {profile.hourlyRate
-                  ? `₹${profile.hourlyRate}/hr`
-                  : t("profile.rateFallback")}
-              </Text>
-            </View>
           </>
         )}
 

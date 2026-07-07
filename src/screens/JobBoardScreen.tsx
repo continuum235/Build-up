@@ -8,6 +8,7 @@ import {
   StatusBar,
   ActivityIndicator,
   Modal,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -16,15 +17,11 @@ import {
 } from "react-native-responsive-screen";
 import { useJobs } from "../hooks/useJobs";
 import { useApi } from "../services/api";
+import { CATEGORIES, CATEGORY_MIN_WAGE, CATEGORY_LABELS, Category } from "../data/categoryWages";
 import BottomNavigation from "../components/layout/BottomNavigation";
 import JobDetails from "../components/jobs/JobDetails";
 import Button from "../components/ui/Button";
 import TextInput from "../components/ui/TextInput";
-
-const CATEGORIES = [
-  "CARPENTER", "ELECTRICIAN", "PLUMBER", "PAINTER", "CLEANER",
-  "GARDENER", "MASON", "DRIVER", "COOK", "SECURITY", "OTHER",
-] as const;
 
 const BUDGET_TYPES = ["HOURLY", "DAILY", "FIXED"] as const;
 
@@ -51,13 +48,16 @@ const JobBoardScreen: React.FC = () => {
     location: "",
     budget: "",
     experience: "",
-    category: "OTHER",
+    category: "OTHER" as Category,
     budgetType: "FIXED",
     startDate: "",
     endDate: "",
+    minWage: "",
+    positions: "1",
   });
   const [customJobs, setCustomJobs] = useState<PostedJob[]>([]);
   const [posting, setPosting] = useState(false);
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const { createJob } = useApi();
 
   const seedJobs: PostedJob[] = jobs.map((job) => {
@@ -90,20 +90,41 @@ const JobBoardScreen: React.FC = () => {
     });
   };
 
+  const minWage = CATEGORY_MIN_WAGE[newJob.category] || 0;
+  const positions = parseInt(newJob.positions, 10) || 1;
+  const totalMinWage = minWage * positions;
+  const budgetVal = parseInt(newJob.budget, 10) || 0;
+  const budgetTooLow = budgetVal > 0 && budgetVal < totalMinWage;
+
+  const handleCategorySelect = (cat: Category) => {
+    setNewJob((prev) => ({
+      ...prev,
+      category: cat,
+      minWage: String(CATEGORY_MIN_WAGE[cat] || 0),
+    }));
+    setCategoryDropdownOpen(false);
+  };
+
   const handleAddJob = async () => {
     if (!newJob.title.trim()) return;
+    if (budgetTooLow) {
+      alert(`Budget must be at least ₹${totalMinWage} (₹${minWage} × ${positions} worker${positions > 1 ? "s" : ""})`);
+      return;
+    }
     setPosting(true);
     try {
       await createJob({
         title: newJob.title,
         description: newJob.description || newJob.title,
         location: newJob.location || "Not specified",
-        budget: parseInt(newJob.budget, 10) || 0,
+        budget: budgetVal,
         budgetType: newJob.budgetType,
         experience: parseInt(newJob.experience, 10) || 0,
         category: newJob.category,
         startDate: newJob.startDate || new Date().toISOString(),
         endDate: newJob.endDate || undefined,
+        minWage,
+        positions,
       });
     } catch {
       // job still added locally below
@@ -113,7 +134,7 @@ const JobBoardScreen: React.FC = () => {
       title: newJob.title,
       posted: "Just now",
       location: newJob.location || "Location not specified",
-      budget: newJob.budget ? `$${newJob.budget}` : "Negotiable",
+      budget: newJob.budget ? `₹${newJob.budget}` : "Negotiable",
       experience: newJob.experience ? `${newJob.experience} yrs` : "Not specified",
       tags: [],
       liked: false,
@@ -130,6 +151,8 @@ const JobBoardScreen: React.FC = () => {
       budgetType: "FIXED",
       startDate: "",
       endDate: "",
+      minWage: "",
+      positions: "1",
     });
     setPosting(false);
     setShowAddForm(false);
@@ -193,6 +216,53 @@ const JobBoardScreen: React.FC = () => {
         }
       />
 
+      {/* Category Dropdown */}
+      <View style={styles.fieldContainer}>
+        <Text style={styles.inputLabel}>Category *</Text>
+        <TouchableOpacity
+          style={styles.dropdownBox}
+          onPress={() => setCategoryDropdownOpen((o) => !o)}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.dropdownText}>
+            {CATEGORY_LABELS[newJob.category]}
+          </Text>
+          <Image
+            source={require("../../assets/Drop-down-arrow.png")}
+            resizeMode="contain"
+            style={[
+              styles.dropdownIcon,
+              categoryDropdownOpen && styles.dropdownIconOpen,
+            ]}
+          />
+        </TouchableOpacity>
+        {categoryDropdownOpen && (
+          <View style={styles.dropdownMenu}>
+            <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>
+              {CATEGORIES.map((cat) => (
+                <TouchableOpacity
+                  key={cat}
+                  style={[
+                    styles.dropdownOption,
+                    newJob.category === cat && styles.dropdownOptionSelected,
+                  ]}
+                  onPress={() => handleCategorySelect(cat)}
+                >
+                  <Text
+                    style={[
+                      styles.dropdownOptionText,
+                      newJob.category === cat && styles.dropdownOptionTextSelected,
+                    ]}
+                  >
+                    {CATEGORY_LABELS[cat]} — ₹{CATEGORY_MIN_WAGE[cat]}/day
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+      </View>
+
       <View style={styles.formRow}>
         <View style={styles.formHalf}>
           <TextInput
@@ -248,32 +318,38 @@ const JobBoardScreen: React.FC = () => {
           </ScrollView>
         </View>
         <View style={styles.formHalf}>
-          <Text style={styles.inputLabel}>Category</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {CATEGORIES.map((cat) => (
-              <TouchableOpacity
-                key={cat}
-                style={[
-                  styles.chip,
-                  newJob.category === cat && styles.chipActive,
-                ]}
-                onPress={() =>
-                  setNewJob((prev) => ({ ...prev, category: cat }))
-                }
-              >
-                <Text
-                  style={[
-                    styles.chipText,
-                    newJob.category === cat && styles.chipTextActive,
-                  ]}
-                >
-                  {cat.charAt(0) + cat.slice(1).toLowerCase()}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          <TextInput
+            style={styles.textInput}
+            label="Workers Needed *"
+            placeholder="e.g. 2"
+            keyboardType="numeric"
+            value={newJob.positions}
+            onChangeText={(text) =>
+              setNewJob((prev) => ({ ...prev, positions: text }))
+            }
+          />
         </View>
       </View>
+
+      {/* Minimum Wage Summary */}
+      {minWage > 0 && (
+        <View style={styles.minWageSummary}>
+          <Text style={styles.minWageText}>
+            Min wage per worker: <Text style={styles.minWageBold}>₹{minWage}/day</Text>
+          </Text>
+          <Text style={styles.minWageText}>
+            Workers: <Text style={styles.minWageBold}>{positions}</Text>
+          </Text>
+          <Text style={styles.minWageText}>
+            Total minimum required: <Text style={styles.minWageBold}>₹{totalMinWage}</Text>
+          </Text>
+          {budgetTooLow && (
+            <Text style={styles.minWageError}>
+              Budget must be at least ₹{totalMinWage}
+            </Text>
+          )}
+        </View>
+      )}
 
       <View style={styles.formRow}>
         <View style={styles.formHalf}>
@@ -455,103 +531,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingHorizontal: wp("10%"),
   },
-  jobCard: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#965541",
-    borderRadius: wp("6%"),
-    borderWidth: 1,
-    padding: wp("5%"),
-    marginBottom: hp("2%"),
-  },
-  cardHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: hp("0.5%"),
-  },
-  jobTitle: {
-    color: "#965541",
-    fontSize: wp("5%"),
-    fontWeight: "bold",
-    flex: 1,
-    marginRight: wp("3%"),
-    lineHeight: wp("6.5%"),
-  },
-  heartButton: {
-    width: wp("8%"),
-    height: wp("8%"),
-    borderRadius: wp("4%"),
-    borderWidth: 1,
-    borderColor: "#965541",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  heartIcon: {
-    width: wp("4%"),
-    height: wp("4%"),
-    tintColor: "#965541",
-  },
-  heartIconActive: {
-    tintColor: "#FF3B30",
-  },
-  postedText: {
-    color: "#666666",
-    fontSize: wp("3.5%"),
-    marginBottom: hp("1.5%"),
-  },
-  locationRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: hp("2%"),
-  },
-  locationIcon: {
-    width: wp("4%"),
-    height: wp("4%"),
-    marginRight: wp("1.5%"),
-    tintColor: "#965541",
-  },
-  locationText: {
-    color: "#1E1E1E",
-    fontSize: wp("3.8%"),
-    textDecorationLine: "underline",
-  },
-  detailsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: hp("2%"),
-  },
-  detailBlock: {
-    flexDirection: "column",
-  },
-  detailLabel: {
-    color: "#965541",
-    fontSize: wp("3.5%"),
-    marginBottom: hp("0.5%"),
-  },
-  detailValue: {
-    color: "#000000",
-    fontWeight: "bold",
-    fontSize: wp("4.8%"),
-  },
-  tagsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  tagPill: {
-    borderColor: "#965541",
-    borderRadius: wp("2.5%"),
-    borderWidth: 1,
-    paddingVertical: hp("0.5%"),
-    paddingHorizontal: wp("4%"),
-    marginRight: wp("2%"),
-  },
-  tagText: {
-    color: "#965541",
-    fontSize: wp("3%"),
-    fontWeight: "bold",
-  },
-
   /* Add Job Form */
   addFormContainer: {
     padding: wp("2%"),
@@ -562,6 +541,9 @@ const styles = StyleSheet.create({
     color: "#1E1E1E",
     marginBottom: hp("2.5%"),
     textAlign: "center",
+  },
+  fieldContainer: {
+    marginBottom: hp("1.5%"),
   },
   inputLabel: {
     color: "#1E1E1E",
@@ -637,6 +619,77 @@ const styles = StyleSheet.create({
     color: "#965541",
     fontWeight: "bold",
   },
+  dropdownBox: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderColor: "#D8DADC",
+    borderRadius: wp("3%"),
+    borderWidth: 1,
+    paddingVertical: hp("1.8%"),
+    paddingHorizontal: wp("4%"),
+    backgroundColor: "#FFFFFF",
+  },
+  dropdownText: {
+    color: "#1E1E1E",
+    fontSize: wp("4%"),
+  },
+  dropdownIcon: {
+    width: wp("4.5%"),
+    height: wp("4.5%"),
+  },
+  dropdownIconOpen: {
+    transform: [{ rotate: "180deg" }],
+  },
+  dropdownMenu: {
+    maxHeight: hp("28%"),
+    borderColor: "#D8DADC",
+    borderRadius: wp("3%"),
+    borderWidth: 1,
+    marginTop: hp("0.5%"),
+    backgroundColor: "#FFFFFF",
+    overflow: "hidden",
+  },
+  dropdownOption: {
+    paddingVertical: hp("1.6%"),
+    paddingHorizontal: wp("4%"),
+    borderBottomColor: "#EEF0F2",
+    borderBottomWidth: 1,
+  },
+  dropdownOptionSelected: {
+    backgroundColor: "#F2E1DA",
+  },
+  dropdownOptionText: {
+    color: "#1E1E1E",
+    fontSize: wp("3.8%"),
+  },
+  dropdownOptionTextSelected: {
+    color: "#965541",
+    fontWeight: "bold",
+  },
+  minWageSummary: {
+    backgroundColor: "#FFF5F0",
+    borderRadius: wp("3%"),
+    padding: wp("4%"),
+    marginTop: hp("1.5%"),
+    borderWidth: 1,
+    borderColor: "#965541",
+  },
+  minWageText: {
+    color: "#1E1E1E",
+    fontSize: wp("3.8%"),
+    marginBottom: hp("0.5%"),
+  },
+  minWageBold: {
+    fontWeight: "bold",
+    color: "#965541",
+  },
+  minWageError: {
+    color: "#D32F2F",
+    fontSize: wp("3.5%"),
+    fontWeight: "bold",
+    marginTop: hp("0.5%"),
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -649,7 +702,6 @@ const styles = StyleSheet.create({
     padding: wp("6%"),
     maxHeight: hp("80%"),
   },
-
   /* BOTTOM NAVIGATION */
   bottomNav: {
     flexDirection: "row",

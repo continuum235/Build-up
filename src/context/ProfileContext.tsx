@@ -33,7 +33,6 @@ interface Profile {
   languages: string[];
   skills: string[];
   bio: string;
-  hourlyRate: string;
   details: Details;
 }
 
@@ -48,7 +47,6 @@ interface ProfileContextType {
   addSkill: (skill: string) => void;
   removeSkill: (skill: string) => void;
   setBio: (bio: string) => void;
-  setHourlyRate: (rate: string) => void;
   setDetails: (updates: Partial<Details>) => void;
   resetProfile: () => void;
 }
@@ -71,7 +69,6 @@ const initialProfile: Profile = {
   languages: [],
   skills: [],
   bio: "",
-  hourlyRate: "",
   details: {
     country: "India",
     addressLine1: "",
@@ -131,8 +128,6 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({
           skills: prev.skills.filter((item) => item !== skill),
         })),
       setBio: (bio) => setProfile((prev) => ({ ...prev, bio })),
-      setHourlyRate: (rate) =>
-        setProfile((prev) => ({ ...prev, hourlyRate: rate })),
       setDetails: (updates) =>
         setProfile((prev) => ({
           ...prev,

@@ -56,6 +56,8 @@ export function useApi() {
     category: string;
     startDate: string;
     endDate?: string;
+    minWage: number;
+    positions: number;
   }) =>
     apiFetch("/jobs", {
       method: "POST",
