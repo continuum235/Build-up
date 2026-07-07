@@ -8,8 +8,27 @@ function asString(value: unknown): string {
 
 export async function updateEngagement(req: Request, res: Response) {
   const engagementId = asString(req.params.id);
-  const userId = req.currentUser!.id;
-  const { status } = req.body as { status?: string };
+
+  const clerkUserId = req.auth?.userId;
+  if (!clerkUserId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const currentUser = await prisma.user.findUnique({
+    where: { clerkId: clerkUserId },
+    select: { id: true },
+  });
+
+  if (!currentUser) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  const userId = currentUser.id;
+
+  const { status, cancellationReason } = req.body as {
+    status?: string;
+    cancellationReason?: string;
+  };
 
   if (!status || !["COMPLETED", "CANCELLED"].includes(status)) {
     return res.status(400).json({ message: "status must be COMPLETED or CANCELLED" });
@@ -35,10 +54,15 @@ export async function updateEngagement(req: Request, res: Response) {
     return res.status(403).json({ message: "Forbidden" });
   }
 
+  const updateData: Record<string, unknown> = { status: status as EngagementStatus };
+  if (status === "CANCELLED" && cancellationReason) {
+    updateData.cancellationReason = cancellationReason;
+  }
+
   const updates = [
     prisma.engagement.update({
       where: { id: engagementId },
-      data: { status: status as EngagementStatus },
+      data: updateData,
     }),
   ];
 
@@ -66,7 +90,22 @@ export async function updateEngagement(req: Request, res: Response) {
 
 export async function createReview(req: Request, res: Response) {
   const engagementId = asString(req.params.id);
-  const userId = req.currentUser!.id;
+
+  const clerkUserId = req.auth?.userId;
+  if (!clerkUserId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const currentUser = await prisma.user.findUnique({
+    where: { clerkId: clerkUserId },
+    select: { id: true },
+  });
+
+  if (!currentUser) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  const userId = currentUser.id;
   const body = req.body as Record<string, unknown>;
   const rating = body.rating;
   const comment = body.comment;

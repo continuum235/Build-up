@@ -78,6 +78,8 @@ model Engagement {
 
   status    EngagementStatus @default(ACTIVE)
 
+  cancellationReason String?
+
   reviews Review[]
 
   createdAt DateTime @default(now())

@@ -8,9 +8,10 @@ export function useApi() {
   const apiFetch = async (path: string, options?: RequestInit) => {
     const token = await getToken();
     const body = options?.body;
+    const extraHeaders = options?.headers as Record<string, string> | undefined;
     const headers: Record<string, string> = {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options?.headers,
+      ...extraHeaders,
     };
     if (body) {
       headers["Content-Type"] = "application/json";
@@ -75,5 +76,11 @@ export function useApi() {
 
   const getMyWorkerJobs = () => apiFetch("/workers/me/jobs");
 
-  return { apiFetch, syncUser, getMe, updateProfile, listJobs, createJob, acceptJob, rejectJob, getMyWorkerJobs };
+  const updateEngagement = (engagementId: string, data: { status: string; cancellationReason?: string }) =>
+    apiFetch(`/engagements/${engagementId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+
+  return { apiFetch, syncUser, getMe, updateProfile, listJobs, createJob, acceptJob, rejectJob, getMyWorkerJobs, updateEngagement };
 }

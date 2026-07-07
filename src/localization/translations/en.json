@@ -177,7 +177,15 @@
     "completed": "Completed",
     "userVerified": "User Verified",
     "budget": "Budget",
-    "chatWith": "Chat with {{company}}"
+    "experience": "Experience",
+    "chatWith": "Chat with {{company}}",
+    "complete": "Complete",
+    "cancel": "Cancel",
+    "noActiveJobs": "No active jobs",
+    "noCompletedJobs": "No completed jobs",
+    "cancelReasonTitle": "Why are you cancelling?",
+    "cancelReasonPlaceholder": "Tell the hirer why you need to cancel...",
+    "submitCancel": "Submit Cancellation"
   },
   "validation": {
     "invalidLogin": "Enter a valid email and password.",

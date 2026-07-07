@@ -4,9 +4,13 @@ import {
   ScrollView,
   Text,
   Image,
+  TextInput,
   TouchableOpacity,
+  Modal,
   StyleSheet,
   StatusBar,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -18,9 +22,7 @@ import routes, { RootStackParamList } from "../navigation/routes";
 import BottomNavigation from "../components/layout/BottomNavigation";
 import JobDetails from "../components/jobs/JobDetails";
 import { useLanguage } from "../context/LanguageContext";
-import { useJobs } from "../hooks/useJobs";
 import { useApi } from "../services/api";
-import type { Job } from "../services/jobsService";
 
 const ChatIcon = require("../../assets/message.png");
 
@@ -31,221 +33,166 @@ interface YourJobsScreenProps {
   >;
 }
 
-type JobTab = "Sent Proposals" | "Active Jobs" | "Completed Jobs";
-type JobStatus = "Accepted" | "standby" | "Rejected" | "Active" | "Completed";
+type JobTab = "Active Jobs" | "Completed Jobs";
 type SupportedLanguage = "en" | "hi";
 
-interface JobCardData {
-  id: number;
-  status: JobStatus;
-  source: Job;
-  company: string;
-  verified: boolean;
-  location: string;
-  budget: string;
-  showChat: boolean;
+interface EngagementItem {
+  id: string;
+  status: string;
+  job: Record<string, unknown>;
 }
-
-const buildJobCard = (
-  job: Job,
-  status: JobStatus,
-  showChat: boolean,
-): JobCardData => ({
-  id: job.id,
-  status,
-  source: job,
-  company: job.company,
-  verified: job.verified,
-  location: job.location,
-  budget: `$${job.budget}`,
-  showChat,
-});
 
 const YourJobsScreen: React.FC<YourJobsScreenProps> = ({ navigation }) => {
   const { language, t } = useLanguage();
-  const { jobs } = useJobs();
-  const { getMyWorkerJobs } = useApi();
-  const [activeTab, setActiveTab] = useState<JobTab>("Sent Proposals");
-  const [engagements, setEngagements] = useState<Record<string, unknown>[]>([]);
+  const { getMyWorkerJobs, updateEngagement } = useApi();
+  const [activeTab, setActiveTab] = useState<JobTab>("Active Jobs");
+  const [engagements, setEngagements] = useState<EngagementItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actingId, setActingId] = useState<string | null>(null);
+
+  const [cancelModal, setCancelModal] = useState<{
+    visible: boolean;
+    engagementId: string;
+  }>({ visible: false, engagementId: "" });
+  const [cancelReason, setCancelReason] = useState("");
+
   const currentLanguage = language as SupportedLanguage;
 
-  useEffect(() => {
-    let cancelled = false;
+  const fetchJobs = () => {
     setLoading(true);
     getMyWorkerJobs()
       .then((data: Record<string, unknown>) => {
-        if (!cancelled) {
-          setEngagements((data as { engagements: Record<string, unknown>[] }).engagements ?? []);
-        }
+        setEngagements(
+          ((data as { engagements: EngagementItem[] }).engagements ?? []) as EngagementItem[],
+        );
       })
       .catch(() => {})
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => { cancelled = true; };
-  }, [getMyWorkerJobs]);
-
-  const mapEngagementToCard = (
-    engagement: Record<string, unknown>,
-    status: JobStatus,
-    showChat: boolean,
-  ): JobCardData | null => {
-    const job = engagement.job as Record<string, unknown> | undefined;
-    if (!job) return null;
-    const title = String(job.title ?? "");
-    const hirerName = (job.hirer as Record<string, unknown> | undefined)?.name as string ?? "";
-    return {
-      id: Number(job.id) || 0,
-      status,
-      source: {
-        id: Number(job.id) || 0,
-        title,
-        company: hirerName,
-        verified: false,
-        location: String(job.location ?? ""),
-        budget: Number(job.budget ?? 0),
-        experience: String(job.experience ?? ""),
-        category: String(job.category ?? "OTHER"),
-        liked: false,
-        postedTime: "",
-        description: "",
-        applicants: "0",
-        tags: [] as string[],
-        languages: "",
-        ratings: 0,
-        city: "",
-        coordinates: { lat: 0, lng: 0 },
-        translations: {
-          en: { title, experience: String(job.experience ?? ""), postedTime: "", tags: [] as string[] },
-          hi: { title, experience: String(job.experience ?? ""), postedTime: "", tags: [] as string[] },
-        },
-      },
-      company: hirerName,
-      verified: false,
-      location: String(job.location ?? ""),
-      budget: `$${Number(job.budget ?? 0)}`,
-      showChat,
-    };
+      .finally(() => setLoading(false));
   };
 
-  const activeEngagements = engagements.filter((e) => (e.status as string) === "ACTIVE");
-  const completedEngagements = engagements.filter((e) => (e.status as string) === "COMPLETED");
+  useEffect(() => {
+    fetchJobs();
+  }, []);
 
-  const jobsByTab: Record<JobTab, JobCardData[]> = {
-    "Sent Proposals": activeEngagements.length > 0
-      ? activeEngagements.map((e) => mapEngagementToCard(e, "Accepted", true)).filter(Boolean) as JobCardData[]
-      : [
-          buildJobCard(jobs[0], "Accepted", true),
-          buildJobCard(jobs[1], "standby", false),
-          buildJobCard(jobs[2], "Rejected", false),
-        ],
-    "Active Jobs": activeEngagements.length > 0
-      ? activeEngagements.map((e) => mapEngagementToCard(e, "Active", true)).filter(Boolean) as JobCardData[]
-      : [
-          buildJobCard(jobs[0], "Active", true),
-          buildJobCard(jobs[3], "standby", true),
-          buildJobCard(jobs[4], "Accepted", true),
-        ],
-    "Completed Jobs": completedEngagements.length > 0
-      ? completedEngagements.map((e) => mapEngagementToCard(e, "Completed", false)).filter(Boolean) as JobCardData[]
-      : [
-          buildJobCard(jobs[1], "Completed", false),
-          buildJobCard(jobs[5], "Completed", false),
-          buildJobCard(jobs[8], "Completed", false),
-        ],
-  };
-
-  const getStatusColor = (status: JobStatus) => {
-    switch (status.toLowerCase()) {
-      case "accepted":
-      case "active":
-      case "completed":
-        return "#34C759";
-      case "standby":
-        return "#FF9500";
-      case "rejected":
-        return "#FF3B30";
-      default:
-        return "#D8DADC";
-    }
-  };
-
-  const getStatusLabel = (status: JobStatus) => {
-    switch (status) {
-      case "Accepted":
-        return t("yourJobs.accepted");
-      case "standby":
-        return t("yourJobs.standby");
-      case "Rejected":
-        return t("yourJobs.rejected");
-      case "Active":
-        return t("yourJobs.active");
-      case "Completed":
-        return t("yourJobs.completed");
-      default:
-        return status;
-    }
-  };
+  const activeEngagements = engagements.filter((e) => e.status === "ACTIVE");
+  const completedEngagements = engagements.filter((e) => e.status === "COMPLETED");
 
   const getTabLabel = (tab: JobTab) => {
     switch (tab) {
-      case "Sent Proposals":
-        return t("yourJobs.sentProposals");
       case "Active Jobs":
         return t("yourJobs.activeJobs");
       case "Completed Jobs":
         return t("yourJobs.completedJobs");
-      default:
-        return tab;
     }
   };
 
-  const renderJobCard = (job: JobCardData) => {
-    const localizedJob =
-      job.source.translations[currentLanguage] ?? job.source.translations.en;
+  const handleComplete = async (engagementId: string) => {
+    setActingId(engagementId);
+    try {
+      await updateEngagement(engagementId, { status: "COMPLETED" });
+      fetchJobs();
+    } catch {
+      Alert.alert("Error", "Failed to mark job as completed");
+    } finally {
+      setActingId(null);
+    }
+  };
+
+  const handleCancel = async () => {
+    const { engagementId } = cancelModal;
+    if (!cancelReason.trim()) {
+      Alert.alert("Reason required", "Please provide a reason for cancellation");
+      return;
+    }
+    setActingId(engagementId);
+    setCancelModal({ visible: false, engagementId: "" });
+    try {
+      await updateEngagement(engagementId, {
+        status: "CANCELLED",
+        cancellationReason: cancelReason.trim(),
+      });
+      setCancelReason("");
+      fetchJobs();
+    } catch {
+      Alert.alert("Error", "Failed to cancel engagement");
+    } finally {
+      setActingId(null);
+    }
+  };
+
+  const renderJobCard = (engagement: EngagementItem) => {
+    const job = engagement.job;
+    const title = String(job.title ?? "");
+    const hirerName = (job.hirer as Record<string, unknown> | undefined)?.name as string ?? "";
+    const location = String(job.location ?? "");
+    const budget = Number(job.budget ?? 0);
+    const experience = String(job.experience ?? "");
+
     return (
-      <JobDetails
-        key={`${activeTab}-${job.id}-${job.status}`}
-        job={{
-          id: job.id,
-          title: localizedJob.title,
-          company: job.company,
-          verified: job.verified,
-          location: job.location,
-          budget: job.budget,
-          tags: [],
-        }}
-        onPress={() =>
-          navigation.navigate(routes.jobDetails, { jobId: job.id })
-        }
-        verifiedLabel={t("yourJobs.userVerified")}
-        details={[{ label: t("yourJobs.budget"), value: job.budget }]}
-        leadingContent={
-          <View style={styles.statusRow}>
-            <View
-              style={[
-                styles.statusDot,
-                { backgroundColor: getStatusColor(job.status) },
-              ]}
-            />
-            <Text style={styles.statusText}>{getStatusLabel(job.status)}</Text>
+      <View key={engagement.id} style={styles.card}>
+        <JobDetails
+          job={{
+            id: String(job.id),
+            title,
+            company: hirerName,
+            verified: false,
+            posted: "",
+            location,
+            budget: `$${budget}`,
+            experience,
+            tags: [],
+          }}
+          verifiedLabel={t("yourJobs.userVerified")}
+          postedPrefix=""
+          onPress={() =>
+            navigation.navigate(routes.jobDetails, { jobId: job.id as string })
+          }
+          details={[
+            { label: t("yourJobs.budget"), value: `$${budget}` },
+            { label: t("yourJobs.experience"), value: experience },
+          ]}
+        />
+
+        {engagement.status === "ACTIVE" && (
+          <View style={styles.actionRow}>
+            <TouchableOpacity
+              style={[styles.actionBtn, styles.completeBtn]}
+              activeOpacity={0.8}
+              onPress={() => handleComplete(engagement.id)}
+              disabled={actingId === engagement.id}
+            >
+              {actingId === engagement.id ? (
+                <ActivityIndicator color="#FFF" size="small" />
+              ) : (
+                <Text style={styles.actionBtnText}>
+                  {t("yourJobs.complete")}
+                </Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.actionBtn, styles.cancelBtn]}
+              activeOpacity={0.8}
+              onPress={() =>
+                setCancelModal({ visible: true, engagementId: engagement.id })
+              }
+              disabled={actingId === engagement.id}
+            >
+              <Text style={styles.cancelBtnText}>
+                {t("yourJobs.cancel")}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.chatBtn} activeOpacity={0.8}>
+              <Image
+                source={ChatIcon}
+                style={styles.chatIcon}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
           </View>
-        }
-      >
-        {job.showChat && (
-          <TouchableOpacity style={styles.chatButton} activeOpacity={0.8}>
-            <Image
-              source={ChatIcon}
-              style={styles.chatIcon}
-              resizeMode="contain"
-            />
-            <Text style={styles.chatButtonText}>
-              {t("yourJobs.chatWith", { company: job.company })}
-            </Text>
-          </TouchableOpacity>
         )}
-      </JobDetails>
+      </View>
     );
   };
 
@@ -258,7 +205,7 @@ const YourJobsScreen: React.FC<YourJobsScreenProps> = ({ navigation }) => {
       </View>
 
       <View style={styles.tabsContainer}>
-        {(Object.keys(jobsByTab) as JobTab[]).map((tab) => (
+        {(["Active Jobs", "Completed Jobs"] as JobTab[]).map((tab) => (
           <TouchableOpacity
             key={tab}
             style={styles.tabButton}
@@ -282,20 +229,86 @@ const YourJobsScreen: React.FC<YourJobsScreenProps> = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {activeTab === "Sent Proposals" && (
-          <Text style={styles.warningText}>
-            {t("yourJobs.proposalWarningLine1")}
-            {"\n"}
-            {t("yourJobs.proposalWarningLine2")}
-          </Text>
-        )}
+        {loading ? (
+          <ActivityIndicator
+            size="large"
+            color="#965541"
+            style={{ marginTop: hp("10%") }}
+          />
+        ) : (
+          <View style={styles.cardsContainer}>
+            {activeTab === "Active Jobs" && activeEngagements.length === 0 && (
+              <Text style={styles.emptyText}>
+                {t("yourJobs.noActiveJobs")}
+              </Text>
+            )}
+            {activeTab === "Completed Jobs" &&
+              completedEngagements.length === 0 && (
+                <Text style={styles.emptyText}>
+                  {t("yourJobs.noCompletedJobs")}
+                </Text>
+              )}
 
-        <View style={styles.cardsContainer}>
-          {jobsByTab[activeTab].map((job) => renderJobCard(job))}
-        </View>
+            {activeTab === "Active Jobs" &&
+              activeEngagements.map(renderJobCard)}
+            {activeTab === "Completed Jobs" &&
+              completedEngagements.map(renderJobCard)}
+          </View>
+        )}
       </ScrollView>
 
       <BottomNavigation activeTab="yourJobs" />
+
+      <Modal
+        visible={cancelModal.visible}
+        transparent
+        animationType="fade"
+        onRequestClose={() =>
+          setCancelModal({ visible: false, engagementId: "" })
+        }
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>
+              {t("yourJobs.cancelReasonTitle")}
+            </Text>
+
+            <TextInput
+              style={styles.reasonInput}
+              placeholder={t("yourJobs.cancelReasonPlaceholder")}
+              placeholderTextColor="#A4A9B6"
+              value={cancelReason}
+              onChangeText={setCancelReason}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalCancelBtn]}
+                onPress={() => {
+                  setCancelModal({ visible: false, engagementId: "" });
+                  setCancelReason("");
+                }}
+              >
+                <Text style={styles.modalCancelBtnText}>
+                  {t("yourJobs.cancel")}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalConfirmBtn]}
+                onPress={handleCancel}
+              >
+                <Text style={styles.modalConfirmBtnText}>
+                  {t("yourJobs.submitCancel")}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -318,7 +331,7 @@ const styles = StyleSheet.create({
   },
   tabsContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "space-around",
     paddingHorizontal: wp("6%"),
     marginBottom: hp("1%"),
     borderBottomWidth: 1,
@@ -327,6 +340,7 @@ const styles = StyleSheet.create({
   tabButton: {
     alignItems: "center",
     paddingBottom: hp("1%"),
+    flex: 1,
   },
   tabText: {
     fontSize: wp("3.8%"),
@@ -350,121 +364,115 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: hp("2%"),
   },
-  warningText: {
-    color: "#FFAA00",
-    textAlign: "center",
-    fontSize: wp("3.8%"),
-    marginVertical: hp("2.5%"),
-    paddingHorizontal: wp("10%"),
-  },
   cardsContainer: {
     paddingHorizontal: wp("5%"),
   },
-  jobCard: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#A4A9B6",
-    borderRadius: wp("5%"),
-    borderWidth: 1,
-    padding: wp("5%"),
+  emptyText: {
+    textAlign: "center",
+    color: "#A4A9B6",
+    fontSize: wp("4%"),
+    marginTop: hp("10%"),
+  },
+  card: {
     marginBottom: hp("2%"),
   },
-  statusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: hp("1%"),
-  },
-  statusDot: {
-    width: wp("2.5%"),
-    height: wp("2.5%"),
-    borderRadius: wp("1.25%"),
-    marginRight: wp("2%"),
-  },
-  statusText: {
-    color: "#1E1E1E",
-    fontSize: wp("3.5%"),
-    fontWeight: "500",
-  },
-  jobTitle: {
-    color: "#000000",
-    fontSize: wp("4.5%"),
-    fontWeight: "bold",
-    marginBottom: hp("1%"),
-    lineHeight: wp("6%"),
-  },
-  companyRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: hp("1.5%"),
-  },
-  companyName: {
-    color: "#1E1E1E",
-    fontSize: wp("3.5%"),
-    fontWeight: "bold",
-    marginRight: wp("2%"),
-  },
-  verifiedBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  verifiedIcon: {
-    width: wp("3.5%"),
-    height: wp("3.5%"),
-    marginRight: wp("1%"),
-    tintColor: "#007AFF",
-  },
-  verifiedText: {
-    color: "#007AFF",
-    fontSize: wp("3.2%"),
-    fontWeight: "bold",
-  },
-  locationBudgetRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: hp("1%"),
-  },
-  locationWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    marginRight: wp("2%"),
-  },
-  locationPin: {
-    width: wp("3.5%"),
-    height: wp("3.5%"),
-    marginRight: wp("1.5%"),
-    tintColor: "#965541",
-  },
-  locationText: {
-    color: "#1E1E1E",
-    fontSize: wp("3.5%"),
-    textDecorationLine: "underline",
-    flex: 1,
-  },
-  budgetLabel: {
-    color: "#965541",
-    fontSize: wp("3.5%"),
-  },
-  budgetValue: {
-    color: "#000000",
-    fontWeight: "bold",
-    fontSize: wp("3.8%"),
-  },
-  chatButton: {
+  actionRow: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: hp("1%"),
+    gap: wp("2%"),
+  },
+  actionBtn: {
+    flex: 1,
+    paddingVertical: hp("2%"),
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  completeBtn: {
+    backgroundColor: "#965541",
+    borderRadius: wp("3%"),
+  },
+  cancelBtn: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1.5,
+    borderColor: "#965541",
+    borderRadius: wp("3%"),
+  },
+  cancelBtnText: {
+    color: "#965541",
+    fontSize: wp("4%"),
+    fontWeight: "bold",
+  },
+  actionBtnText: {
+    color: "#FFFFFF",
+    fontSize: wp("4%"),
+    fontWeight: "bold",
+  },
+  chatBtn: {
+    width: wp("10%"),
+    height: wp("10%"),
+    borderRadius: wp("5%"),
+    backgroundColor: "#F0F0F0",
+    alignItems: "center",
+    justifyContent: "center",
   },
   chatIcon: {
-    width: wp("4.5%"),
-    height: wp("4.5%"),
-    marginRight: wp("2%"),
+    width: wp("5%"),
+    height: wp("5%"),
     tintColor: "#965541",
   },
-  chatButtonText: {
-    color: "#965541",
-    fontSize: wp("3.5%"),
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    width: wp("85%"),
+    backgroundColor: "#FFF",
+    borderRadius: wp("4%"),
+    padding: wp("6%"),
+  },
+  modalTitle: {
+    fontSize: wp("4.5%"),
+    fontWeight: "bold",
+    color: "#1E1E1E",
+    marginBottom: hp("2%"),
+  },
+  reasonInput: {
+    borderWidth: 1,
+    borderColor: "#D8DADC",
+    borderRadius: wp("2%"),
+    padding: wp("3%"),
+    fontSize: wp("3.8%"),
+    color: "#1E1E1E",
+    minHeight: hp("12%"),
+    marginBottom: hp("2%"),
+  },
+  modalActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: wp("3%"),
+  },
+  modalBtn: {
+    paddingVertical: hp("1.2%"),
+    paddingHorizontal: wp("6%"),
+    borderRadius: wp("2%"),
+  },
+  modalCancelBtn: {
+    backgroundColor: "#F0F0F0",
+  },
+  modalCancelBtnText: {
+    color: "#666",
+    fontSize: wp("3.8%"),
     fontWeight: "500",
-    textDecorationLine: "underline",
+  },
+  modalConfirmBtn: {
+    backgroundColor: "#FF3B30",
+  },
+  modalConfirmBtnText: {
+    color: "#FFF",
+    fontSize: wp("3.8%"),
+    fontWeight: "bold",
   },
 });

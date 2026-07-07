@@ -101,7 +101,7 @@ const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {
         if (!cancelled) setLoadingJobs(false);
       });
     return () => { cancelled = true; };
-  }, [getMyWorkerJobs]);
+  }, []);
 
   const jobs = [...seedJobs, ...apiJobs.map(mapApiJob)];
   const [likedJobIds, setLikedJobIds] = useState<Set<string | number>>(
