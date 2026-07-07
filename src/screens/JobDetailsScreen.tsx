@@ -45,10 +45,10 @@ const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({
   const { jobId } = route.params;
   const { getJobById } = useJobs();
   const seedJob = typeof jobId === "number" ? getJobById(jobId) : undefined;
-  const { acceptJob, rejectJob } = useApi();
+  const { createOrFindConversation } = useApi();
   const [apiJob, setApiJob] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
-  const [acting, setActing] = useState(false);
+  const [messaging, setMessaging] = useState(false);
 
   useEffect(() => {
     if (seedJob || typeof jobId !== "string") return;
@@ -112,29 +112,23 @@ const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({
     ? String((j.hirer as { email?: string } | undefined)?.email ?? "")
     : "";
 
-  const handleAccept = async () => {
-    if (acting) return;
-    setActing(true);
+  const handleMessageHirer = async () => {
+    if (messaging) return;
+    setMessaging(true);
     try {
-      await acceptJob(String(j.id));
-      navigation.goBack();
+      const data = await createOrFindConversation(String(j.id));
+      const conversation = (data as { conversation: { id: string } }).conversation;
+      const hirerName = isApi
+        ? String((j.hirer as { name?: string } | undefined)?.name ?? "Hirer")
+        : "Hirer";
+      navigation.navigate(routes.chat, {
+        conversationId: conversation.id,
+        title: hirerName,
+      });
     } catch {
-      alert("Failed to accept job. Try again.");
+      alert("Failed to start conversation. Try again.");
     } finally {
-      setActing(false);
-    }
-  };
-
-  const handleReject = async () => {
-    if (acting) return;
-    setActing(true);
-    try {
-      await rejectJob(String(j.id));
-      navigation.goBack();
-    } catch {
-      alert("Failed to reject job. Try again.");
-    } finally {
-      setActing(false);
+      setMessaging(false);
     }
   };
 
@@ -239,21 +233,12 @@ const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({
       {/* BOTTOM ACTION BAR */}
       <View style={styles.actionBar}>
         <TouchableOpacity
-          style={[styles.rejectButton, acting && { opacity: 0.5 }]}
-          onPress={handleReject}
-          disabled={acting}
+          style={[styles.messageButton, messaging && { opacity: 0.5 }]}
+          onPress={handleMessageHirer}
+          disabled={messaging}
         >
-          <Text style={styles.rejectButtonText}>
-            {acting ? "..." : "Reject"}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.acceptButton, acting && { opacity: 0.5 }]}
-          onPress={handleAccept}
-          disabled={acting}
-        >
-          <Text style={styles.acceptButtonText}>
-            {acting ? "..." : "Accept"}
+          <Text style={styles.messageButtonText}>
+            {messaging ? "..." : "Message Hirer"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -437,28 +422,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     gap: wp("4%"),
   },
-  rejectButton: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-    paddingVertical: hp("2%"),
-    borderRadius: wp("3%"),
-    alignItems: "center",
-    borderWidth: 1.5,
-    borderColor: "#965541",
-  },
-  rejectButtonText: {
-    color: "#965541",
-    fontSize: wp("4.5%"),
-    fontWeight: "bold",
-  },
-  acceptButton: {
+  messageButton: {
     flex: 1,
     backgroundColor: "#965541",
     paddingVertical: hp("2%"),
     borderRadius: wp("3%"),
     alignItems: "center",
   },
-  acceptButtonText: {
+  messageButtonText: {
     color: "#FFFFFF",
     fontSize: wp("4.5%"),
     fontWeight: "bold",

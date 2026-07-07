@@ -17,11 +17,12 @@ const routes = {
   profile: "profile",
   messages: "messages",
   jobBoard: "jobBoard",
+  chat: "chat",
 } as const;
 
 export type RouteName = (typeof routes)[keyof typeof routes];
 
-export type ParameterlessRouteName = Exclude<RouteName, typeof routes.jobDetails>;
+export type ParameterlessRouteName = Exclude<RouteName, typeof routes.jobDetails | typeof routes.chat>;
 
 export type RootStackParamList = {
   [routes.welcome]: undefined;
@@ -42,6 +43,7 @@ export type RootStackParamList = {
   [routes.profile]: undefined;
   [routes.messages]: undefined;
   [routes.jobBoard]: undefined;
+  [routes.chat]: { conversationId: string; title: string };
 };
 
 export default routes;

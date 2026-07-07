@@ -84,5 +84,22 @@ export function useApi() {
       body: JSON.stringify(data),
     });
 
-  return { apiFetch, syncUser, getMe, updateProfile, listJobs, createJob, acceptJob, rejectJob, getMyWorkerJobs, updateEngagement };
+  const createOrFindConversation = (jobId: string) =>
+    apiFetch("/conversations", {
+      method: "POST",
+      body: JSON.stringify({ jobId }),
+    });
+
+  const listConversations = () => apiFetch("/conversations");
+
+  const getConversationMessages = (conversationId: string) =>
+    apiFetch(`/conversations/${conversationId}/messages`);
+
+  const sendMessage = (conversationId: string, content: string) =>
+    apiFetch(`/conversations/${conversationId}/messages`, {
+      method: "POST",
+      body: JSON.stringify({ conversationId, content }),
+    });
+
+  return { apiFetch, syncUser, getMe, updateProfile, listJobs, createJob, acceptJob, rejectJob, getMyWorkerJobs, updateEngagement, createOrFindConversation, listConversations, getConversationMessages, sendMessage };
 }

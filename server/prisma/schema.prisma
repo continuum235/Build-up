@@ -32,6 +32,10 @@ model User {
   reviewsGiven    Review[]       @relation("ReviewAuthor")
   reviewsReceived Review[]       @relation("ReviewSubject")
 
+  conversationsAsHirer Conversation[] @relation("HirerConversation")
+  conversationsAsWorker Conversation[] @relation("WorkerConversation")
+  sentMessages         Message[]      @relation("MessageSender")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -55,9 +59,10 @@ model Job {
   hirerId String
   hirer   User   @relation("HirerJobs", fields: [hirerId], references: [id], onDelete: Cascade)
 
-  engagements Engagement[]
-  dismissals   JobDismissal[]
-  reviews      Review[]
+  engagements  Engagement[]
+  dismissals    JobDismissal[]
+  reviews       Review[]
+  conversations Conversation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -131,6 +136,39 @@ model Review {
   @@index([jobId])
   @@index([authorId])
   @@index([subjectId])
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  jobId     String
+  hirerId   String
+  workerId  String
+
+  job     Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  hirer   User @relation("HirerConversation", fields: [hirerId], references: [id], onDelete: Cascade)
+  worker  User @relation("WorkerConversation", fields: [workerId], references: [id], onDelete: Cascade)
+
+  messages Message[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([jobId, workerId])
+  @@index([hirerId])
+  @@index([workerId])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderId       String
+  content        String
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([conversationId])
 }
 
 enum Role {

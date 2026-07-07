@@ -8,6 +8,7 @@ import { hirerRouter } from "./routes/hirer.routes";
 import { jobRouter } from "./routes/job.routes";
 import { userRouter } from "./routes/user.routes";
 import { workerRouter } from "./routes/worker.routes";
+import { conversationRouter } from "./routes/conversation.routes";
 
 const app = express();
 const port = process.env.PORT ?? 3000;
@@ -26,6 +27,7 @@ app.use("/jobs", jobRouter);
 app.use("/users", userRouter);
 app.use("/workers", workerRouter);
 app.use("/hirers", hirerRouter);
+app.use("/conversations", conversationRouter);
 
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err);

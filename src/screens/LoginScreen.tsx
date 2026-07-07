@@ -64,21 +64,28 @@ const LoginScreen: React.FC = () => {
   };
 
   const handleGoogle = async () => {
-    if (!startOAuthFlow) return;
+    if (!startOAuthFlow) {
+      alert("Sign-in not ready yet. Please try again.");
+      return;
+    }
     setLoading(true);
     try {
       const { createdSessionId, setActive: setActiveOAuth } = await startOAuthFlow();
       if (createdSessionId && setActiveOAuth) {
         await setActiveOAuth({ session: createdSessionId });
-        await syncUser().catch(() => {});
+        try {
+          await syncUser();
+        } catch {
+          // backend sync is best-effort; onboarding will retry
+        }
         navigation.replace(routes.roleType);
       }
     } catch (err: unknown) {
       const msg =
         err instanceof Error
           ? err.message
-          : (err as { errors?: { message: string }[] })?.errors?.[0]?.message ?? "Google login failed";
-      alert(msg);
+          : (err as { errors?: { message: string }[] })?.errors?.[0]?.message ?? "";
+      if (msg) alert(msg);
     } finally {
       setLoading(false);
     }
