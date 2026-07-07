@@ -7,13 +7,17 @@ export function useApi() {
 
   const apiFetch = async (path: string, options?: RequestInit) => {
     const token = await getToken();
+    const body = options?.body;
+    const headers: Record<string, string> = {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options?.headers,
+    };
+    if (body) {
+      headers["Content-Type"] = "application/json";
+    }
     const res = await fetch(`${BASE_URL}${path}`, {
       ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...options?.headers,
-      },
+      headers,
     });
     const data = await res.json();
     if (!res.ok) {
@@ -57,5 +61,19 @@ export function useApi() {
       body: JSON.stringify(data),
     });
 
-  return { apiFetch, syncUser, getMe, updateProfile, listJobs, createJob };
+  const acceptJob = (jobId: string) =>
+    apiFetch(`/jobs/${jobId}/accept`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    });
+
+  const rejectJob = (jobId: string) =>
+    apiFetch(`/jobs/${jobId}/reject`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    });
+
+  const getMyWorkerJobs = () => apiFetch("/workers/me/jobs");
+
+  return { apiFetch, syncUser, getMe, updateProfile, listJobs, createJob, acceptJob, rejectJob, getMyWorkerJobs };
 }

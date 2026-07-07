@@ -7,7 +7,7 @@ export async function getMyHirerJobs(req: Request, res: Response) {
   const jobs = await prisma.job.findMany({
     where: { hirerId },
     include: {
-      engagement: {
+      engagements: {
         include: {
           worker: { select: { id: true, name: true } },
         },

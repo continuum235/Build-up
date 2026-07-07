@@ -48,13 +48,15 @@ model Job {
   startDate   DateTime
   endDate     DateTime?
   status      JobStatus @default(OPEN)
+  positions   Int     @default(1)
+  filledCount Int     @default(0)
 
   hirerId String
   hirer   User   @relation("HirerJobs", fields: [hirerId], references: [id], onDelete: Cascade)
 
-  engagement Engagement?
-  dismissals  JobDismissal[]
-  reviews     Review[]
+  engagements Engagement[]
+  dismissals   JobDismissal[]
+  reviews      Review[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -71,7 +73,7 @@ model Engagement {
   workerId String
   worker   User   @relation("WorkerEngagements", fields: [workerId], references: [id], onDelete: Cascade)
 
-  jobId String @unique
+  jobId String
   job   Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
   status    EngagementStatus @default(ACTIVE)
@@ -82,6 +84,7 @@ model Engagement {
   updatedAt DateTime @updatedAt
 
   @@index([workerId])
+  @@index([jobId])
   @@index([status])
 }
 

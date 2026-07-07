@@ -21,6 +21,13 @@ import JobDetails from "../components/jobs/JobDetails";
 import Button from "../components/ui/Button";
 import TextInput from "../components/ui/TextInput";
 
+const CATEGORIES = [
+  "CARPENTER", "ELECTRICIAN", "PLUMBER", "PAINTER", "CLEANER",
+  "GARDENER", "MASON", "DRIVER", "COOK", "SECURITY", "OTHER",
+] as const;
+
+const BUDGET_TYPES = ["HOURLY", "DAILY", "FIXED"] as const;
+
 interface PostedJob {
   id: number;
   title: string;
@@ -40,10 +47,14 @@ const JobBoardScreen: React.FC = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newJob, setNewJob] = useState({
     title: "",
+    description: "",
     location: "",
     budget: "",
     experience: "",
-    tags: "",
+    category: "OTHER",
+    budgetType: "FIXED",
+    startDate: "",
+    endDate: "",
   });
   const [customJobs, setCustomJobs] = useState<PostedJob[]>([]);
   const [posting, setPosting] = useState(false);
@@ -85,13 +96,14 @@ const JobBoardScreen: React.FC = () => {
     try {
       await createJob({
         title: newJob.title,
-        description: newJob.title,
+        description: newJob.description || newJob.title,
         location: newJob.location || "Not specified",
         budget: parseInt(newJob.budget, 10) || 0,
-        budgetType: "FIXED",
-        experience: 0,
-        category: "OTHER",
-        startDate: new Date().toISOString(),
+        budgetType: newJob.budgetType,
+        experience: parseInt(newJob.experience, 10) || 0,
+        category: newJob.category,
+        startDate: newJob.startDate || new Date().toISOString(),
+        endDate: newJob.endDate || undefined,
       });
     } catch {
       // job still added locally below
@@ -102,23 +114,22 @@ const JobBoardScreen: React.FC = () => {
       posted: "Just now",
       location: newJob.location || "Location not specified",
       budget: newJob.budget ? `$${newJob.budget}` : "Negotiable",
-      experience: newJob.experience || "Not specified",
-      tags: newJob.tags
-        ? newJob.tags
-            .split(",")
-            .map((t) => t.trim())
-            .filter(Boolean)
-        : [],
+      experience: newJob.experience ? `${newJob.experience} yrs` : "Not specified",
+      tags: [],
       liked: false,
       applicants: "0",
     };
     setCustomJobs((prev) => [job, ...prev]);
     setNewJob({
       title: "",
+      description: "",
       location: "",
       budget: "",
       experience: "",
-      tags: "",
+      category: "OTHER",
+      budgetType: "FIXED",
+      startDate: "",
+      endDate: "",
     });
     setPosting(false);
     setShowAddForm(false);
@@ -162,6 +173,17 @@ const JobBoardScreen: React.FC = () => {
       />
 
       <TextInput
+        style={[styles.textInput, { minHeight: hp("8%") }]}
+        label="Description"
+        placeholder="Describe the job requirements..."
+        value={newJob.description}
+        onChangeText={(text) =>
+          setNewJob((prev) => ({ ...prev, description: text }))
+        }
+        multiline
+      />
+
+      <TextInput
         style={styles.textInput}
         label="Location"
         placeholder="e.g. Thane, Mumbai"
@@ -175,7 +197,7 @@ const JobBoardScreen: React.FC = () => {
         <View style={styles.formHalf}>
           <TextInput
             style={styles.textInput}
-            label="Budget ($)"
+            label="Budget *"
             placeholder="e.g. 1000"
             keyboardType="numeric"
             value={newJob.budget}
@@ -187,8 +209,9 @@ const JobBoardScreen: React.FC = () => {
         <View style={styles.formHalf}>
           <TextInput
             style={styles.textInput}
-            label="Experience"
-            placeholder="e.g. Skilled"
+            label="Experience (years)"
+            placeholder="e.g. 3"
+            keyboardType="numeric"
             value={newJob.experience}
             onChangeText={(text) =>
               setNewJob((prev) => ({ ...prev, experience: text }))
@@ -197,13 +220,85 @@ const JobBoardScreen: React.FC = () => {
         </View>
       </View>
 
-      <TextInput
-        style={styles.textInput}
-        label="Tags (comma separated)"
-        placeholder="e.g. Tag 1, Tag 2"
-        value={newJob.tags}
-        onChangeText={(text) => setNewJob((prev) => ({ ...prev, tags: text }))}
-      />
+      <View style={styles.formRow}>
+        <View style={styles.formHalf}>
+          <Text style={styles.inputLabel}>Budget Type</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {BUDGET_TYPES.map((bt) => (
+              <TouchableOpacity
+                key={bt}
+                style={[
+                  styles.chip,
+                  newJob.budgetType === bt && styles.chipActive,
+                ]}
+                onPress={() =>
+                  setNewJob((prev) => ({ ...prev, budgetType: bt }))
+                }
+              >
+                <Text
+                  style={[
+                    styles.chipText,
+                    newJob.budgetType === bt && styles.chipTextActive,
+                  ]}
+                >
+                  {bt}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+        <View style={styles.formHalf}>
+          <Text style={styles.inputLabel}>Category</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {CATEGORIES.map((cat) => (
+              <TouchableOpacity
+                key={cat}
+                style={[
+                  styles.chip,
+                  newJob.category === cat && styles.chipActive,
+                ]}
+                onPress={() =>
+                  setNewJob((prev) => ({ ...prev, category: cat }))
+                }
+              >
+                <Text
+                  style={[
+                    styles.chipText,
+                    newJob.category === cat && styles.chipTextActive,
+                  ]}
+                >
+                  {cat.charAt(0) + cat.slice(1).toLowerCase()}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </View>
+
+      <View style={styles.formRow}>
+        <View style={styles.formHalf}>
+          <TextInput
+            style={styles.textInput}
+            label="Start Date"
+            placeholder="YYYY-MM-DD"
+            value={newJob.startDate}
+            onChangeText={(text) =>
+              setNewJob((prev) => ({ ...prev, startDate: text }))
+            }
+          />
+        </View>
+        <View style={styles.formHalf}>
+          <TextInput
+            style={styles.textInput}
+            label="End Date (optional)"
+            placeholder="YYYY-MM-DD"
+            value={newJob.endDate}
+            onChangeText={(text) =>
+              setNewJob((prev) => ({ ...prev, endDate: text }))
+            }
+          />
+        </View>
+      </View>
 
       <View style={styles.addFormActions}>
         <Button
@@ -520,6 +615,27 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "bold",
     fontSize: wp("4%"),
+  },
+  chip: {
+    borderColor: "#D8DADC",
+    borderWidth: 1,
+    borderRadius: wp("2%"),
+    paddingHorizontal: wp("3%"),
+    paddingVertical: hp("0.8%"),
+    marginRight: wp("2%"),
+    marginBottom: hp("0.5%"),
+  },
+  chipActive: {
+    borderColor: "#965541",
+    backgroundColor: "#FFF5F0",
+  },
+  chipText: {
+    color: "#666666",
+    fontSize: wp("3%"),
+  },
+  chipTextActive: {
+    color: "#965541",
+    fontWeight: "bold",
   },
   modalOverlay: {
     flex: 1,

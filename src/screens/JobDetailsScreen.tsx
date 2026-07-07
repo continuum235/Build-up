@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   ScrollView,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { RouteProp } from "@react-navigation/native";
@@ -15,6 +16,7 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import { useJobs } from "../hooks/useJobs";
+import { useApi } from "../services/api";
 import routes, { RootStackParamList } from "../navigation/routes";
 
 interface JobDetailsScreenProps {
@@ -25,21 +27,116 @@ interface JobDetailsScreenProps {
   route: RouteProp<RootStackParamList, typeof routes.jobDetails>;
 }
 
+function relativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins} min ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} hr ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days} day${days > 1 ? "s" : ""} ago`;
+}
+
 const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({
   navigation,
   route,
 }) => {
   const { jobId } = route.params;
   const { getJobById } = useJobs();
-  const job = getJobById(jobId);
+  const seedJob = typeof jobId === "number" ? getJobById(jobId) : undefined;
+  const { acceptJob, rejectJob } = useApi();
+  const [apiJob, setApiJob] = useState<Record<string, unknown> | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [acting, setActing] = useState(false);
 
-  if (!job) {
+  useEffect(() => {
+    if (seedJob || typeof jobId !== "string") return;
+    setLoading(true);
+    fetch(`${process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000"}/jobs/${jobId}`)
+      .then((r) => r.json())
+      .then((data) => setApiJob((data as { job: Record<string, unknown> }).job ?? null))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [jobId, seedJob]);
+
+  const job = seedJob ?? apiJob;
+
+  if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <Text>Job not found</Text>
+      <SafeAreaView style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
+        <ActivityIndicator size="large" color="#965541" />
       </SafeAreaView>
     );
   }
+
+  if (!job) {
+    return (
+      <SafeAreaView style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
+        <Text style={{ color: "#666", fontSize: wp("4%") }}>Job not found</Text>
+      </SafeAreaView>
+    );
+  }
+
+  // Normalize job fields — works for both seed and API jobs
+  const j = job as Record<string, unknown>;
+  const isApi = !seedJob;
+  const title = isApi ? String(j.title ?? "") : (job as any).title;
+  const company = isApi
+    ? String((j.hirer as { name?: string } | undefined)?.name ?? "Build Up")
+    : (job as any).company;
+  const verified = isApi ? false : (job as any).verified;
+  const postedTime = isApi
+    ? relativeTime(String(j.createdAt ?? new Date().toISOString()))
+    : (job as any).translations?.en?.postedTime ?? "";
+  const description = isApi
+    ? String(j.description ?? "")
+    : (job as any).translations?.en?.description ?? (job as any).description ?? "";
+  const location = String(j.location ?? "");
+  const tags: string[] = isApi
+    ? []
+    : (job as any).translations?.en?.tags ?? (job as any).tags ?? [];
+  const budget = isApi
+    ? `₹${j.budget ?? 0}`
+    : `₹${(job as any).budget}`;
+  const experience = isApi
+    ? `${j.experience ?? 0} years`
+    : (job as any).translations?.en?.experience ?? (job as any).experience ?? "";
+  const category = isApi
+    ? String(j.category ?? "")
+    : (job as any).category ?? "";
+  const hirerName = isApi
+    ? String((j.hirer as { name?: string } | undefined)?.name ?? "")
+    : "";
+  const hirerEmail = isApi
+    ? String((j.hirer as { email?: string } | undefined)?.email ?? "")
+    : "";
+
+  const handleAccept = async () => {
+    if (acting) return;
+    setActing(true);
+    try {
+      await acceptJob(String(j.id));
+      navigation.goBack();
+    } catch {
+      alert("Failed to accept job. Try again.");
+    } finally {
+      setActing(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (acting) return;
+    setActing(true);
+    try {
+      await rejectJob(String(j.id));
+      navigation.goBack();
+    } catch {
+      alert("Failed to reject job. Try again.");
+    } finally {
+      setActing(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -60,39 +157,41 @@ const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({
         showsVerticalScrollIndicator={false}
       >
         {/* JOB TITLE */}
-        <Text style={styles.jobTitle}>{job.title}</Text>
+        <Text style={styles.jobTitle}>{title}</Text>
 
         {/* COMPANY & VERIFICATION INFO */}
         <View style={styles.companyInfoRow}>
-          <Text style={styles.companyName}>{job.company}</Text>
-          {job.verified && (
+          <Text style={styles.companyName}>{company}</Text>
+          {verified && (
             <View style={styles.verifiedBadge}>
               <Text style={styles.verifiedText}>✓</Text>
               <Text style={styles.verifiedLabel}>User Verified</Text>
             </View>
           )}
-          <Text style={styles.postedTime}>• Posted {job.postedTime}</Text>
+          <Text style={styles.postedTime}>• Posted {postedTime}</Text>
         </View>
 
         {/* DESCRIPTION */}
         <View style={styles.descriptionContainer}>
-          <Text style={styles.descriptionText}>{job.description}</Text>
+          <Text style={styles.descriptionText}>{description}</Text>
         </View>
 
         {/* LOCATION */}
         <View style={styles.locationContainer}>
           <Text style={styles.locationIcon}>📍</Text>
-          <Text style={styles.locationText}>{job.location}</Text>
+          <Text style={styles.locationText}>{location}</Text>
         </View>
 
         {/* TAGS */}
-        <View style={styles.tagsContainer}>
-          {job.tags.map((tag, index) => (
-            <View key={index} style={styles.tag}>
-              <Text style={styles.tagText}>{tag}</Text>
-            </View>
-          ))}
-        </View>
+        {tags.length > 0 && (
+          <View style={styles.tagsContainer}>
+            {tags.map((tag, index) => (
+              <View key={index} style={styles.tag}>
+                <Text style={styles.tagText}>{tag}</Text>
+              </View>
+            ))}
+          </View>
+        )}
 
         <View style={styles.divider} />
 
@@ -103,54 +202,36 @@ const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({
           <View style={styles.detailsGrid}>
             <View style={styles.detailItem}>
               <Text style={styles.detailLabel}>Budget:</Text>
-              <Text style={styles.detailValue}>₹{job.budget}</Text>
+              <Text style={styles.detailValue}>{budget}</Text>
             </View>
             <View style={styles.detailItem}>
               <Text style={styles.detailLabel}>Experience:</Text>
-              <Text style={styles.detailValue}>{job.experience}</Text>
+              <Text style={styles.detailValue}>{experience}</Text>
             </View>
           </View>
 
-          <View style={styles.detailsGrid}>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Applicants:</Text>
-              <Text style={styles.detailValue}>{job.applicants}</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Languages:</Text>
-              <Text style={styles.detailValue}>{job.languages}</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.divider} />
-
-        {/* CLIENTS DETAILS SECTION */}
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>Clients Details:</Text>
-
-          <View style={styles.detailsGrid}>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Profile:</Text>
-              <View style={styles.verifiedBadge}>
-                <Text style={styles.verifiedText}>✓</Text>
-                <Text style={styles.verifiedLabel}>User Verified</Text>
+          {isApi && category && (
+            <View style={styles.detailsGrid}>
+              <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>Category:</Text>
+                <Text style={styles.detailValue}>{category.charAt(0) + category.slice(1).toLowerCase()}</Text>
               </View>
             </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Workorder:</Text>
-              <View style={styles.verifiedBadge}>
-                <Text style={styles.verifiedText}>✓</Text>
-                <Text style={styles.verifiedLabel}>Verified</Text>
+          )}
+        </View>
+
+        {isApi && (hirerName || hirerEmail) && (
+          <>
+            <View style={styles.divider} />
+            <View style={styles.sectionContainer}>
+              <Text style={styles.sectionTitle}>Posted by:</Text>
+              <View style={styles.detailItem}>
+                <Text style={styles.detailValue}>{hirerName}</Text>
+                {hirerEmail ? <Text style={styles.detailLabel}>{hirerEmail}</Text> : null}
               </View>
             </View>
-          </View>
-
-          <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Ratings:</Text>
-            <Text style={styles.ratingsText}>{job.ratings}/5</Text>
-          </View>
-        </View>
+          </>
+        )}
 
         <View style={styles.bottomSpacing} />
       </ScrollView>
@@ -158,19 +239,22 @@ const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({
       {/* BOTTOM ACTION BAR */}
       <View style={styles.actionBar}>
         <TouchableOpacity
-          style={styles.rejectButton}
-          onPress={() => {
-            alert("Job rejected");
-            navigation.goBack();
-          }}
+          style={[styles.rejectButton, acting && { opacity: 0.5 }]}
+          onPress={handleReject}
+          disabled={acting}
         >
-          <Text style={styles.rejectButtonText}>Reject</Text>
+          <Text style={styles.rejectButtonText}>
+            {acting ? "..." : "Reject"}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.acceptButton}
-          onPress={() => alert("Job accepted! You have applied for this job.")}
+          style={[styles.acceptButton, acting && { opacity: 0.5 }]}
+          onPress={handleAccept}
+          disabled={acting}
         >
-          <Text style={styles.acceptButtonText}>Accept</Text>
+          <Text style={styles.acceptButtonText}>
+            {acting ? "..." : "Accept"}
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

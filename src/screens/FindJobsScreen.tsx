@@ -78,9 +78,10 @@ function mapApiJob(j: Record<string, unknown>) {
 const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {
   const { language, t } = useLanguage();
   const { jobs: seedJobs, categories, categoryTranslations } = useJobs();
-  const { listJobs } = useApi();
+  const { getMyWorkerJobs, acceptJob, rejectJob } = useApi();
   const [apiJobs, setApiJobs] = useState<Record<string, unknown>[]>([]);
   const [loadingJobs, setLoadingJobs] = useState(true);
+  const [actingOnJob, setActingOnJob] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [activeTab, setActiveTab] = useState("Broadcasted Jobs");
   const [activeFilter, setActiveFilter] = useState("All");
@@ -89,10 +90,10 @@ const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {
   useEffect(() => {
     let cancelled = false;
     setLoadingJobs(true);
-    listJobs()
+    getMyWorkerJobs()
       .then((data) => {
         if (!cancelled) {
-          setApiJobs((data as { jobs: Record<string, unknown>[] }).jobs ?? []);
+          setApiJobs((data as { openJobs: Record<string, unknown>[] }).openJobs ?? []);
         }
       })
       .catch(() => {})
@@ -100,7 +101,7 @@ const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {
         if (!cancelled) setLoadingJobs(false);
       });
     return () => { cancelled = true; };
-  }, [listJobs]);
+  }, [getMyWorkerJobs]);
 
   const jobs = [...seedJobs, ...apiJobs.map(mapApiJob)];
   const [likedJobIds, setLikedJobIds] = useState<Set<string | number>>(
@@ -355,17 +356,43 @@ const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {
 
             <View style={styles.broadcastActionRow}>
               <TouchableOpacity
-                style={styles.approveButton}
-                onPress={() => setShowNewJobModal(false)}
+                style={[styles.approveButton, actingOnJob && { opacity: 0.5 }]}
+                onPress={async () => {
+                  if (actingOnJob) return;
+                  setActingOnJob(true);
+                  try {
+                    await acceptJob(String(broadcastJob.id));
+                    setShowNewJobModal(false);
+                  } catch {
+                    alert("Failed to accept job. Try again.");
+                  } finally {
+                    setActingOnJob(false);
+                  }
+                }}
               >
-                <Text style={styles.approveText}>{t("findJobs.approve")}</Text>
+                <Text style={styles.approveText}>
+                  {actingOnJob ? "..." : t("findJobs.approve")}
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.declineButton}
-                onPress={() => setShowNewJobModal(false)}
+                style={[styles.declineButton, actingOnJob && { opacity: 0.5 }]}
+                onPress={async () => {
+                  if (actingOnJob) return;
+                  setActingOnJob(true);
+                  try {
+                    await rejectJob(String(broadcastJob.id));
+                    setShowNewJobModal(false);
+                  } catch {
+                    alert("Failed to decline job. Try again.");
+                  } finally {
+                    setActingOnJob(false);
+                  }
+                }}
               >
-                <Text style={styles.declineText}>{t("findJobs.decline")}</Text>
+                <Text style={styles.declineText}>
+                  {actingOnJob ? "..." : t("findJobs.decline")}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

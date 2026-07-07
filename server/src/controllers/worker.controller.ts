@@ -11,7 +11,7 @@ export async function acceptJob(req: Request, res: Response) {
 
   const job = await prisma.job.findUnique({
     where: { id: jobId },
-    select: { id: true, status: true },
+    select: { id: true, status: true, positions: true, filledCount: true },
   });
 
   if (!job) {
@@ -20,6 +20,10 @@ export async function acceptJob(req: Request, res: Response) {
 
   if (job.status !== "OPEN") {
     return res.status(409).json({ message: "Job is not open for acceptance" });
+  }
+
+  if (job.filledCount >= job.positions) {
+    return res.status(409).json({ message: "All positions for this job are filled" });
   }
 
   const activeEngagement = await prisma.engagement.findFirst({
@@ -39,16 +43,22 @@ export async function acceptJob(req: Request, res: Response) {
     return res.status(409).json({ message: "Cannot accept a job you have rejected" });
   }
 
+  const newFilledCount = job.filledCount + 1;
+  const shouldClose = newFilledCount >= job.positions;
+
   await prisma.$transaction([
     prisma.engagement.create({ data: { workerId, jobId } }),
     prisma.job.update({
       where: { id: jobId },
-      data: { status: "FILLED" },
+      data: {
+        filledCount: newFilledCount,
+        ...(shouldClose ? { status: "FILLED" } : {}),
+      },
     }),
   ]);
 
-  const engagement = await prisma.engagement.findUnique({
-    where: { jobId },
+  const engagement = await prisma.engagement.findFirst({
+    where: { workerId, jobId },
     include: {
       job: {
         include: {
@@ -96,8 +106,8 @@ export async function rejectJob(req: Request, res: Response) {
 export async function getMyWorkerJobs(req: Request, res: Response) {
   const workerId = req.currentUser!.id;
 
-  const activeEngagement = await prisma.engagement.findFirst({
-    where: { workerId, status: "ACTIVE" },
+  const engagements = await prisma.engagement.findMany({
+    where: { workerId },
     include: {
       job: {
         include: {
@@ -105,19 +115,25 @@ export async function getMyWorkerJobs(req: Request, res: Response) {
         },
       },
     },
+    orderBy: { createdAt: "desc" },
   });
+
+  const engagedJobIds = engagements.map((e) => e.jobId);
 
   const dismissedRows = await prisma.jobDismissal.findMany({
     where: { workerId },
     select: { jobId: true },
   });
 
-  const dismissedJobIds = dismissedRows.map((d) => d.jobId);
+  const excludedJobIds = [
+    ...engagedJobIds,
+    ...dismissedRows.map((d) => d.jobId),
+  ];
 
   const openJobs = await prisma.job.findMany({
     where: {
       status: "OPEN",
-      id: { notIn: dismissedJobIds },
+      id: { notIn: excludedJobIds },
     },
     include: {
       hirer: { select: { id: true, name: true } },
@@ -126,7 +142,7 @@ export async function getMyWorkerJobs(req: Request, res: Response) {
   });
 
   return res.status(200).json({
-    activeEngagement: activeEngagement ?? null,
+    engagements,
     openJobs,
   });
 }

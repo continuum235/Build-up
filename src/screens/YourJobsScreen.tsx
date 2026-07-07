@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   ScrollView,
@@ -19,6 +19,7 @@ import BottomNavigation from "../components/layout/BottomNavigation";
 import JobDetails from "../components/jobs/JobDetails";
 import { useLanguage } from "../context/LanguageContext";
 import { useJobs } from "../hooks/useJobs";
+import { useApi } from "../services/api";
 import type { Job } from "../services/jobsService";
 
 const ChatIcon = require("../../assets/message.png");
@@ -63,25 +64,96 @@ const buildJobCard = (
 const YourJobsScreen: React.FC<YourJobsScreenProps> = ({ navigation }) => {
   const { language, t } = useLanguage();
   const { jobs } = useJobs();
+  const { getMyWorkerJobs } = useApi();
   const [activeTab, setActiveTab] = useState<JobTab>("Sent Proposals");
+  const [engagements, setEngagements] = useState<Record<string, unknown>[]>([]);
+  const [loading, setLoading] = useState(true);
   const currentLanguage = language as SupportedLanguage;
 
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    getMyWorkerJobs()
+      .then((data: Record<string, unknown>) => {
+        if (!cancelled) {
+          setEngagements((data as { engagements: Record<string, unknown>[] }).engagements ?? []);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [getMyWorkerJobs]);
+
+  const mapEngagementToCard = (
+    engagement: Record<string, unknown>,
+    status: JobStatus,
+    showChat: boolean,
+  ): JobCardData | null => {
+    const job = engagement.job as Record<string, unknown> | undefined;
+    if (!job) return null;
+    const title = String(job.title ?? "");
+    const hirerName = (job.hirer as Record<string, unknown> | undefined)?.name as string ?? "";
+    return {
+      id: Number(job.id) || 0,
+      status,
+      source: {
+        id: Number(job.id) || 0,
+        title,
+        company: hirerName,
+        verified: false,
+        location: String(job.location ?? ""),
+        budget: Number(job.budget ?? 0),
+        experience: String(job.experience ?? ""),
+        category: String(job.category ?? "OTHER"),
+        liked: false,
+        postedTime: "",
+        description: "",
+        applicants: "0",
+        tags: [] as string[],
+        languages: "",
+        ratings: 0,
+        city: "",
+        coordinates: { lat: 0, lng: 0 },
+        translations: {
+          en: { title, experience: String(job.experience ?? ""), postedTime: "", tags: [] as string[] },
+          hi: { title, experience: String(job.experience ?? ""), postedTime: "", tags: [] as string[] },
+        },
+      },
+      company: hirerName,
+      verified: false,
+      location: String(job.location ?? ""),
+      budget: `$${Number(job.budget ?? 0)}`,
+      showChat,
+    };
+  };
+
+  const activeEngagements = engagements.filter((e) => (e.status as string) === "ACTIVE");
+  const completedEngagements = engagements.filter((e) => (e.status as string) === "COMPLETED");
+
   const jobsByTab: Record<JobTab, JobCardData[]> = {
-    "Sent Proposals": [
-      buildJobCard(jobs[0], "Accepted", true),
-      buildJobCard(jobs[1], "standby", false),
-      buildJobCard(jobs[2], "Rejected", false),
-    ],
-    "Active Jobs": [
-      buildJobCard(jobs[0], "Active", true),
-      buildJobCard(jobs[3], "standby", true),
-      buildJobCard(jobs[4], "Accepted", true),
-    ],
-    "Completed Jobs": [
-      buildJobCard(jobs[1], "Completed", false),
-      buildJobCard(jobs[5], "Completed", false),
-      buildJobCard(jobs[8], "Completed", false),
-    ],
+    "Sent Proposals": activeEngagements.length > 0
+      ? activeEngagements.map((e) => mapEngagementToCard(e, "Accepted", true)).filter(Boolean) as JobCardData[]
+      : [
+          buildJobCard(jobs[0], "Accepted", true),
+          buildJobCard(jobs[1], "standby", false),
+          buildJobCard(jobs[2], "Rejected", false),
+        ],
+    "Active Jobs": activeEngagements.length > 0
+      ? activeEngagements.map((e) => mapEngagementToCard(e, "Active", true)).filter(Boolean) as JobCardData[]
+      : [
+          buildJobCard(jobs[0], "Active", true),
+          buildJobCard(jobs[3], "standby", true),
+          buildJobCard(jobs[4], "Accepted", true),
+        ],
+    "Completed Jobs": completedEngagements.length > 0
+      ? completedEngagements.map((e) => mapEngagementToCard(e, "Completed", false)).filter(Boolean) as JobCardData[]
+      : [
+          buildJobCard(jobs[1], "Completed", false),
+          buildJobCard(jobs[5], "Completed", false),
+          buildJobCard(jobs[8], "Completed", false),
+        ],
   };
 
   const getStatusColor = (status: JobStatus) => {
