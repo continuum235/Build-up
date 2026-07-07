@@ -10,7 +10,8 @@
     "addExpertise": "Add Expertise",
     "upload": "Upload",
     "uploaded": "Uploaded",
-    "saveDetails": "Save Details"
+    "saveDetails": "Save Details",
+    "add": "Add"
   },
   "profile": {
     "headerTitle": "Create Your Profile",
@@ -77,6 +78,8 @@
   },
   "upload": {
     "title": "Upload Profile",
+    "heading": "Looking for jobs",
+    "subtitle": "Add your details and upload your profile so employers can find you faster.",
     "heroTitle": "Looking for jobs",
     "heroSubtitle": "Add your details and upload your profile so employers can find you faster.",
     "aadhaar": "Aadhaar Card*",
@@ -105,14 +108,18 @@
     "label": "Your skills",
     "note": "*Choose max up to three skills",
     "placeholder": "Select skills from below...",
-    "button": "Add Skills"
+    "button": "Add Skills",
+    "suggested": "Suggested skills",
+    "selected": "selected",
+    "continue": "Continue"
   },
   "bio": {
     "heading": "Great! Now write a bio\nto tell the world about\nyourself.",
     "subtitle": "Help people get to know you at a glance. What work are you best at? Tell them clearly.",
     "label": "Your overview",
     "placeholder": "Enter your top skills, experiences, and interests. At least 100 characters",
-    "button": "Set this Bio"
+    "button": "Set this Bio",
+    "minChars": "min characters"
   },
   "hourlyRate": {
     "heading": "Now, let's set your\nhourly rate",
@@ -123,12 +130,21 @@
   },
   "details": {
     "title": "Enter your details",
+    "heading": "Enter your details",
+    "subtitle": "Fill in your address information",
     "country": "Country*",
     "address": "Address*",
     "addressLine1": "Address line 1",
     "addressLine2": "Address line 2",
     "city": "City*",
-    "button": "Save Details"
+    "button": "Save Details",
+    "countryPlaceholder": "Enter your country",
+    "address1": "Address line 1",
+    "address1Placeholder": "Enter your address",
+    "address2": "Address line 2",
+    "address2Placeholder": "Enter your address (optional)",
+    "cityPlaceholder": "Enter your city",
+    "submit": "Save Details"
   },
   "findJobs": {
     "title": "Find Jobs",

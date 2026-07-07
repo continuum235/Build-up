@@ -87,14 +87,14 @@ const LanguageScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.textSection}>
-          <Text style={styles.mainHeading}>{t("language.heading")}</Text>
-          <Text style={styles.subHeading}>{t("language.subtitle")}</Text>
+          <Text style={styles.mainHeading}>{t("languages.heading")}</Text>
+          <Text style={styles.subHeading}>{t("languages.subtitle")}</Text>
         </View>
 
         <View style={styles.inputRow}>
           <RNTextInput
             style={styles.textInput}
-            placeholder={t("language.placeholder")}
+            placeholder={t("languages.placeholder")}
             placeholderTextColor="#A4A9B6"
             value={inputText}
             onChangeText={setInputText}
