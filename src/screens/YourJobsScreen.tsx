@@ -43,7 +43,7 @@ interface EngagementItem {
 
 const YourJobsScreen: React.FC<YourJobsScreenProps> = ({ navigation }) => {
   const { t } = useLanguage();
-  const { getMyWorkerJobs, updateEngagement } = useApi();
+  const { getMyWorkerJobs, updateEngagement, createOrFindConversation } = useApi();
   const [activeTab, setActiveTab] = useState<JobTab>("Active Jobs");
   const [engagements, setEngagements] = useState<EngagementItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,6 +54,7 @@ const YourJobsScreen: React.FC<YourJobsScreenProps> = ({ navigation }) => {
     engagementId: string;
   }>({ visible: false, engagementId: "" });
   const [cancelReason, setCancelReason] = useState("");
+  const [chatLoadingId, setChatLoadingId] = useState<string | null>(null);
 
   const fetchJobs = useCallback(() => {
     getMyWorkerJobs()
@@ -113,6 +114,22 @@ const YourJobsScreen: React.FC<YourJobsScreenProps> = ({ navigation }) => {
       Alert.alert("Error", "Failed to cancel engagement");
     } finally {
       setActingId(null);
+    }
+  };
+
+  const handleChat = async (jobId: string, jobTitle: string) => {
+    setChatLoadingId(jobId);
+    try {
+      const data = await createOrFindConversation(jobId);
+      const conv = (data as { conversation: { id: string } }).conversation;
+      navigation.navigate(routes.chat, {
+        conversationId: conv.id,
+        title: jobTitle,
+      });
+    } catch {
+      Alert.alert("Error", "Failed to start conversation.");
+    } finally {
+      setChatLoadingId(null);
     }
   };
 
@@ -179,12 +196,21 @@ const YourJobsScreen: React.FC<YourJobsScreenProps> = ({ navigation }) => {
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.chatBtn} activeOpacity={0.8}>
-              <Image
-                source={ChatIcon}
-                style={styles.chatIcon}
-                resizeMode="contain"
-              />
+            <TouchableOpacity
+              style={styles.chatBtn}
+              activeOpacity={0.8}
+              onPress={() => handleChat(job.id as string, title)}
+              disabled={chatLoadingId === job.id}
+            >
+              {chatLoadingId === job.id ? (
+                <ActivityIndicator color="#965541" size="small" />
+              ) : (
+                <Image
+                  source={ChatIcon}
+                  style={styles.chatIcon}
+                  resizeMode="contain"
+                />
+              )}
             </TouchableOpacity>
           </View>
         )}

@@ -1,12 +1,34 @@
+import { z } from "zod";
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { clerkClient } from "../lib/clerk";
-import { isRole } from "./auth.controller";
+import { CITY_NAMES } from "../data/cities";
 
-function asString(value: unknown): string {
-  return typeof value === "string" ? value : "";
-}
+// ── Zod schema ─────────────────────────────────────────────────────────────
+const patchUserSchema = z
+  .object({
+    name: z.string().min(1).max(200).optional(),
+    role: z.enum(["HIRER", "WORKER"]).optional(),
+    roleTitle: z.string().min(1).max(100).optional(),
+    bio: z.string().max(2000).optional(),
+    hourlyRate: z.number().int().nonnegative().optional(),
+    languages: z.array(z.string()).optional(),
+    skills: z.array(z.string()).optional(),
+    documents: z.record(z.string(), z.unknown()).optional(),
+    country: z.string().optional(),
+    addressLine1: z.string().optional(),
+    addressLine2: z.string().optional(),
+    city: z
+      .string()
+      .refine((v) => CITY_NAMES.includes(v), {
+        message: `city must be one of: ${CITY_NAMES.join(", ")}`,
+      })
+      .optional(),
+    onboardingComplete: z.boolean().optional(),
+  })
+  .strict();
 
+// ── Helpers ────────────────────────────────────────────────────────────────
 const USER_SELECT = {
   id: true,
   clerkId: true,
@@ -28,90 +50,101 @@ const USER_SELECT = {
   updatedAt: true,
 } as const;
 
+// ── Controllers ────────────────────────────────────────────────────────────
+
 export async function patchUser(req: Request, res: Response) {
-  const userId = req.auth?.userId;
-  if (!userId) {
-    return res.status(401).json({ message: "Unauthorized" });
+  const parse = patchUserSchema.safeParse(req.body);
+  if (!parse.success) {
+    return res.status(400).json({
+      message: "Validation failed",
+      errors: parse.error.issues.map((e) => ({
+        field: e.path.join("."),
+        message: e.message,
+      })),
+    });
   }
 
-  const body = req.body as Record<string, unknown>;
-  const data: Record<string, unknown> = {};
+  const updates = parse.data;
 
-  if (body.role !== undefined) {
-    if (!isRole(body.role)) {
-      return res.status(400).json({ message: "role must be HIRER or WORKER" });
-    }
-    data.role = body.role;
-  }
-
-  if (body.roleTitle !== undefined) data.roleTitle = asString(body.roleTitle);
-  if (body.bio !== undefined) data.bio = asString(body.bio);
-
-  if (body.hourlyRate !== undefined) {
-    const rate = Number(body.hourlyRate);
-    if (!Number.isInteger(rate) || rate < 0) {
-      return res.status(400).json({ message: "hourlyRate must be a non-negative integer" });
-    }
-    data.hourlyRate = rate;
-  }
-
-  if (body.languages !== undefined) {
-    if (!Array.isArray(body.languages)) {
-      return res.status(400).json({ message: "languages must be an array" });
-    }
-    data.languages = body.languages;
-  }
-
-  if (body.skills !== undefined) {
-    if (!Array.isArray(body.skills)) {
-      return res.status(400).json({ message: "skills must be an array" });
-    }
-    data.skills = body.skills;
-  }
-
-  if (body.documents !== undefined) {
-    if (typeof body.documents !== "object" || body.documents === null) {
-      return res.status(400).json({ message: "documents must be an object" });
-    }
-    data.documents = body.documents;
-  }
-
-  if (body.country !== undefined) data.country = asString(body.country);
-  if (body.addressLine1 !== undefined) data.addressLine1 = asString(body.addressLine1);
-  if (body.addressLine2 !== undefined) data.addressLine2 = asString(body.addressLine2);
-  if (body.city !== undefined) data.city = asString(body.city);
-
-  if (body.onboardingComplete !== undefined) {
-    data.onboardingComplete = body.onboardingComplete === true;
-  }
-
-  if (Object.keys(data).length === 0) {
+  if (Object.keys(updates).length === 0) {
     return res.status(400).json({ message: "No valid fields to update" });
   }
 
-  const user = await prisma.user.upsert({
-    where: { clerkId: userId },
-    create: await (async () => {
-      const clerkUser = await clerkClient.users.getUser(userId);
+  // ── One-role enforcement ──
+  if (updates.role !== undefined) {
+    const currentUser = await prisma.user.findUnique({
+      where: { clerkId: req.auth!.userId },
+      select: { role: true, onboardingComplete: true },
+    });
+
+    if (currentUser?.role && currentUser.onboardingComplete) {
+      return res.status(403).json({
+        message:
+          "Your role cannot be changed after onboarding is complete. " +
+          "Please contact support at support@buildup.app to request a role change.",
+        code: "ROLE_LOCKED",
+      });
+    }
+  }
+
+  try {
+    const existing = await prisma.user.findUnique({
+      where: { clerkId: req.auth!.userId },
+      select: { id: true },
+    });
+
+    let user;
+
+    if (existing) {
+      // Spread only known Prisma-compatible fields
+      const { documents, ...rest } = updates;
+      user = await prisma.user.update({
+        where: { clerkId: req.auth!.userId },
+        data: {
+          ...rest,
+          // Prisma requires InputJsonValue for Json columns
+          ...(documents !== undefined ? { documents: documents as object } : {}),
+        },
+        select: USER_SELECT,
+      });
+    } else {
+      // User not yet in DB — create them now (edge case: sync missed)
+      const clerkUser = await clerkClient.users.getUser(req.auth!.userId);
       const primaryEmail = clerkUser.emailAddresses.find(
         (e) => e.id === clerkUser.primaryEmailAddressId,
       );
-      return {
-        clerkId: userId,
-        email: primaryEmail?.emailAddress ?? clerkUser.emailAddresses[0]?.emailAddress ?? "",
-        name: [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ").trim() || "User",
-        ...data,
-      };
-    })(),
-    update: data,
-    select: USER_SELECT,
-  });
+      const email =
+        primaryEmail?.emailAddress ??
+        clerkUser.emailAddresses[0]?.emailAddress ??
+        "";
+      const name =
+        [clerkUser.firstName, clerkUser.lastName]
+          .filter(Boolean)
+          .join(" ")
+          .trim() || "User";
 
-  return res.status(200).json({ user });
+      const { documents, ...rest } = updates;
+      user = await prisma.user.create({
+        data: {
+          clerkId: req.auth!.userId,
+          email,
+          name,
+          ...rest,
+          ...(documents !== undefined ? { documents: documents as object } : {}),
+        },
+        select: USER_SELECT,
+      });
+    }
+
+    return res.status(200).json({ user });
+  } catch (error) {
+    console.error("Failed to update user profile:", error);
+    return res.status(500).json({ message: "Failed to save profile" });
+  }
 }
 
 export async function getUserReviews(req: Request, res: Response) {
-  const userId = asString(req.params.id);
+  const userId = (req.params as { id?: string }).id ?? "";
 
   const user = await prisma.user.findUnique({
     where: { id: userId },

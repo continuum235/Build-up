@@ -4,21 +4,21 @@ import {
   Text,
   Image,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import { useNavigation } from "@react-navigation/native";
-import { useSignIn, useOAuth } from "@clerk/clerk-expo";
+import { useSignIn, useOAuth, useAuth } from "@clerk/clerk-expo";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import routes, { RootStackParamList } from "../navigation/routes";
 import { useLanguage } from "../context/LanguageContext";
-import { isValidEmail, isValidPassword } from "../utils/validation";
+import { loginSchema } from "../utils/schemas";
 import { useApi } from "../services/api";
 import KeyboardSafeWrapper from "../components/layout/KeyboardSafeWrapper";
 import Button from "../components/ui/Button";
@@ -31,17 +31,50 @@ const LoginScreen: React.FC = () => {
   const { t } = useLanguage();
   const { signIn, setActive } = useSignIn();
   const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
-  const { syncUser } = useApi();
+  const { signOut } = useAuth();
+  const { syncUser, getMe } = useApi();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const canSubmit = isValidEmail(email) && isValidPassword(password);
+  /** After Clerk auth succeeds, fetch the DB profile and redirect appropriately */
+  const handlePostAuth = async () => {
+    try {
+      await syncUser();
+    } catch {
+      // best-effort
+    }
+    try {
+      const { user } = await getMe();
+      if (user.onboardingComplete) {
+        const dest = user.role === "HIRER" ? routes.jobBoard : routes.findJobs;
+        navigation.reset({ index: 0, routes: [{ name: dest }] });
+      } else {
+        navigation.replace(routes.roleType);
+      }
+    } catch {
+      // Backend unreachable — send to onboarding, it will re-sync
+      navigation.replace(routes.roleType);
+    }
+  };
 
   const handleLogin = async () => {
-    if (!canSubmit || !signIn) {
-      alert(t("validation.invalidLogin"));
+    const parse = loginSchema.safeParse({ email, password });
+    if (!parse.success) {
+      const fieldErrors: Record<string, string> = {};
+      parse.error.issues.forEach((e) => {
+        const field = e.path[0] as string;
+        if (!fieldErrors[field]) fieldErrors[field] = e.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+    setErrors({});
+
+    if (!signIn) {
+      alert("Sign-in is not ready. Please try again.");
       return;
     }
     setLoading(true);
@@ -49,14 +82,16 @@ const LoginScreen: React.FC = () => {
       const result = await signIn.create({ identifier: email, password });
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-        await syncUser().catch(() => {});
-        navigation.replace(routes.roleType);
+        await handlePostAuth();
+      } else {
+        alert("Additional verification required. Please try again.");
       }
     } catch (err: unknown) {
       const msg =
         err instanceof Error
           ? err.message
-          : (err as { errors?: { message: string }[] })?.errors?.[0]?.message ?? "Login failed";
+          : (err as { errors?: { message: string }[] })?.errors?.[0]?.message ??
+            "Login failed";
       alert(msg);
     } finally {
       setLoading(false);
@@ -70,21 +105,19 @@ const LoginScreen: React.FC = () => {
     }
     setLoading(true);
     try {
-      const { createdSessionId, setActive: setActiveOAuth } = await startOAuthFlow();
+      await signOut().catch(() => {});
+      const { createdSessionId, setActive: setActiveOAuth } =
+        await startOAuthFlow();
       if (createdSessionId && setActiveOAuth) {
         await setActiveOAuth({ session: createdSessionId });
-        try {
-          await syncUser();
-        } catch {
-          // backend sync is best-effort; onboarding will retry
-        }
-        navigation.replace(routes.roleType);
+        await handlePostAuth();
       }
     } catch (err: unknown) {
       const msg =
         err instanceof Error
           ? err.message
-          : (err as { errors?: { message: string }[] })?.errors?.[0]?.message ?? "";
+          : (err as { errors?: { message: string }[] })?.errors?.[0]?.message ??
+            "";
       if (msg) alert(msg);
     } finally {
       setLoading(false);
@@ -123,15 +156,27 @@ const LoginScreen: React.FC = () => {
             <TextInput
               placeholder={t("auth.emailPlaceholder")}
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(v) => {
+                setEmail(v);
+                if (errors.email) setErrors((p) => ({ ...p, email: "" }));
+              }}
               keyboardType="email-address"
               autoCapitalize="none"
+              autoComplete="email"
+              textContentType="emailAddress"
+              error={errors.email}
             />
             <TextInput
               placeholder={t("auth.passwordPlaceholder")}
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(v) => {
+                setPassword(v);
+                if (errors.password) setErrors((p) => ({ ...p, password: "" }));
+              }}
               secureTextEntry
+              autoComplete="password"
+              textContentType="password"
+              error={errors.password}
             />
             <TouchableOpacity style={styles.forgotPasswordButton}>
               <Text style={styles.forgotPasswordText}>
@@ -141,12 +186,15 @@ const LoginScreen: React.FC = () => {
           </View>
 
           {loading ? (
-            <ActivityIndicator size="large" color="#965541" style={{ marginVertical: hp("2%") }} />
+            <ActivityIndicator
+              size="large"
+              color="#965541"
+              style={{ marginVertical: hp("2%") }}
+            />
           ) : (
             <Button
               title={t("auth.loginButton")}
               onPress={handleLogin}
-              disabled={!canSubmit}
             />
           )}
 

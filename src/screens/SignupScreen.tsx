@@ -14,11 +14,11 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import { useNavigation } from "@react-navigation/native";
-import { useSignUp, useOAuth } from "@clerk/clerk-expo";
+import { useSignUp, useOAuth, useAuth } from "@clerk/clerk-expo";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import routes, { RootStackParamList } from "../navigation/routes";
 import { useLanguage } from "../context/LanguageContext";
-import { isNonEmpty, isValidEmail, isValidPassword } from "../utils/validation";
+import { signupSchema } from "../utils/schemas";
 import { useApi } from "../services/api";
 import KeyboardSafeWrapper from "../components/layout/KeyboardSafeWrapper";
 import Button from "../components/ui/Button";
@@ -31,22 +31,29 @@ const SignupScreen: React.FC = () => {
   const { t } = useLanguage();
   const { signUp, setActive } = useSignUp();
   const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
-  const { syncUser } = useApi();
+  const { signOut } = useAuth();
+  const { syncUser, updateProfile } = useApi();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [location, setLocation] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const canSubmit =
-    isNonEmpty(name) &&
-    isValidEmail(email) &&
-    isValidPassword(password, 8) &&
-    isNonEmpty(location);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSignup = async () => {
-    if (!canSubmit || !signUp) {
+    const parse = signupSchema.safeParse({ name, email, password });
+    if (!parse.success) {
+      const fieldErrors: Record<string, string> = {};
+      parse.error.issues.forEach((e) => {
+        const field = e.path[0] as string;
+        if (!fieldErrors[field]) fieldErrors[field] = e.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+    setErrors({});
+
+    if (!signUp) {
       alert(t("validation.invalidSignup"));
       return;
     }
@@ -55,13 +62,13 @@ const SignupScreen: React.FC = () => {
       const result = await signUp.create({
         emailAddress: email,
         password,
-        firstName: name.split(" ")[0],
-        lastName: name.split(" ").slice(1).join(" ") || undefined,
       });
 
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
         await syncUser().catch(() => {});
+        await updateProfile({ name }).catch(() => {});
+        // New user always goes to onboarding
         navigation.replace(routes.roleType);
       } else {
         alert("Please check your email for a verification code.");
@@ -70,7 +77,8 @@ const SignupScreen: React.FC = () => {
       const msg =
         err instanceof Error
           ? err.message
-          : (err as { errors?: { message: string }[] })?.errors?.[0]?.message ?? "Signup failed";
+          : (err as { errors?: { message: string }[] })?.errors?.[0]?.message ??
+            "Signup failed";
       alert(msg);
     } finally {
       setLoading(false);
@@ -84,13 +92,15 @@ const SignupScreen: React.FC = () => {
     }
     setLoading(true);
     try {
-      const { createdSessionId, setActive: setActiveOAuth } = await startOAuthFlow();
+      await signOut().catch(() => {});
+      const { createdSessionId, setActive: setActiveOAuth } =
+        await startOAuthFlow();
       if (createdSessionId && setActiveOAuth) {
         await setActiveOAuth({ session: createdSessionId });
         try {
           await syncUser();
         } catch {
-          // backend sync is best-effort; onboarding will retry
+          // best-effort
         }
         navigation.replace(routes.roleType);
       }
@@ -98,7 +108,8 @@ const SignupScreen: React.FC = () => {
       const msg =
         err instanceof Error
           ? err.message
-          : (err as { errors?: { message: string }[] })?.errors?.[0]?.message ?? "";
+          : (err as { errors?: { message: string }[] })?.errors?.[0]?.message ??
+            "";
       if (msg) alert(msg);
     } finally {
       setLoading(false);
@@ -164,38 +175,48 @@ const SignupScreen: React.FC = () => {
             <TextInput
               placeholder={t("auth.fullName")}
               value={name}
-              onChangeText={setName}
+              onChangeText={(v) => {
+                setName(v);
+                if (errors.name) setErrors((p) => ({ ...p, name: "" }));
+              }}
               style={styles.input}
+              error={errors.name}
             />
             <TextInput
               placeholder={t("auth.emailPlaceholder")}
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(v) => {
+                setEmail(v);
+                if (errors.email) setErrors((p) => ({ ...p, email: "" }));
+              }}
               keyboardType="email-address"
+              autoCapitalize="none"
               style={styles.input}
+              error={errors.email}
             />
             <TextInput
               placeholder={t("auth.passwordPlaceholderSignup")}
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(v) => {
+                setPassword(v);
+                if (errors.password) setErrors((p) => ({ ...p, password: "" }));
+              }}
               secureTextEntry
               style={styles.input}
-            />
-            <TextInput
-              placeholder={t("auth.location")}
-              value={location}
-              onChangeText={setLocation}
-              style={styles.input}
+              error={errors.password}
             />
           </View>
 
           {loading ? (
-            <ActivityIndicator size="large" color="#965541" style={{ marginVertical: hp("2%") }} />
+            <ActivityIndicator
+              size="large"
+              color="#965541"
+              style={{ marginVertical: hp("2%") }}
+            />
           ) : (
             <Button
               title={t("auth.createAccount")}
               onPress={handleSignup}
-              disabled={!canSubmit}
               style={styles.submitButton}
               textStyle={styles.submitButtonText}
             />

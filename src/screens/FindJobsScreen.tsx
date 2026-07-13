@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   ScrollView,
   Text,
-  Image,
   TextInput,
   TouchableOpacity,
   StyleSheet,
   StatusBar,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -18,17 +19,10 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import routes, { RootStackParamList } from "../navigation/routes";
 import BottomNavigation from "../components/layout/BottomNavigation";
 import JobDetails from "../components/jobs/JobDetails";
-import { useLanguage } from "../context/LanguageContext";
-import { useJobs } from "../hooks/useJobs";
 import { useApi } from "../services/api";
 
-const SearchIcon = require("../../assets/Search.png");
-
 interface FindJobsScreenProps {
-  navigation: NativeStackNavigationProp<
-    RootStackParamList,
-    typeof routes.findJobs
-  >;
+  navigation: NativeStackNavigationProp<RootStackParamList, typeof routes.findJobs>;
 }
 
 function relativeTime(dateStr: string): string {
@@ -42,111 +36,149 @@ function relativeTime(dateStr: string): string {
   return `${days} day${days > 1 ? "s" : ""} ago`;
 }
 
-function mapApiJob(j: Record<string, unknown>) {
-  const hirer = j.hirer as { name?: string } | undefined;
-  const title = String(j.title ?? "");
+interface ApiJob {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  budget: number;
+  category: string;
+  experience: number;
+  createdAt: string;
+  hirer?: { id?: string; name?: string };
+}
+
+function mapApiJob(j: ApiJob) {
+  const title = j.title ?? "";
   return {
-    id: String(j.id),
+    id: j.id,
     title,
-    company: hirer?.name ?? "Build Up",
+    company: j.hirer?.name ?? "Build Up",
     verified: false,
-    location: String(j.location ?? ""),
+    location: j.location ?? "",
     budget: Number(j.budget ?? 0),
-    applicants: "0",
-    category: String(j.category ?? "OTHER"),
+    category: j.category ?? "OTHER",
     liked: false,
-    translations: {
-      en: {
-        title,
-        postedTime: relativeTime(String(j.createdAt ?? new Date().toISOString())),
-        experience: `${j.experience ?? 0} years`,
-        tags: [] as string[],
-        description: String(j.description ?? ""),
-      },
-      hi: {
-        title,
-        postedTime: relativeTime(String(j.createdAt ?? new Date().toISOString())),
-        experience: `${j.experience ?? 0} years`,
-        tags: [] as string[],
-        description: String(j.description ?? ""),
-      },
-    },
+    experience: `${j.experience ?? 0} years`,
+    description: j.description ?? "",
+    postedTime: relativeTime(j.createdAt ?? new Date().toISOString()),
   };
 }
 
+const CATEGORIES = [
+  "All", "CARPENTER", "ELECTRICIAN", "PLUMBER", "PAINTER",
+  "CLEANER", "GARDENER", "MASON", "DRIVER", "COOK", "SECURITY", "OTHER",
+];
+
 const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {
-  const { language, t } = useLanguage();
-  const { jobs: seedJobs, categories, categoryTranslations } = useJobs();
-  const { getMyWorkerJobs, acceptJob, rejectJob } = useApi();
-  const [apiJobs, setApiJobs] = useState<Record<string, unknown>[]>([]);
-  const [actingOnJob, setActingOnJob] = useState(false);
+  const { listJobs, getMe, getMyWorkerJobs, acceptJob, rejectJob, createOrFindConversation } = useApi();
+
+  const [jobs, setJobs] = useState<ReturnType<typeof mapApiJob>[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
-  const [activeTab, setActiveTab] = useState("Broadcasted Jobs");
   const [activeFilter, setActiveFilter] = useState("All");
-  const [showNewJobModal, setShowNewJobModal] = useState(false);
+  const [userCity, setUserCity] = useState<string>("");
+  const [likedJobIds, setLikedJobIds] = useState<Set<string>>(new Set());
+  const [actingJobId, setActingJobId] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    getMyWorkerJobs()
-      .then((data) => {
-        if (!cancelled) {
-          setApiJobs((data as { openJobs: Record<string, unknown>[] }).openJobs ?? []);
-        }
-      })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, [getMyWorkerJobs]);
+  const [acceptedJobIds, setAcceptedJobIds] = useState<Set<string>>(new Set());
+  const [dismissedJobIds, setDismissedJobIds] = useState<Set<string>>(new Set());
 
-  const jobs = [...seedJobs, ...apiJobs.map(mapApiJob)];
-  const [likedJobIds, setLikedJobIds] = useState<Set<string | number>>(
-    () => new Set(jobs.filter((job) => "liked" in job && job.liked).map((job) => job.id)),
+  const fetchAll = useCallback(
+    async (city: string) => {
+      setLoading(true);
+      try {
+        const params: Record<string, string> = { status: "OPEN", limit: "50" };
+        if (city) params.userCity = city;
+        const [jobsData, workerData] = await Promise.all([
+          listJobs(params),
+          getMyWorkerJobs(),
+        ]);
+        setJobs(
+          ((jobsData as { jobs?: ApiJob[] }).jobs ?? []).map(mapApiJob),
+        );
+        const engagements = (workerData as { engagements?: { jobId: string }[] }).engagements ?? [];
+        setAcceptedJobIds(new Set(engagements.map((e) => e.jobId)));
+        const dismissed = (workerData as { dismissedJobIds?: string[] }).dismissedJobIds ?? [];
+        setDismissedJobIds(new Set(dismissed));
+      } catch {
+        // keep existing
+      } finally {
+        setLoading(false);
+      }
+    },
+    [listJobs, getMyWorkerJobs],
   );
 
-  const filters = ["All", ...categories];
-  const tabs = [
-    { id: "Best Matches", label: t("findJobs.bestMatches") },
-    { id: "Broadcasted Jobs", label: t("findJobs.broadcastedJobs") },
-    { id: "Liked Jobs", label: t("findJobs.likedJobs") },
-  ];
-  const normalizedSearch = searchText.trim().toLowerCase();
-  const isBroadcastTab = activeTab === "Broadcasted Jobs";
-  const isLikedTab = activeTab === "Liked Jobs";
-  const currentLanguage = language as "en" | "hi";
-  const broadcastJob = jobs[0];
-  const localizedBroadcastJob =
-    broadcastJob.translations[currentLanguage] ?? broadcastJob.translations.en;
+  useEffect(() => {
+    getMe()
+      .then(({ user }: { user: { city?: string } }) => {
+        const city = user.city ?? "";
+        setUserCity(city);
+        return fetchAll(city);
+      })
+      .catch(() => fetchAll(""));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const getCategoryLabel = (category: string) =>
-    categoryTranslations[category as keyof typeof categoryTranslations]?.[
-      currentLanguage
-    ] ?? category;
+  const handleAccept = async (jobId: string) => {
+    setActingJobId(jobId);
+    try {
+      await acceptJob(jobId);
+      setAcceptedJobIds((prev) => new Set(prev).add(jobId));
+    } catch {
+      Alert.alert("Error", "Failed to accept job. It may already be filled.");
+    } finally {
+      setActingJobId(null);
+    }
+  };
 
-  const toggleLike = (jobId: string | number) => {
+  const handleReject = async (jobId: string) => {
+    setActingJobId(jobId);
+    try {
+      await rejectJob(jobId);
+      setDismissedJobIds((prev) => new Set(prev).add(jobId));
+    } catch {
+      Alert.alert("Error", "Failed to reject job.");
+    } finally {
+      setActingJobId(null);
+    }
+  };
+
+  const handleMessageHirer = async (jobId: string, jobTitle: string) => {
+    setActingJobId(jobId);
+    try {
+      const data = await createOrFindConversation(jobId);
+      const conv = (data as { conversation: { id: string } }).conversation;
+      navigation.navigate(routes.chat, {
+        conversationId: conv.id,
+        title: jobTitle,
+      });
+    } catch {
+      Alert.alert("Error", "Failed to start conversation.");
+    } finally {
+      setActingJobId(null);
+    }
+  };
+
+  const toggleLike = (jobId: string) => {
     setLikedJobIds((prev) => {
       const next = new Set(prev);
-      if (next.has(jobId)) {
-        next.delete(jobId);
-      } else {
-        next.add(jobId);
-      }
+      if (next.has(jobId)) next.delete(jobId);
+      else next.add(jobId);
       return next;
     });
   };
 
+  const normalizedSearch = searchText.trim().toLowerCase();
+
   const filteredJobs = jobs.filter((job) => {
-    if (isLikedTab && !likedJobIds.has(job.id)) {
-      return false;
-    }
-    if (activeFilter !== "All" && job.category !== activeFilter) {
-      return false;
-    }
-    if (!normalizedSearch) {
-      return true;
-    }
-    const localizedJob =
-      job.translations[currentLanguage] ?? job.translations.en;
+    if (acceptedJobIds.has(job.id)) return false;
+    if (dismissedJobIds.has(job.id)) return false;
+    if (activeFilter !== "All" && job.category !== activeFilter) return false;
+    if (!normalizedSearch) return true;
     const haystack =
-      `${localizedJob.title} ${job.title} ${job.company} ${job.location} ${getCategoryLabel(job.category)}`.toLowerCase();
+      `${job.title} ${job.company} ${job.location} ${job.category}`.toLowerCase();
     return haystack.includes(normalizedSearch);
   });
 
@@ -159,17 +191,20 @@ const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.pageTitle}>{t("findJobs.title")}</Text>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.pageTitle}>
+            {userCity ? `Jobs near ${userCity}` : "Find Jobs"}
+          </Text>
+          {userCity ? (
+            <Text style={styles.pageSubtitle}>Sorted by proximity to your city</Text>
+          ) : null}
+        </View>
 
-        {/* SEARCH BAR */}
+        {/* Search bar */}
         <View style={styles.searchBar}>
-          <Image
-            source={SearchIcon}
-            resizeMode="contain"
-            style={styles.searchIcon}
-          />
           <TextInput
-            placeholder={t("findJobs.searchPlaceholder")}
+            placeholder="Search jobs, skills, location..."
             placeholderTextColor="#A4A9B6"
             value={searchText}
             onChangeText={setSearchText}
@@ -177,218 +212,136 @@ const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {
           />
         </View>
 
-        {/* TABS */}
-        <View style={styles.tabsContainer}>
-          {tabs.map((tab) => (
+        {/* Category filter chips */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterScrollContent}
+          style={styles.filterScrollView}
+        >
+          {CATEGORIES.map((cat) => (
             <TouchableOpacity
-              key={tab.id}
-              style={styles.tabButton}
-              onPress={() => setActiveTab(tab.id)}
+              key={cat}
+              onPress={() => setActiveFilter(cat)}
+              style={[
+                styles.filterChip,
+                activeFilter === cat ? styles.filterChipActive : styles.filterChipInactive,
+              ]}
             >
               <Text
                 style={[
-                  styles.tabText,
-                  activeTab === tab.id && styles.tabTextActive,
+                  styles.filterText,
+                  activeFilter === cat ? styles.filterTextActive : styles.filterTextInactive,
                 ]}
               >
-                {tab.label}
+                {cat === "All" ? "All Jobs" : cat.charAt(0) + cat.slice(1).toLowerCase()}
               </Text>
-              {activeTab === tab.id && <View style={styles.activeIndicator} />}
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
 
-        {!isBroadcastTab && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterScrollContent}
-            style={styles.filterScrollView}
-          >
-            {filters.map((filter) => (
-              <TouchableOpacity
-                key={filter}
-                onPress={() => setActiveFilter(filter)}
-                style={[
-                  styles.filterChip,
-                  activeFilter === filter
-                    ? styles.filterChipActive
-                    : styles.filterChipInactive,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.filterText,
-                    activeFilter === filter
-                      ? styles.filterTextActive
-                      : styles.filterTextInactive,
-                  ]}
-                >
-                  {getCategoryLabel(filter)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        )}
-
-        {/* JOB LIST */}
+        {/* Job list */}
         <View style={styles.cardsContainer}>
-          {isBroadcastTab && (
-            <View style={styles.broadcastContent}>
-              <Text style={styles.broadcastInfoText}>
-                {t("findJobs.broadcastEmpty")}
-              </Text>
-
-              <View style={styles.radarContainer}>
-                <View style={styles.circleOuter}>
-                  <View style={styles.circleMiddle}>
-                    <TouchableOpacity
-                      style={styles.circleInner}
-                      activeOpacity={0.8}
-                      onPress={() => setShowNewJobModal(true)}
-                    >
-                      <Text style={styles.globeIcon}>🌐</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            </View>
+          {loading && (
+            <ActivityIndicator
+              size="large"
+              color="#965541"
+              style={{ marginTop: hp("5%") }}
+            />
           )}
 
-          {!isBroadcastTab && filteredJobs.length === 0 && (
+          {!loading && filteredJobs.length === 0 && (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyStateTitle}>
-                {t("findJobs.noJobsTitle")}
-              </Text>
+              <Text style={styles.emptyStateTitle}>No jobs found</Text>
               <Text style={styles.emptyStateText}>
-                {t("findJobs.noJobsText")}
+                {acceptedJobIds.size > 0 || dismissedJobIds.size > 0
+                  ? "All visible jobs have been actioned. Check Your Jobs for accepted ones."
+                  : "Try adjusting your search or filters."}
               </Text>
             </View>
           )}
 
-          {!isBroadcastTab &&
+          {!loading &&
             filteredJobs.map((job) => {
               const isLiked = likedJobIds.has(job.id);
-              const localizedJob =
-                job.translations[currentLanguage] ?? job.translations.en;
+              const isAccepted = acceptedJobIds.has(job.id);
+              const isActing = actingJobId === job.id;
               return (
-                <JobDetails
-                  key={job.id}
-                  job={{
-                    id: job.id,
-                    title: localizedJob.title,
-                    company: job.company,
-                    verified: job.verified,
-                    posted: localizedJob.postedTime,
-                    location: job.location,
-                    budget: `$${job.budget}`,
-                    experience: localizedJob.experience,
-                    tags: localizedJob.tags,
-                  }}
-                  isLiked={isLiked}
-                  verifiedLabel={t("findJobs.userVerified")}
-                  postedPrefix={t("findJobs.postedPrefix")}
-                  onPress={() =>
-                    navigation.navigate(routes.jobDetails, { jobId: job.id })
-                  }
-                  onLikePress={() => toggleLike(job.id)}
-                  details={[
-                    { label: t("findJobs.budget"), value: `$${job.budget}` },
-                    {
-                      label: t("findJobs.experience"),
-                      value: localizedJob.experience,
-                    },
-                  ]}
-                />
+                <View key={job.id}>
+                  <JobDetails
+                    job={{
+                      id: job.id,
+                      title: job.title,
+                      company: job.company,
+                      verified: job.verified,
+                      posted: job.postedTime,
+                      location: job.location,
+                      budget: `₹${job.budget}`,
+                      experience: job.experience,
+                      tags: [],
+                    }}
+                    isLiked={isLiked}
+                    verifiedLabel="User Verified"
+                    postedPrefix="Posted"
+                    onPress={() =>
+                      navigation.navigate(routes.jobDetails, { jobId: job.id })
+                    }
+                    onLikePress={() => toggleLike(job.id)}
+                    details={[
+                      { label: "Budget", value: `₹${job.budget}` },
+                      { label: "Experience", value: job.experience },
+                      { label: "Location", value: job.location },
+                    ]}
+                  >
+                    {isAccepted ? (
+                      <TouchableOpacity
+                        style={[styles.actionBtn, styles.messageBtn, isActing && { opacity: 0.5 }]}
+                        activeOpacity={0.8}
+                        onPress={() => handleMessageHirer(job.id, job.title)}
+                        disabled={isActing}
+                      >
+                        {isActing ? (
+                          <ActivityIndicator color="#FFF" size="small" />
+                        ) : (
+                          <Text style={styles.actionBtnText}>Message Hirer</Text>
+                        )}
+                      </TouchableOpacity>
+                    ) : (
+                      <View style={styles.actionRow}>
+                        <TouchableOpacity
+                          style={[styles.actionBtn, styles.acceptBtn, isActing && { opacity: 0.5 }]}
+                          activeOpacity={0.8}
+                          onPress={() => handleAccept(job.id)}
+                          disabled={isActing}
+                        >
+                          {isActing ? (
+                            <ActivityIndicator color="#FFF" size="small" />
+                          ) : (
+                            <Text style={styles.actionBtnText}>Accept</Text>
+                          )}
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.actionBtn, styles.rejectBtn, isActing && { opacity: 0.5 }]}
+                          activeOpacity={0.8}
+                          onPress={() => handleReject(job.id)}
+                          disabled={isActing}
+                        >
+                          <Text style={styles.rejectBtnText}>Reject</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </JobDetails>
+                </View>
               );
             })}
         </View>
       </ScrollView>
 
-      {showNewJobModal && (
-        <View style={styles.broadcastOverlay}>
-          <View style={styles.broadcastModalCard}>
-            <Text style={styles.broadcastModalTitle}>
-              {localizedBroadcastJob.title}
-            </Text>
-
-            <View style={styles.broadcastCompanyRow}>
-              <Text style={styles.broadcastCompanyName}>
-                {broadcastJob.company}
-              </Text>
-              <Text style={styles.broadcastVerifiedCheck}> ✓ </Text>
-              <Text style={styles.broadcastVerifiedText}>
-                {t("findJobs.userVerified")}
-              </Text>
-            </View>
-
-            <View style={styles.mapBox}>
-              <View style={styles.mapTop}>
-                <Text style={styles.mapText}>{t("findJobs.maps")}</Text>
-              </View>
-              <View style={styles.mapBottom}>
-                <Text style={styles.mapLocationText}>
-                  📍 {broadcastJob.location}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.broadcastDetailsRow}>
-              <Text style={styles.broadcastDetailLabel}>
-                {t("findJobs.budget")}{" "}
-                <Text style={styles.broadcastDetailValue}>
-                  ${broadcastJob.budget}
-                </Text>
-              </Text>
-              <Text style={styles.broadcastDetailLabel}>
-                {t("findJobs.experience")}{" "}
-                <Text style={styles.broadcastDetailValue}>
-                  {localizedBroadcastJob.experience}
-                </Text>
-              </Text>
-            </View>
-
-            <View style={styles.broadcastActionRow}>
-              <TouchableOpacity
-                style={[styles.approveButton, actingOnJob && { opacity: 0.5 }]}
-                onPress={async () => {
-                  if (actingOnJob) return;
-                  setActingOnJob(true);
-                  try {
-                    await acceptJob(String(broadcastJob.id));
-                    setShowNewJobModal(false);
-                  } catch {
-                    alert("Failed to accept job. Try again.");
-                  } finally {
-                    setActingOnJob(false);
-                  }
-                }}
-              >
-                <Text style={styles.approveText}>
-                  {actingOnJob ? "..." : t("findJobs.approve")}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.declineButton, actingOnJob && { opacity: 0.5 }]}
-                onPress={async () => {
-                  if (actingOnJob) return;
-                  setActingOnJob(true);
-                  try {
-                    await rejectJob(String(broadcastJob.id));
-                    setShowNewJobModal(false);
-                  } catch {
-                    alert("Failed to decline job. Try again.");
-                  } finally {
-                    setActingOnJob(false);
-                  }
-                }}
-              >
-                <Text style={styles.declineText}>
-                  {actingOnJob ? "..." : t("findJobs.decline")}
-                </Text>
-              </TouchableOpacity>
-            </View>
+      {actingJobId && (
+        <View style={styles.actingOverlay}>
+          <View style={styles.actingCard}>
+            <ActivityIndicator size="large" color="#965541" />
+            <Text style={styles.actingText}>Processing...</Text>
           </View>
         </View>
       )}
@@ -405,20 +358,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
-  pageTitle: {
-    fontSize: wp("6%"),
-    fontWeight: "700",
-    color: "#965541",
-    alignSelf: "center",
-    textAlign: "center",
-    marginTop: hp("1.5%"),
-    marginBottom: hp("1%"),
-  },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: hp("10%"),
+    paddingBottom: hp("12%"),
+  },
+  header: {
+    paddingHorizontal: wp("5%"),
+    paddingTop: hp("2%"),
+    paddingBottom: hp("1%"),
+  },
+  pageTitle: {
+    fontSize: wp("6%"),
+    fontWeight: "700",
+    color: "#965541",
+  },
+  pageSubtitle: {
+    fontSize: wp("3.2%"),
+    color: "#A4A9B6",
+    marginTop: hp("0.3%"),
   },
   searchBar: {
     flexDirection: "row",
@@ -427,16 +386,10 @@ const styles = StyleSheet.create({
     borderRadius: wp("3%"),
     borderWidth: 1,
     marginHorizontal: wp("5%"),
-    marginBottom: hp("2.5%"),
+    marginBottom: hp("2%"),
     paddingHorizontal: wp("4%"),
     height: hp("6.5%"),
     backgroundColor: "#FFFFFF",
-  },
-  searchIcon: {
-    width: wp("5%"),
-    height: wp("5%"),
-    marginRight: wp("3%"),
-    tintColor: "#A4A9B6",
   },
   searchInput: {
     flex: 1,
@@ -444,37 +397,8 @@ const styles = StyleSheet.create({
     fontSize: wp("4%"),
     height: "100%",
   },
-  tabsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: wp("6%"),
-    paddingTop: hp("2%"),
-    marginBottom: hp("1%"),
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E5E5",
-  },
-  tabButton: {
-    alignItems: "center",
-    paddingBottom: hp("1.5%"),
-  },
-  tabText: {
-    fontSize: wp("4%"),
-    color: "#666666",
-  },
-  tabTextActive: {
-    color: "#965541",
-    fontWeight: "bold",
-  },
-  activeIndicator: {
-    position: "absolute",
-    bottom: -1,
-    width: "100%",
-    height: hp("0.35%"),
-    backgroundColor: "#965541",
-    borderRadius: wp("1%"),
-  },
   filterScrollView: {
-    marginBottom: hp("2.5%"),
+    marginBottom: hp("2%"),
   },
   filterScrollContent: {
     paddingHorizontal: wp("5%"),
@@ -482,9 +406,9 @@ const styles = StyleSheet.create({
   filterChip: {
     borderRadius: wp("4%"),
     borderWidth: 1.5,
-    paddingVertical: hp("1.2%"),
-    paddingHorizontal: wp("5%"),
-    marginRight: wp("3%"),
+    paddingVertical: hp("1%"),
+    paddingHorizontal: wp("4%"),
+    marginRight: wp("2.5%"),
     justifyContent: "center",
   },
   filterChipActive: {
@@ -496,7 +420,7 @@ const styles = StyleSheet.create({
     borderColor: "#965541",
   },
   filterText: {
-    fontSize: wp("3.6%"),
+    fontSize: wp("3.4%"),
     fontWeight: "600",
   },
   filterTextActive: {
@@ -508,315 +432,72 @@ const styles = StyleSheet.create({
   cardsContainer: {
     paddingHorizontal: wp("5%"),
   },
-  broadcastContent: {
-    flex: 1,
-    alignItems: "center",
-    minHeight: hp("58%"),
-    position: "relative",
-  },
-  broadcastInfoText: {
-    color: "#1E1E1E",
-    fontSize: wp("3.8%"),
-    textAlign: "center",
-    lineHeight: wp("5.5%"),
-    marginTop: hp("5%"),
-    marginBottom: hp("8%"),
-    paddingHorizontal: wp("4%"),
-  },
-  radarContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  circleOuter: {
-    width: wp("70%"),
-    height: wp("70%"),
-    borderRadius: wp("35%"),
-    backgroundColor: "#D8C4BC",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  circleMiddle: {
-    width: wp("50%"),
-    height: wp("50%"),
-    borderRadius: wp("25%"),
-    backgroundColor: "#A67C6D",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  circleInner: {
-    width: wp("30%"),
-    height: wp("30%"),
-    borderRadius: wp("15%"),
-    backgroundColor: "#965541",
-    justifyContent: "center",
-    alignItems: "center",
-    elevation: 5,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-  },
-  globeIcon: {
-    fontSize: wp("12%"),
-    color: "#FFFFFF",
-  },
-  broadcastOverlay: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 10,
-  },
-  broadcastModalCard: {
-    width: wp("85%"),
-    backgroundColor: "#FFFFFF",
-    borderRadius: wp("6%"),
-    padding: wp("6%"),
-    alignItems: "center",
-  },
-  broadcastModalTitle: {
-    color: "#000000",
-    fontSize: wp("5%"),
-    fontWeight: "bold",
-    textAlign: "center",
-    lineHeight: wp("6.5%"),
-    marginBottom: hp("1%"),
-  },
-  broadcastCompanyRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: hp("3%"),
-  },
-  broadcastCompanyName: {
-    color: "#1E1E1E",
-    fontSize: wp("3.5%"),
-  },
-  broadcastVerifiedCheck: {
-    color: "#FFFFFF",
-    fontSize: wp("3%"),
-    fontWeight: "bold",
-  },
-  broadcastVerifiedText: {
-    color: "#FFFFFF",
-    fontSize: wp("3.2%"),
-  },
-  mapBox: {
-    width: "100%",
-    height: hp("12%"),
-    borderColor: "#1E1E1E",
-    borderWidth: 1,
-    borderRadius: wp("3%"),
-    overflow: "hidden",
-    marginBottom: hp("2%"),
-  },
-  mapTop: {
-    flex: 1,
-    backgroundColor: "#F9F9F9",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  mapText: {
-    color: "#1E1E1E",
-    fontSize: wp("3.5%"),
-  },
-  mapBottom: {
-    backgroundColor: "#B88B7D",
-    paddingVertical: hp("0.5%"),
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderColor: "#1E1E1E",
-  },
-  mapLocationText: {
-    color: "#FFFFFF",
-    fontSize: wp("2.8%"),
-  },
-  broadcastDetailsRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    width: "100%",
-    marginBottom: hp("3%"),
-  },
-  broadcastDetailLabel: {
-    color: "#1E1E1E",
-    fontSize: wp("3.5%"),
-  },
-  broadcastDetailValue: {
-    fontWeight: "bold",
-    color: "#000000",
-  },
-  broadcastActionRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-  },
-  approveButton: {
-    flex: 1,
-    backgroundColor: "#965541",
-    paddingVertical: hp("1.8%"),
-    borderRadius: wp("6%"),
-    alignItems: "center",
-    marginRight: wp("2%"),
-  },
-  approveText: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-    fontSize: wp("4%"),
-  },
-  declineButton: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-    borderColor: "#965541",
-    borderWidth: 2,
-    paddingVertical: hp("1.8%"),
-    borderRadius: wp("6%"),
-    alignItems: "center",
-    marginLeft: wp("2%"),
-  },
-  declineText: {
-    color: "#965541",
-    fontWeight: "bold",
-    fontSize: wp("4%"),
-  },
-  jobCard: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#D8DADC",
-    borderRadius: wp("4%"),
-    borderWidth: 1,
-    padding: wp("5%"),
-    marginBottom: hp("2%"),
-  },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: hp("1%"),
-  },
-  jobTitle: {
-    color: "#1E1E1E",
-    fontSize: wp("4.7%"),
-    fontWeight: "700",
-    flex: 1,
-    marginRight: wp("3%"),
-  },
-  heartButton: {
-    padding: wp("1%"),
-  },
-  heartIcon: {
-    width: wp("6%"),
-    height: wp("6%"),
-  },
-  heartIconActive: {
-    tintColor: "#965541",
-  },
-  heartIconInactive: {
-    tintColor: "#A4A9B6",
-  },
-  companyRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: hp("1.2%"),
-    flexWrap: "wrap",
-  },
-  companyName: {
-    color: "#1E1E1E",
-    fontSize: wp("3.5%"),
-    fontWeight: "700",
-    marginRight: wp("1.5%"),
-  },
-  verifiedBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#E8F5E9",
-    paddingHorizontal: wp("2%"),
-    paddingVertical: hp("0.4%"),
-    borderRadius: wp("2%"),
-    marginRight: wp("2%"),
-  },
-  verifiedIcon: {
-    width: wp("3.2%"),
-    height: wp("3.2%"),
-    marginRight: wp("1%"),
-    tintColor: "#4CAF50",
-  },
-  verifiedText: {
-    color: "#4CAF50",
-    fontSize: wp("3%"),
-    fontWeight: "600",
-  },
-  postedText: {
-    color: "#888888",
-    fontSize: wp("3%"),
-  },
-  locationRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: hp("2%"),
-  },
-  locationIcon: {
-    width: wp("4%"),
-    height: wp("4%"),
-    marginRight: wp("2%"),
-    tintColor: "#1E1E1E",
-  },
-  locationText: {
-    color: "#1E1E1E",
-    fontSize: wp("3.6%"),
-  },
-  detailsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: hp("2%"),
-    paddingRight: wp("8%"),
-  },
-  detailBlock: {
-    flexDirection: "column",
-  },
-  detailLabel: {
-    color: "#965541",
-    fontSize: wp("3.4%"),
-    marginBottom: hp("0.5%"),
-  },
-  detailValue: {
-    color: "#1E1E1E",
-    fontSize: wp("4.6%"),
-    fontWeight: "700",
-  },
-  tagsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
-  tagChip: {
-    borderColor: "#965541",
-    borderRadius: wp("2%"),
-    borderWidth: 1,
-    paddingVertical: hp("0.8%"),
-    paddingHorizontal: wp("3.5%"),
-    marginRight: wp("2%"),
-    marginBottom: hp("1%"),
-  },
-  tagText: {
-    color: "#965541",
-    fontSize: wp("2.8%"),
-    fontWeight: "600",
-  },
   emptyState: {
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: hp("6%"),
+    paddingVertical: hp("8%"),
   },
   emptyStateTitle: {
-    fontSize: wp("4%"),
-    fontWeight: "600",
+    fontSize: wp("5%"),
+    fontWeight: "bold",
     color: "#1E1E1E",
     marginBottom: hp("1%"),
   },
   emptyStateText: {
-    fontSize: wp("3.4%"),
-    color: "#888888",
+    fontSize: wp("3.8%"),
+    color: "#666666",
     textAlign: "center",
-    paddingHorizontal: wp("8%"),
+  },
+  actionRow: {
+    flexDirection: "row",
+    gap: wp("2%"),
+    marginTop: hp("1%"),
+  },
+  actionBtn: {
+    flex: 1,
+    paddingVertical: hp("1.8%"),
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: wp("3%"),
+  },
+  acceptBtn: {
+    backgroundColor: "#965541",
+  },
+  rejectBtn: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1.5,
+    borderColor: "#965541",
+  },
+  messageBtn: {
+    backgroundColor: "#965541",
+  },
+  actionBtnText: {
+    color: "#FFFFFF",
+    fontSize: wp("4%"),
+    fontWeight: "bold",
+  },
+  rejectBtnText: {
+    color: "#965541",
+    fontSize: wp("4%"),
+    fontWeight: "bold",
+  },
+  actingOverlay: {
+    position: "absolute",
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 20,
+  },
+  actingCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: wp("4%"),
+    padding: wp("8%"),
+    alignItems: "center",
+  },
+  actingText: {
+    marginTop: hp("1%"),
+    color: "#965541",
+    fontWeight: "600",
+    fontSize: wp("4%"),
   },
 });

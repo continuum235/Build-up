@@ -1,21 +1,35 @@
-import type { EngagementStatus } from "@prisma/client";
+import { z } from "zod";
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 
-function asString(value: unknown): string {
-  return typeof value === "string" ? value : "";
-}
+// ── Zod schemas ────────────────────────────────────────────────────────────
+const updateEngagementSchema = z.object({
+  status: z.enum(["COMPLETED", "CANCELLED"]),
+  cancellationReason: z.string().max(500).optional(),
+});
+
+const createReviewSchema = z.object({
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().max(1000).optional(),
+});
+
 
 export async function updateEngagement(req: Request, res: Response) {
-  const engagementId = asString(req.params.id);
+  const engagementId = (req.params as { id?: string }).id ?? "";
 
-  const clerkUserId = req.auth?.userId;
-  if (!clerkUserId) {
-    return res.status(401).json({ message: "Unauthorized" });
+  const parse = updateEngagementSchema.safeParse(req.body);
+  if (!parse.success) {
+    return res.status(400).json({
+      message: "Validation failed",
+      errors: parse.error.issues.map((e) => ({
+        field: e.path.join("."),
+        message: e.message,
+      })),
+    });
   }
 
   const currentUser = await prisma.user.findUnique({
-    where: { clerkId: clerkUserId },
+    where: { clerkId: req.auth!.userId },
     select: { id: true },
   });
 
@@ -24,15 +38,7 @@ export async function updateEngagement(req: Request, res: Response) {
   }
 
   const userId = currentUser.id;
-
-  const { status, cancellationReason } = req.body as {
-    status?: string;
-    cancellationReason?: string;
-  };
-
-  if (!status || !["COMPLETED", "CANCELLED"].includes(status)) {
-    return res.status(400).json({ message: "status must be COMPLETED or CANCELLED" });
-  }
+  const { status, cancellationReason } = parse.data;
 
   const engagement = await prisma.engagement.findUnique({
     where: { id: engagementId },
@@ -54,7 +60,7 @@ export async function updateEngagement(req: Request, res: Response) {
     return res.status(403).json({ message: "Forbidden" });
   }
 
-  const updateData: Record<string, unknown> = { status: status as EngagementStatus };
+  const updateData: Record<string, unknown> = { status };
   if (status === "CANCELLED" && cancellationReason) {
     updateData.cancellationReason = cancellationReason;
   }
@@ -89,15 +95,21 @@ export async function updateEngagement(req: Request, res: Response) {
 }
 
 export async function createReview(req: Request, res: Response) {
-  const engagementId = asString(req.params.id);
+  const engagementId = (req.params as { id?: string }).id ?? "";
 
-  const clerkUserId = req.auth?.userId;
-  if (!clerkUserId) {
-    return res.status(401).json({ message: "Unauthorized" });
+  const parse = createReviewSchema.safeParse(req.body);
+  if (!parse.success) {
+    return res.status(400).json({
+      message: "Validation failed",
+      errors: parse.error.issues.map((e) => ({
+        field: e.path.join("."),
+        message: e.message,
+      })),
+    });
   }
 
   const currentUser = await prisma.user.findUnique({
-    where: { clerkId: clerkUserId },
+    where: { clerkId: req.auth!.userId },
     select: { id: true },
   });
 
@@ -106,13 +118,7 @@ export async function createReview(req: Request, res: Response) {
   }
 
   const userId = currentUser.id;
-  const body = req.body as Record<string, unknown>;
-  const rating = body.rating;
-  const comment = body.comment;
-
-  if (typeof rating !== "number" || !Number.isInteger(rating) || rating < 1 || rating > 5) {
-    return res.status(400).json({ message: "rating must be an integer between 1 and 5" });
-  }
+  const { rating, comment } = parse.data;
 
   const engagement = await prisma.engagement.findUnique({
     where: { id: engagementId },
@@ -153,7 +159,7 @@ export async function createReview(req: Request, res: Response) {
   const review = await prisma.review.create({
     data: {
       rating,
-      comment: typeof comment === "string" && comment.length > 0 ? comment : null,
+      comment: comment ?? null,
       jobId: engagement.jobId,
       engagementId,
       authorId: userId,

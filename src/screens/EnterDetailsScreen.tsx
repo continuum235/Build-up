@@ -18,10 +18,11 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import routes, { RootStackParamList } from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
-import { isValidDetails } from "../utils/validation";
 import { useApi } from "../services/api";
+import { detailsSchema } from "../utils/schemas";
 import KeyboardSafeWrapper from "../components/layout/KeyboardSafeWrapper";
 import TextInput from "../components/ui/TextInput";
+import CityDropdown from "../components/ui/CityDropdown";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -39,25 +40,33 @@ const EnterDetailsScreen: React.FC = () => {
   );
   const [city, setCity] = useState<string>(profile.details.city);
   const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async () => {
-    const updatedDetails = {
-      country,
-      addressLine1,
-      addressLine2,
-      city,
-    };
-
-    if (!isValidDetails(updatedDetails)) {
-      alert(t("validation.requiredDetails"));
+    const parseResult = detailsSchema.safeParse({ addressLine1, addressLine2, city });
+    if (!parseResult.success) {
+      const fieldErrors: Record<string, string> = {};
+      parseResult.error.issues.forEach((e) => {
+        const field = e.path[0] as string;
+        fieldErrors[field] = e.message;
+      });
+      setErrors(fieldErrors);
       return;
     }
+    setErrors({});
 
+    const updatedDetails = { country, addressLine1, addressLine2, city };
     setDetails(updatedDetails);
     setSubmitting(true);
 
     try {
       await updateProfile({
+        role: profile.roleType === "employer" ? "HIRER" : "WORKER",
+        roleTitle: profile.roleTitle,
+        documents: profile.documents,
+        languages: profile.languages,
+        skills: profile.skills,
+        bio: profile.bio,
         country: updatedDetails.country,
         addressLine1: updatedDetails.addressLine1,
         addressLine2: updatedDetails.addressLine2,
@@ -66,13 +75,17 @@ const EnterDetailsScreen: React.FC = () => {
       });
 
       const destRoute =
-        profile.roleType === "employer" ? routes.jobBoard : routes.profile;
+        profile.roleType === "employer" ? routes.jobBoard : routes.findJobs;
       navigation.reset({
         index: 0,
         routes: [{ name: destRoute }],
       });
-    } catch {
-      alert("Failed to save profile. Please check your connection and try again.");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to save profile. Please check your connection and try again.";
+      alert(message);
     } finally {
       setSubmitting(false);
     }
@@ -121,6 +134,7 @@ const EnterDetailsScreen: React.FC = () => {
             value={addressLine1}
             onChangeText={setAddressLine1}
             style={styles.input}
+            error={errors.addressLine1}
           />
 
           <Text style={styles.inputLabel}>{t("details.address2")}</Text>
@@ -131,12 +145,12 @@ const EnterDetailsScreen: React.FC = () => {
             style={styles.input}
           />
 
-          <Text style={styles.inputLabel}>{t("details.city")}</Text>
-          <TextInput
-            placeholder={t("details.cityPlaceholder")}
+          <CityDropdown
+            label={t("details.city")}
             value={city}
-            onChangeText={setCity}
-            style={styles.input}
+            onChange={setCity}
+            placeholder="Select your city"
+            error={errors.city}
           />
         </View>
 

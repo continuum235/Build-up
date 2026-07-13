@@ -144,5 +144,6 @@ export async function getMyWorkerJobs(req: Request, res: Response) {
   return res.status(200).json({
     engagements,
     openJobs,
+    dismissedJobIds: dismissedRows.map((d) => d.jobId),
   });
 }

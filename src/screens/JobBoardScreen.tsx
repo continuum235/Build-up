@@ -21,6 +21,8 @@ import BottomNavigation from "../components/layout/BottomNavigation";
 import JobDetails from "../components/jobs/JobDetails";
 import Button from "../components/ui/Button";
 import TextInput from "../components/ui/TextInput";
+import CityDropdown from "../components/ui/CityDropdown";
+import { jobPostSchema } from "../utils/schemas";
 
 const BUDGET_TYPES = ["HOURLY", "DAILY", "FIXED"] as const;
 
@@ -48,12 +50,13 @@ const JobBoardScreen: React.FC = () => {
     budget: "",
     experience: "",
     category: "OTHER" as Category,
-    budgetType: "FIXED",
+    budgetType: "FIXED" as "HOURLY" | "DAILY" | "FIXED",
     startDate: "",
     endDate: "",
     minWage: "",
     positions: "1",
   });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [customJobs, setCustomJobs] = useState<PostedJob[]>([]);
   const [posting, setPosting] = useState(false);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
@@ -105,11 +108,34 @@ const JobBoardScreen: React.FC = () => {
   };
 
   const handleAddJob = async () => {
-    if (!newJob.title.trim()) return;
-    if (budgetTooLow) {
-      alert(`Budget must be at least ₹${totalMinWage} (₹${minWage} × ${positions} worker${positions > 1 ? "s" : ""})`);
+    const budgetVal = parseFloat(newJob.budget) || 0;
+    const positions = parseInt(newJob.positions, 10) || 1;
+    const minWageVal = CATEGORY_MIN_WAGE[newJob.category] || 0;
+
+    const parseResult = jobPostSchema.safeParse({
+      title: newJob.title,
+      description: newJob.description || newJob.title,
+      location: newJob.location,
+      budget: budgetVal,
+      minWage: minWageVal,
+      positions,
+      experience: parseInt(newJob.experience, 10) || 0,
+      category: newJob.category,
+      budgetType: newJob.budgetType,
+      startDate: newJob.startDate || new Date().toISOString(),
+      endDate: newJob.endDate || undefined,
+    });
+
+    if (!parseResult.success) {
+      const fieldErrors: Record<string, string> = {};
+      parseResult.error.issues.forEach((e) => {
+        const field = e.path[0] as string;
+        if (!fieldErrors[field]) fieldErrors[field] = e.message;
+      });
+      setFormErrors(fieldErrors);
       return;
     }
+    setFormErrors({});
     setPosting(true);
     try {
       await createJob({
@@ -122,7 +148,7 @@ const JobBoardScreen: React.FC = () => {
         category: newJob.category,
         startDate: newJob.startDate || new Date().toISOString(),
         endDate: newJob.endDate || undefined,
-        minWage,
+        minWage: minWageVal,
         positions,
       });
     } catch {
@@ -195,7 +221,7 @@ const JobBoardScreen: React.FC = () => {
       />
 
       <TextInput
-        style={[styles.textInput, { minHeight: hp("8%") }]}
+        style={styles.textInput}
         label="Description"
         placeholder="Describe the job requirements..."
         value={newJob.description}
@@ -205,14 +231,15 @@ const JobBoardScreen: React.FC = () => {
         multiline
       />
 
-      <TextInput
-        style={styles.textInput}
-        label="Location"
-        placeholder="e.g. Thane, Mumbai"
+      <CityDropdown
+        label="Location *"
         value={newJob.location}
-        onChangeText={(text) =>
-          setNewJob((prev) => ({ ...prev, location: text }))
-        }
+        onChange={(city) => {
+          setNewJob((prev) => ({ ...prev, location: city }));
+          if (formErrors.location) setFormErrors((p) => ({ ...p, location: "" }));
+        }}
+        placeholder="Select job city"
+        error={formErrors.location}
       />
 
       {/* Category Dropdown */}
@@ -404,14 +431,11 @@ const JobBoardScreen: React.FC = () => {
       </View>
 
       <View style={styles.tabsContainer}>
-        {["Jobs Posted", "Active Contracts", "Add Job"].map((tab) => (
+        {["Jobs Posted", "Active Contracts"].map((tab) => (
           <TouchableOpacity
             key={tab}
             style={styles.tabButton}
-            onPress={() => {
-              setActiveTab(tab);
-              if (tab === "Add Job") setShowAddForm(true);
-            }}
+            onPress={() => setActiveTab(tab)}
           >
             <Text
               style={[
@@ -441,7 +465,7 @@ const JobBoardScreen: React.FC = () => {
             </View>
           )}
 
-          {activeTab !== "Add Job" && postedJobs.map(renderJobCard)}
+          {postedJobs.map(renderJobCard)}
         </View>
       </ScrollView>
 
@@ -455,6 +479,15 @@ const JobBoardScreen: React.FC = () => {
         </View>
       </Modal>
 
+      {/* FAB — Post a new job */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => setShowAddForm(true)}
+        activeOpacity={0.85}
+      >
+        <Text style={styles.fabIcon}>+</Text>
+      </TouchableOpacity>
+
       <BottomNavigation activeTab="jobBoard" />
     </SafeAreaView>
   );
@@ -466,6 +499,30 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFFFFF",
+  },
+  // FAB
+  fab: {
+    position: "absolute",
+    right: wp("6%"),
+    bottom: hp("10%"),
+    width: wp("14%"),
+    height: wp("14%"),
+    borderRadius: wp("7%"),
+    backgroundColor: "#965541",
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 6,
+    shadowColor: "#965541",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    zIndex: 10,
+  },
+  fabIcon: {
+    color: "#FFFFFF",
+    fontSize: wp("8%"),
+    fontWeight: "bold",
+    lineHeight: wp("10%"),
   },
   header: {
     alignItems: "center",

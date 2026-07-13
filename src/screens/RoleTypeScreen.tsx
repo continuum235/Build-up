@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   ScrollView,
@@ -27,9 +27,28 @@ const RoleTypeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { profile, setRoleType } = useProfile();
   const { t } = useLanguage();
-  const { updateProfile } = useApi();
+  const { updateProfile, getMe } = useApi();
   const [selectedRole, setSelectedRole] = useState<string>(profile.roleType);
   const [saving, setSaving] = useState(false);
+  const [roleLocked, setRoleLocked] = useState(false);
+  const [lockedRole, setLockedRole] = useState<string | null>(null);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    getMe()
+      .then(({ user }) => {
+        if (user.role && user.onboardingComplete) {
+          // Role is locked — user should not be here
+          setRoleLocked(true);
+          setLockedRole(user.role as string);
+        }
+      })
+      .catch(() => {
+        // Backend unreachable — allow selection (will enforce server-side)
+      })
+      .finally(() => setChecking(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSelect = async (roleType: string) => {
     setSelectedRole(roleType);
@@ -52,13 +71,52 @@ const RoleTypeScreen: React.FC = () => {
     }
   };
 
+  if (checking) {
+    return (
+      <SafeAreaView style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" color="#965541" />
+      </SafeAreaView>
+    );
+  }
+
+  if (roleLocked) {
+    const roleLabel = lockedRole === "HIRER" ? "Employer / Hirer" : "Job Seeker / Worker";
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" />
+        <View style={styles.lockedContainer}>
+          <Text style={styles.lockedIcon}>🔒</Text>
+          <Text style={styles.lockedTitle}>Role Already Set</Text>
+          <Text style={styles.lockedBody}>
+            Your account is registered as{" "}
+            <Text style={styles.lockedRoleText}>{roleLabel}</Text>.
+            {"\n\n"}Roles cannot be changed after onboarding. If you believe
+            this is a mistake or need to switch roles, please contact our
+            support team.
+          </Text>
+          <TouchableOpacity
+            style={styles.supportButton}
+            onPress={() => {
+              // Navigate to main screen
+              const dest = lockedRole === "HIRER" ? routes.jobBoard : routes.findJobs;
+              navigation.reset({ index: 0, routes: [{ name: dest }] });
+            }}
+          >
+            <Text style={styles.supportButtonText}>Go to my account</Text>
+          </TouchableOpacity>
+          <Text style={styles.supportEmail}>support@buildup.app</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
 
       <View style={styles.headerRow}>
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.navigate(routes.welcome)}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <Image
@@ -145,6 +203,57 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFFFFF",
+  },
+  centered: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  // ── Locked role screen ──
+  lockedContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: wp("10%"),
+    paddingVertical: hp("6%"),
+  },
+  lockedIcon: {
+    fontSize: wp("15%"),
+    marginBottom: hp("3%"),
+  },
+  lockedTitle: {
+    color: "#1E1E1E",
+    fontSize: wp("6%"),
+    fontWeight: "bold",
+    marginBottom: hp("2%"),
+    textAlign: "center",
+  },
+  lockedBody: {
+    color: "#4C5260",
+    fontSize: wp("4%"),
+    lineHeight: wp("6%"),
+    textAlign: "center",
+    marginBottom: hp("4%"),
+  },
+  lockedRoleText: {
+    color: "#965541",
+    fontWeight: "bold",
+  },
+  supportButton: {
+    backgroundColor: "#965541",
+    borderRadius: wp("4%"),
+    paddingVertical: hp("2%"),
+    paddingHorizontal: wp("10%"),
+    marginBottom: hp("2%"),
+  },
+  supportButtonText: {
+    color: "#FFFFFF",
+    fontSize: wp("4.2%"),
+    fontWeight: "bold",
+  },
+  supportEmail: {
+    color: "#965541",
+    fontSize: wp("3.5%"),
+    textDecorationLine: "underline",
   },
   headerRow: {
     flexDirection: "row",
