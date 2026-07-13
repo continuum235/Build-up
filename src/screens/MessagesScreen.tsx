@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import {
   View,
   FlatList,
@@ -46,22 +46,28 @@ const MessagesScreen: React.FC = () => {
   const { listConversations } = useApi();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
+  const mountedRef = useRef(false);
 
-  const loadConversations = useCallback(async () => {
-    setLoading(true);
+  const loadConversations = useCallback(async (showSpinner = false) => {
+    if (showSpinner) setLoading(true);
     try {
       const data = await listConversations();
       setConversations((data as { conversations: Conversation[] }).conversations ?? []);
     } catch {
       // silent
     } finally {
-      setLoading(false);
+      if (showSpinner) setLoading(false);
     }
   }, [listConversations]);
 
   useFocusEffect(
     useCallback(() => {
-      loadConversations();
+      if (!mountedRef.current) {
+        mountedRef.current = true;
+        loadConversations(true);
+      } else {
+        loadConversations(false);
+      }
     }, [loadConversations]),
   );
 
