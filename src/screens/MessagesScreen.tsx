@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useRef } from "react";
 import {
   View,
-  FlatList,
   Text,
   TouchableOpacity,
   StyleSheet,
@@ -18,6 +17,7 @@ import {
 import routes, { RootStackParamList } from "../navigation/routes";
 import { useApi } from "../services/api";
 import BottomNavigation from "../components/layout/BottomNavigation";
+import KeyboardSafeWrapper from "../components/layout/KeyboardSafeWrapper";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -116,30 +116,29 @@ const MessagesScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      <View style={styles.header}>
-        <Text style={styles.pageTitle}>Messages</Text>
-      </View>
+      <KeyboardSafeWrapper
+        scrollStyle={{ flex: 1 }}
+        contentContainerStyle={styles.listContent}
+      >
+        <View style={styles.header}>
+          <Text style={styles.pageTitle}>Messages</Text>
+        </View>
 
-      {loading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#965541" />
-        </View>
-      ) : conversations.length === 0 ? (
-        <View style={styles.centered}>
-          <Text style={styles.emptyText}>No conversations yet</Text>
-          <Text style={styles.emptySubtext}>
-            Message a hirer about a job to start chatting
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={conversations}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
+        {loading ? (
+          <View style={styles.centered}>
+            <ActivityIndicator size="large" color="#965541" />
+          </View>
+        ) : conversations.length === 0 ? (
+          <View style={styles.centered}>
+            <Text style={styles.emptyText}>No conversations yet</Text>
+            <Text style={styles.emptySubtext}>
+              Message a hirer about a job to start chatting
+            </Text>
+          </View>
+        ) : (
+          conversations.map((item) => renderItem({ item }))
+        )}
+      </KeyboardSafeWrapper>
 
       <BottomNavigation activeTab="messages" />
     </SafeAreaView>
