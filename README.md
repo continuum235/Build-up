@@ -2,6 +2,11 @@
 
 A job and onboarding application built with Expo React Native for the mobile client and a TypeScript Express backend. The app enables user authentication, profile onboarding, language selection, skill collection, job discovery, hiring workflows, and chat/conversation support.
 
+<img width="394" height="811" alt="image" src="https://github.com/user-attachments/assets/ff5327e1-cd14-4396-9ba1-93c0084cc1f5" />
+<img width="396" height="678" alt="image" src="https://github.com/user-attachments/assets/ac6da28e-5a3e-434c-92b5-bb34d577bb55" />
+<img width="398" height="783" alt="image" src="https://github.com/user-attachments/assets/a6b56e78-165a-4680-a85d-cc751d5e153f" />
+<img width="393" height="778" alt="image" src="https://github.com/user-attachments/assets/292193c8-45cd-4485-bd86-7979dc30da63" />
+
 ## Project overview
 
 - `App.tsx` initializes Clerk authentication, secure token storage, language context, and profile context.
