@@ -169,7 +169,3 @@ The backend exposes these main routes:
 3. Run `npm install` and `cd server && npm install`.
 4. Add tests for new behavior.
 5. Submit a pull request with a clear description.
-
-## License
-
-This project is currently private. Add a license file if you wish to open-source it.
