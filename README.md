@@ -169,3 +169,6 @@ The backend exposes these main routes:
 3. Run `npm install` and `cd server && npm install`.
 4. Add tests for new behavior.
 5. Submit a pull request with a clear description.
+
+## Figma Link
+https://www.figma.com/design/CVwIhr6rSFajjV8DZv7U4A/Untitled?node-id=0-1&p=f
