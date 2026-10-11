@@ -20,6 +20,7 @@ import {
 } from "react-native-responsive-screen";
 import routes, { RootStackParamList } from "../navigation/routes";
 import { useApi } from "../services/api";
+import { useRealtime } from "../services/realtime";
 
 interface Message {
   id: string;
@@ -42,7 +43,11 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [disconnected, setDisconnected] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+  const { connected, subscribe } = useRealtime();
+  const lastCreatedAtRef = useRef<string | null>(null);
+  const pollTimerRef = useRef<any>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -52,6 +57,9 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
         if (cancelled) return;
         const res = data as { messages: Message[]; currentUserId: string };
         setMessages(res.messages ?? []);
+        if (res.messages && res.messages.length > 0) {
+          lastCreatedAtRef.current = res.messages[res.messages.length - 1].createdAt;
+        }
         setCurrentUserId(res.currentUserId);
       } catch {
         // silent
@@ -62,6 +70,54 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
     return () => { cancelled = true; };
   }, [conversationId, getConversationMessages]);
 
+
+  useEffect(() => {
+    setDisconnected(!connected);
+  }, [connected]);
+
+  useEffect(() => {
+    const unsub = subscribe((ev) => {
+      if (ev.conversationId === conversationId) {
+        const msg = ev.message;
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === msg.id)) return prev;
+          return [...prev, msg];
+        });
+        lastCreatedAtRef.current = msg.createdAt;
+      }
+    });
+    return () => unsub();
+  }, [conversationId, subscribe]);
+
+  useEffect(() => {
+    if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    if (!connected) {
+      pollTimerRef.current = setInterval(async () => {
+        try {
+          const params: Record<string, string> = {};
+          if (lastCreatedAtRef.current) params.after = lastCreatedAtRef.current;
+          const data = await getConversationMessages(conversationId, params);
+          const res = data as { messages: Message[]; currentUserId: string };
+          if (res.messages && res.messages.length > 0) {
+            setMessages((prev) => {
+              const existing = new Set(prev.map((m) => m.id));
+              const added = res.messages.filter((m) => !existing.has(m.id));
+              if (added.length === 0) return prev;
+              const next = [...prev, ...added];
+              lastCreatedAtRef.current = next[next.length - 1].createdAt;
+              return next;
+            });
+          }
+        } catch {}
+      }, 10000);
+    }
+    return () => {
+      if (pollTimerRef.current) {
+        clearInterval(pollTimerRef.current);
+        pollTimerRef.current = null;
+      }
+    };
+  }, [connected, conversationId, getConversationMessages]);
   const handleSend = async () => {
     const text = inputText.trim();
     if (!text || sending) return;
@@ -71,6 +127,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
       const data = await sendMessage(conversationId, text);
       const newMsg = (data as { message: Message }).message;
       setMessages((prev) => [...prev, newMsg]);
+      lastCreatedAtRef.current = newMsg.createdAt;
     } catch {
       setInputText(text);
       alert("Failed to send message");
