@@ -171,6 +171,39 @@ The backend exposes these main routes:
 - Ensure the app’s `EXPO_PUBLIC_API_URL` matches the backend host and port.
 - If using Expo Go, ensure the mobile device can reach the local backend.
 
+
+## WebSocket (Chat)
+
+- Endpoint: `ws://<API_BASE>/ws` (or `wss://.../ws`)
+- Protocol: client sends `{ "type": "auth", "token": "<Clerk session JWT>" }` within 5 seconds, server replies `{ "type": "ready" }` on success; client may send `{ "type": "ping" }` and expects `{ "type": "pong" }`; server pushes `{ "type": "message", "conversationId": "...", "message": {...} }` to participants. Writes always go via REST.
+
+## Additional Routes
+
+- `PATCH /engagements/:id` - update engagement status (COMPLETED/CANCELLED)
+- `POST /engagements/:id/review` - create review for completed engagement
+- `GET /hirers/me/jobs` - get hirer jobs with engagements
+- `GET /workers/me/jobs` - get worker jobs (engagements/open/dismissed)
+- `GET /users/:id/reviews` - get reviews for a user
+- `GET /health/db` - database health check
+
+## Environment variables (new)
+
+- `CORS_ORIGINS` - optional comma-separated origins for CORS
+- `TRUST_PROXY` - set to `1` if behind a trusted proxy
+- `TEST_DATABASE_URL` - optional database URL for integration tests
+
+## Tests
+
+Run tests from the `server/` directory: `npm test`
+
+## Known limitations
+
+- ID document upload is a placeholder (Upload screen remains a placeholder)
+- Chat fan-out is in-memory (single server instance; multi-instance would need Redis pub/sub)
+- Distance is city-level (proximity sort uses city lists)
+- No payments, no shortlist mode
+- No employer approval flow (worker-choice model is preserved)
+
 ## Contributing
 
 1. Fork the repository.
