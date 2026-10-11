@@ -273,3 +273,7 @@ Run tests from the `server/` directory: `npm test`
 
 ## Figma Link
 https://www.figma.com/design/CVwIhr6rSFajjV8DZv7U4A/Untitled?node-id=0-1&p=f
+
+## To Download The App
+https://expo.dev/accounts/continuum234/projects/frontend/builds
+
