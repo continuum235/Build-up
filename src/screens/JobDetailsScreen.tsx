@@ -107,9 +107,6 @@ const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({
   const hirerName = isApi
     ? String((j.hirer as { name?: string } | undefined)?.name ?? "")
     : "";
-  const hirerEmail = isApi
-    ? String((j.hirer as { email?: string } | undefined)?.email ?? "")
-    : "";
 
   const handleMessageHirer = async () => {
     if (messaging) return;
@@ -213,14 +210,13 @@ const JobDetailsScreen: React.FC<JobDetailsScreenProps> = ({
           )}
         </View>
 
-        {isApi && (hirerName || hirerEmail) && (
+        {isApi && hirerName && (
           <>
             <View style={styles.divider} />
             <View style={styles.sectionContainer}>
               <Text style={styles.sectionTitle}>Posted by:</Text>
               <View style={styles.detailItem}>
                 <Text style={styles.detailValue}>{hirerName}</Text>
-                {hirerEmail ? <Text style={styles.detailLabel}>{hirerEmail}</Text> : null}
               </View>
             </View>
           </>
