@@ -52,7 +52,7 @@ A job and onboarding application built with Expo React Native for the mobile cli
 Create a `.env` file at the repository root or configure your environment with:
 
 ```env
-EXPO_PUBLICCLERK_PUBLISHABLE_KEY=pk_test_XXXXXXXXXXXX
+EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_XXXXXXXXXXXX
 EXPO_PUBLIC_API_URL=http://localhost:3000
 ```
 
