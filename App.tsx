@@ -6,6 +6,7 @@ import { View, Text, StyleSheet } from "react-native";
 import AppNavigator from "./src/navigation/AppNavigator";
 import { ProfileProvider } from "./src/context/ProfileContext";
 import { LanguageProvider } from "./src/context/LanguageContext";
+import { RealtimeProvider } from "./src/services/realtime";
 
 const tokenCache = {
   getToken: (key: string) => SecureStore.getItemAsync(key),
@@ -24,13 +25,15 @@ const App: React.FC = () => {
   }
   return (
     <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
-      <LanguageProvider>
-        <ProfileProvider>
-          <NavigationContainer>
-            <AppNavigator />
-          </NavigationContainer>
-        </ProfileProvider>
-      </LanguageProvider>
+      <RealtimeProvider>
+        <LanguageProvider>
+          <ProfileProvider>
+            <NavigationContainer>
+              <AppNavigator />
+            </NavigationContainer>
+          </ProfileProvider>
+        </LanguageProvider>
+      </RealtimeProvider>
     </ClerkProvider>
   );
 };
