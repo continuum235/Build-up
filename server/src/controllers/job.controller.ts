@@ -128,29 +128,38 @@ export async function listJobs(req: Request, res: Response) {
     where.location = { contains: location, mode: "insensitive" };
   }
 
-  const [jobs, total] = await Promise.all([
-    prisma.job.findMany({
+  const total = await prisma.job.count({ where });
+
+  if (userCity && CITY_NAMES.includes(userCity)) {
+    const allJobs = await prisma.job.findMany({
       where,
-      skip,
-      take: limit,
       orderBy: { createdAt: "desc" },
       include: {
-        hirer: { select: { id: true, name: true, email: true } },
+        hirer: { select: { id: true, name: true } },
       },
-    }),
-    prisma.job.count({ where }),
-  ]);
+    });
+    const formatted = allJobs.map(formatJob);
+    const sorted = sortByProximity(formatted as { location: string }[], userCity);
+    const paginated = sorted.slice(skip, skip + limit);
+    return res.status(200).json({
+      jobs: paginated,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    });
+  }
 
+  const jobs = await prisma.job.findMany({
+    where,
+    skip,
+    take: limit,
+    orderBy: { createdAt: "desc" },
+    include: {
+      hirer: { select: { id: true, name: true } },
+    },
+  });
   const formatted = jobs.map(formatJob);
 
-  // Proximity sort if userCity is provided and valid
-  const sorted =
-    userCity && CITY_NAMES.includes(userCity)
-      ? sortByProximity(formatted as { location: string }[], userCity)
-      : formatted;
-
   return res.status(200).json({
-    jobs: sorted,
+    jobs: formatted,
     pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
   });
 }
@@ -161,7 +170,7 @@ export async function getJob(req: Request, res: Response) {
   const job = await prisma.job.findUnique({
     where: { id },
     include: {
-      hirer: { select: { id: true, name: true, email: true } },
+      hirer: { select: { id: true, name: true } },
     },
   });
 
@@ -204,7 +213,7 @@ export async function createJob(req: Request, res: Response) {
       hirerId: req.currentUser!.id,
     },
     include: {
-      hirer: { select: { id: true, name: true, email: true } },
+      hirer: { select: { id: true, name: true } },
     },
   });
 
@@ -217,7 +226,7 @@ export async function updateJob(req: Request, res: Response) {
 
   const existing = await prisma.job.findUnique({
     where: { id },
-    select: { hirerId: true },
+    select: { hirerId: true, filledCount: true, positions: true, status: true, budget: true, minWage: true },
   });
 
   if (!existing) {
@@ -240,17 +249,38 @@ export async function updateJob(req: Request, res: Response) {
   }
 
   const d = parse.data;
+
+  const mergedPositions = d.positions ?? existing.positions;
+  const mergedFilledCount = existing.filledCount;
+  const mergedBudget = d.budget ?? Number(existing.budget);
+  const mergedMinWage = d.minWage ?? (existing.minWage ? Number(existing.minWage) : 0);
+
+  if (mergedPositions < mergedFilledCount) {
+    return res.status(400).json({ message: "positions cannot be less than filledCount" });
+  }
+
+  if (mergedBudget < mergedMinWage * mergedPositions) {
+    return res.status(400).json({ message: "budget must be at least minWage × positions" });
+  }
+
+  if (d.status === "FILLED") {
+    return res.status(409).json({ message: "Cannot set status to FILLED directly" });
+  }
+
+  if (d.status === "OPEN" && mergedFilledCount >= mergedPositions) {
+    return res.status(409).json({ message: "Cannot reopen a fully filled job" });
+  }
+
   const data: Prisma.JobUpdateInput = { ...d };
 
   if (d.startDate) data.startDate = new Date(d.startDate);
-  if (d.endDate !== undefined)
-    data.endDate = d.endDate ? new Date(d.endDate) : null;
+  if (d.endDate !== undefined) data.endDate = d.endDate ? new Date(d.endDate) : null;
 
   const job = await prisma.job.update({
     where: { id },
     data,
     include: {
-      hirer: { select: { id: true, name: true, email: true } },
+      hirer: { select: { id: true, name: true } },
     },
   });
 
@@ -272,6 +302,15 @@ export async function deleteJob(req: Request, res: Response) {
 
   if (existing.hirerId !== userId) {
     return res.status(403).json({ message: "Forbidden" });
+  }
+
+  const activeEngagement = await prisma.engagement.findFirst({
+    where: { jobId: id, status: "ACTIVE" },
+    select: { id: true },
+  });
+
+  if (activeEngagement) {
+    return res.status(409).json({ message: "Job has active engagements. Close it instead." });
   }
 
   await prisma.job.delete({ where: { id } });
