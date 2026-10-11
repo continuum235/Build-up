@@ -63,6 +63,7 @@ Create `server/.env` and set:
 ```env
 PORT=3000
 CLERK_SECRET_KEY=sk_test_XXXXXXXXXXXX
+CLERK_PUBLISHABLE_KEY=pk_test_XXXXXXXXXXXX
 DATABASE_URL=postgresql://<user>:<password>@<host>:<port>/<db>?schema=public
 ```
 
@@ -126,6 +127,7 @@ Set these env vars in the Render dashboard (the blueprint marks them as required
 | --- | --- |
 | `DATABASE_URL` | Neon pooled connection string |
 | `CLERK_SECRET_KEY` | Clerk backend secret key |
+| `CLERK_PUBLISHABLE_KEY` | Clerk publishable key (required by `@clerk/express`) |
 | `CORS_ORIGINS` | Comma-separated allowed origins, e.g. your store URL or `https://your-app.com` |
 
 `PORT` and `TRUST_PROXY=1` are provided automatically. Run database migrations once after the first deploy:
