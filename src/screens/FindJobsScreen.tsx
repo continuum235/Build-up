@@ -126,8 +126,8 @@ const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {
     try {
       await acceptJob(jobId);
       setAcceptedJobIds((prev) => new Set(prev).add(jobId));
-    } catch {
-      Alert.alert("Error", "Failed to accept job. It may already be filled.");
+    } catch (e: any) {
+      Alert.alert("Error", e?.message || "Failed to accept job. It may already be filled.");
     } finally {
       setActingJobId(null);
     }
@@ -138,8 +138,8 @@ const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {
     try {
       await rejectJob(jobId);
       setDismissedJobIds((prev) => new Set(prev).add(jobId));
-    } catch {
-      Alert.alert("Error", "Failed to reject job.");
+    } catch (e: any) {
+      Alert.alert("Error", e?.message || "Failed to reject job.");
     } finally {
       setActingJobId(null);
     }
@@ -154,8 +154,8 @@ const FindJobsScreen: React.FC<FindJobsScreenProps> = ({ navigation }) => {
         conversationId: conv.id,
         title: jobTitle,
       });
-    } catch {
-      Alert.alert("Error", "Failed to start conversation.");
+    } catch (e: any) {
+      Alert.alert("Error", e?.message || "Failed to start conversation.");
     } finally {
       setActingJobId(null);
     }
