@@ -53,8 +53,8 @@ export function broadcastMessage(conversation: any, message: any) {
                 message,
               })
             );
-          } catch (_e) {
-            // ignore broadcast failures
+          } catch {
+            // ignore
           }
         }
       }
@@ -76,8 +76,9 @@ export function attachWebSocketServer(httpServer: Server) {
         if (!authenticated) {
           try {
             ws.send(JSON.stringify({ type: "error", code: "unauthorized" }));
-          } catch (_e) {}
+          } catch {
           ws.close(4401);
+        }
         }
       }, 5000);
     };
@@ -92,7 +93,7 @@ export function attachWebSocketServer(httpServer: Server) {
       let msg: IncomingMessage;
       try {
         msg = JSON.parse(data.toString());
-      } catch (_e) {
+      } catch {
         return;
       }
 
@@ -118,12 +119,15 @@ export function attachWebSocketServer(httpServer: Server) {
           if (authTimeout) clearTimeout(authTimeout);
           try {
             ws.send(JSON.stringify({ type: "ready" }));
-          } catch (_e) {}
-          scheduleHeartbeat();
-        } catch (_e) {
+          } catch {
+            scheduleHeartbeat();
+          }
+        } catch {
           try {
             ws.send(JSON.stringify({ type: "error", code: "unauthorized" }));
-          } catch (_err) {}
+          } catch {
+            // ignore
+          }
           ws.close(4401);
         }
         return;
@@ -133,8 +137,9 @@ export function attachWebSocketServer(httpServer: Server) {
         if (pingTimeout) clearTimeout(pingTimeout);
         try {
           ws.send(JSON.stringify({ type: "pong" }));
-        } catch (_e) {}
-        scheduleHeartbeat();
+        } catch {
+          scheduleHeartbeat();
+        }
         return;
       }
     });

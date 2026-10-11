@@ -2,6 +2,7 @@
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
+import { broadcastMessage } from "../realtime/ws";
 
 function asString(value: unknown): string {
   return typeof value === "string" ? value : "";
@@ -267,5 +268,11 @@ export async function sendMessage(req: Request, res: Response) {
     },
   });
 
+  try {
+    broadcastMessage(conversation, message);
+
+  } catch {
+    // ignore
+  }
   return res.status(201).json({ message });
 }
