@@ -107,6 +107,63 @@ npm run ios
 npm run web
 ```
 
+## Deployment
+
+The repo ships deployment config for a Render-hosted backend (`render.yaml`, `server/Dockerfile`) and EAS native builds for the client (`eas.json`).
+
+### Backend on Render
+
+Deploy via the Blueprint in `render.yaml` (Dashboard → New → Blueprint, point at this repo). It creates a Node web service with:
+
+- Root directory: `server`
+- Build: `npm install && npx prisma generate && npm run build`
+- Start: `npm start`
+- Health check: `/health`
+
+Set these env vars in the Render dashboard (the blueprint marks them as required):
+
+| Variable | Value |
+| --- | --- |
+| `DATABASE_URL` | Neon pooled connection string |
+| `CLERK_SECRET_KEY` | Clerk backend secret key |
+| `CORS_ORIGINS` | Comma-separated allowed origins, e.g. your store URL or `https://your-app.com` |
+
+`PORT` and `TRUST_PROXY=1` are provided automatically. Run database migrations once after the first deploy:
+
+```bash
+cd server
+DATABASE_URL="<neon-url>" npx prisma migrate deploy
+```
+
+> Note: the WebSocket chat server (`/ws`) works on Render, but the **free plan** spins the service down after inactivity, dropping connections until the next request cold-starts it. Use a paid instance for always-on chat.
+
+Alternatively, deploy with the included `server/Dockerfile` by setting the service runtime to Docker with dockerfile path `server/Dockerfile`.
+
+### Frontend with EAS (native)
+
+`eas.json` defines `development`, `preview` (APK / iOS simulator), and `production` profiles.
+
+```bash
+# One-time setup
+npm install -g eas-cli      # or use npx eas-cli
+eas login
+eas init                    # creates the EAS project + adds extra.eas.projectId
+
+# Configure the API URL + Clerk key used at build time
+eas env:create --name EXPO_PUBLIC_API_URL --value https://<your-render-service>.onrender.com --environment production --visibility plaintext
+eas env:create --name EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY --value pk_live_XXXX --environment production --visibility plaintext
+
+# Build
+eas build --profile preview -p android      # installable APK for testing
+eas build --profile production -p android   # or -p ios
+
+# Ship to the stores
+eas submit --profile production -p android
+eas submit --profile production -p ios
+```
+
+Point `EXPO_PUBLIC_API_URL` at the deployed backend; the client derives the WebSocket URL (`https` → `wss`) automatically. Build again after changing env vars, since `EXPO_PUBLIC_*` values are inlined at build time.
+
 ## Available scripts
 
 ### Root project
