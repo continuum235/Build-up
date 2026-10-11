@@ -11,6 +11,7 @@ import { jobRouter } from "./routes/job.routes";
 import { userRouter } from "./routes/user.routes";
 import { workerRouter } from "./routes/worker.routes";
 import { conversationRouter } from "./routes/conversation.routes";
+import { attachWebSocketServer } from "./realtime/ws";
 import { Prisma } from "@prisma/client";
 
 const app = express();
@@ -82,6 +83,8 @@ app.use((err: unknown, req: express.Request, res: express.Response, _next: expre
 const server = app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
+
+attachWebSocketServer(server);
 
 process.on("SIGTERM", () => {
   server.close(() => process.exit(0));
