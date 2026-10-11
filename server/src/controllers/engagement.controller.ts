@@ -40,58 +40,19 @@ export async function updateEngagement(req: Request, res: Response) {
   const userId = currentUser.id;
   const { status, cancellationReason } = parse.data;
 
-  const engagement = await prisma.engagement.findUnique({
-    where: { id: engagementId },
-    include: { job: { select: { hirerId: true } } },
-  });
+  const { updateEngagementWithCancelOrComplete } = await import("../services/cancel.service");
+  const result = await updateEngagementWithCancelOrComplete(
+    engagementId,
+    userId,
+    status,
+    cancellationReason,
+  );
 
-  if (!engagement) {
-    return res.status(404).json({ message: "Engagement not found" });
+  if (!result.success) {
+    return res.status(result.statusCode).json({ message: result.message });
   }
 
-  if (engagement.status !== "ACTIVE") {
-    return res.status(409).json({ message: "Engagement is not active" });
-  }
-
-  const isWorker = engagement.workerId === userId;
-  const isHirer = engagement.job.hirerId === userId;
-
-  if (!isWorker && !isHirer) {
-    return res.status(403).json({ message: "Forbidden" });
-  }
-
-  const updateData: Record<string, unknown> = { status };
-  if (status === "CANCELLED" && cancellationReason) {
-    updateData.cancellationReason = cancellationReason;
-  }
-
-  const updates = [
-    prisma.engagement.update({
-      where: { id: engagementId },
-      data: updateData,
-    }),
-  ];
-
-  if (status === "CANCELLED") {
-    updates.push(
-      prisma.job.update({
-        where: { id: engagement.jobId },
-        data: { status: "OPEN" },
-      }) as never,
-    );
-  }
-
-  await prisma.$transaction(updates);
-
-  const updated = await prisma.engagement.findUnique({
-    where: { id: engagementId },
-    include: {
-      job: { select: { id: true, title: true, status: true } },
-      worker: { select: { id: true, name: true } },
-    },
-  });
-
-  return res.status(200).json({ engagement: updated });
+  return res.status(result.statusCode).json({ engagement: result.engagement });
 }
 
 export async function createReview(req: Request, res: Response) {

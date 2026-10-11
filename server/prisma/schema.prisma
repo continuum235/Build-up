@@ -73,6 +73,7 @@ model Job {
   @@index([location])
 }
 
+// Partial index for one active engagement per worker lives in SQL migration only.
 model Engagement {
   id String @id @default(cuid())
 

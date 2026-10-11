@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
+import { acceptJobForWorker } from "../services/engagement.service";
 
 function asString(value: unknown): string {
   return typeof value === "string" ? value : "";
@@ -9,66 +10,13 @@ export async function acceptJob(req: Request, res: Response) {
   const workerId = req.currentUser!.id;
   const jobId = asString(req.params.jobId);
 
-  const job = await prisma.job.findUnique({
-    where: { id: jobId },
-    select: { id: true, status: true, positions: true, filledCount: true },
-  });
+  const result = await acceptJobForWorker(workerId, jobId);
 
-  if (!job) {
-    return res.status(404).json({ message: "Job not found" });
+  if (!result.success) {
+    return res.status(result.statusCode).json({ message: result.message });
   }
 
-  if (job.status !== "OPEN") {
-    return res.status(409).json({ message: "Job is not open for acceptance" });
-  }
-
-  if (job.filledCount >= job.positions) {
-    return res.status(409).json({ message: "All positions for this job are filled" });
-  }
-
-  const activeEngagement = await prisma.engagement.findFirst({
-    where: { workerId, status: "ACTIVE" },
-    select: { id: true },
-  });
-
-  if (activeEngagement) {
-    return res.status(409).json({ message: "You already have an active engagement" });
-  }
-
-  const existingDismissal = await prisma.jobDismissal.findUnique({
-    where: { workerId_jobId: { workerId, jobId } },
-  });
-
-  if (existingDismissal) {
-    return res.status(409).json({ message: "Cannot accept a job you have rejected" });
-  }
-
-  const newFilledCount = job.filledCount + 1;
-  const shouldClose = newFilledCount >= job.positions;
-
-  await prisma.$transaction([
-    prisma.engagement.create({ data: { workerId, jobId } }),
-    prisma.job.update({
-      where: { id: jobId },
-      data: {
-        filledCount: newFilledCount,
-        ...(shouldClose ? { status: "FILLED" } : {}),
-      },
-    }),
-  ]);
-
-  const engagement = await prisma.engagement.findFirst({
-    where: { workerId, jobId },
-    include: {
-      job: {
-        include: {
-          hirer: { select: { id: true, name: true } },
-        },
-      },
-    },
-  });
-
-  return res.status(201).json({ engagement });
+  return res.status(result.statusCode).json({ engagement: result.engagement });
 }
 
 export async function rejectJob(req: Request, res: Response) {
