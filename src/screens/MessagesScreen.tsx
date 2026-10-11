@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import {
 } from "react-native-responsive-screen";
 import routes, { RootStackParamList } from "../navigation/routes";
 import { useApi } from "../services/api";
+import { useRealtime } from "../services/realtime";
 import BottomNavigation from "../components/layout/BottomNavigation";
 import KeyboardSafeWrapper from "../components/layout/KeyboardSafeWrapper";
 
@@ -47,6 +48,7 @@ const MessagesScreen: React.FC = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const mountedRef = useRef(false);
+  const { subscribe } = useRealtime();
 
   const loadConversations = useCallback(async (showSpinner = false) => {
     if (showSpinner) setLoading(true);
@@ -60,6 +62,13 @@ const MessagesScreen: React.FC = () => {
     }
   }, [listConversations]);
 
+
+  useEffect(() => {
+    const unsub = subscribe(() => {
+      loadConversations(false);
+    });
+    return () => unsub();
+  }, [subscribe, loadConversations]);
   useFocusEffect(
     useCallback(() => {
       if (!mountedRef.current) {
