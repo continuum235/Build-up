@@ -1,13 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
-const JOB_CATEGORIES = [
-  "CARPENTER", "ELECTRICIAN", "PLUMBER", "PAINTER", "CLEANER",
-  "GARDENER", "MASON", "DRIVER", "COOK", "SECURITY", "OTHER",
-] as const;
-
-const JOB_BUDGET_TYPES = ["HOURLY", "DAILY", "FIXED"] as const;
-
 const createJobSchema = z
   .object({
     budget: z.number().positive(),

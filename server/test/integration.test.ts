@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { acceptJobForWorker } from "../src/services/engagement.service";
 
 const hasDb = !!process.env.TEST_DATABASE_URL;
 
