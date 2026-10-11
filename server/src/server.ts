@@ -2,6 +2,8 @@ import "dotenv/config";
 import { clerkMiddleware } from "@clerk/express";
 import cors from "cors";
 import express from "express";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import { authRouter } from "./routes/auth.routes";
 import { engagementRouter } from "./routes/engagement.routes";
 import { hirerRouter } from "./routes/hirer.routes";
@@ -9,16 +11,51 @@ import { jobRouter } from "./routes/job.routes";
 import { userRouter } from "./routes/user.routes";
 import { workerRouter } from "./routes/worker.routes";
 import { conversationRouter } from "./routes/conversation.routes";
+import { Prisma } from "@prisma/client";
 
 const app = express();
 const port = process.env.PORT ?? 3000;
 
-app.use(cors());
-app.use(express.json());
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const _strictLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+if (process.env.TRUST_PROXY === "1") {
+  app.set("trust proxy", 1);
+}
+
+app.use(helmet());
+app.use(cors({
+  origin: process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(",").map((s) => s.trim())
+    : undefined,
+}));
+app.use(express.json({ limit: "100kb" }));
+app.use(globalLimiter);
 app.use(clerkMiddleware());
 
 app.get("/health", (_req, res) => {
   res.status(200).json({ status: "ok" });
+});
+
+app.get("/health/db", async (_req, res) => {
+  try {
+    const { prisma } = await import("./lib/prisma");
+    await prisma.$queryRaw`SELECT 1`;
+    res.status(200).json({ status: "ok" });
+  } catch {
+    res.status(500).json({ status: "error" });
+  }
 });
 
 app.use("/auth", authRouter);
@@ -29,11 +66,26 @@ app.use("/workers", workerRouter);
 app.use("/hirers", hirerRouter);
 app.use("/conversations", conversationRouter);
 
-app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error(err);
+app.use((err: unknown, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    if (err.code === "P2002") {
+      return res.status(409).json({ message: "Unique constraint violation" });
+    }
+    if (err.code === "P2025") {
+      return res.status(404).json({ message: "Record not found" });
+    }
+  }
+  console.error({ err, route: req.path, method: req.method });
   res.status(500).json({ message: "Internal server error" });
 });
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
+});
+
+process.on("SIGTERM", () => {
+  server.close(() => process.exit(0));
+});
+process.on("SIGINT", () => {
+  server.close(() => process.exit(0));
 });
