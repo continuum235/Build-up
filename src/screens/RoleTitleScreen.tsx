@@ -27,7 +27,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const RoleTitleScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const { profile, setRoleTitle } = useProfile();
+  const { profile, setRoleTitle, setRoleType } = useProfile();
   const { t } = useLanguage();
   const { updateProfile } = useApi();
   const [roleTitle, setRoleTitleInput] = useState<string>(profile.roleTitle);
@@ -38,10 +38,11 @@ const RoleTitleScreen: React.FC = () => {
       alert(t("validation.enterRole"));
       return;
     }
+    setRoleType("jobSeeker");
     setRoleTitle(roleTitle.trim());
     setSaving(true);
     try {
-      await updateProfile({ roleTitle: roleTitle.trim() });
+      await updateProfile({ role: "WORKER", roleTitle: roleTitle.trim() });
     } catch {
       // optimistic
     } finally {

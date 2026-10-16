@@ -35,7 +35,7 @@ const workerTabs: { id: string; label: string }[] = [
 ];
 
 const hirerTabs: { id: string; label: string }[] = [
-  { id: "jobBoard", label: "Job board" },
+  { id: "jobBoard", label: "Job Board" },
   { id: "profile", label: "Profile" },
   { id: "messages", label: "Messages" },
 ];
@@ -43,7 +43,8 @@ const hirerTabs: { id: string; label: string }[] = [
 export default function BottomNavigation({ activeTab }: BottomNavigationProps) {
   const navigation = useNavigation<NavigationProp>();
   const { profile } = useProfile();
-  const isEmployer = profile.roleType === "employer";
+  const isEmployer =
+    profile.roleType === "employer" || activeTab === "jobBoard";
   const tabs = isEmployer ? hirerTabs : workerTabs;
 
   const renderIcon = (tabId: string, isActive: boolean): React.ReactNode => {

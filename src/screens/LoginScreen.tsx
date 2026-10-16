@@ -18,6 +18,7 @@ import { useSignIn, useOAuth, useAuth } from "@clerk/clerk-expo";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import routes, { RootStackParamList } from "../navigation/routes";
 import { useLanguage } from "../context/LanguageContext";
+import { useProfile } from "../context/ProfileContext";
 import { loginSchema } from "../utils/schemas";
 import { useApi } from "../services/api";
 import KeyboardSafeWrapper from "../components/layout/KeyboardSafeWrapper";
@@ -33,6 +34,7 @@ const LoginScreen: React.FC = () => {
   const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
   const { signOut } = useAuth();
   const { syncUser, getMe } = useApi();
+  const { setRoleType, resetProfile } = useProfile();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,23 +43,43 @@ const LoginScreen: React.FC = () => {
 
   /** After Clerk auth succeeds, fetch the DB profile and redirect appropriately */
   const handlePostAuth = async () => {
-    try {
-      await syncUser();
-    } catch {
-      // best-effort
-    }
-    try {
-      const { user } = await getMe();
-      if (user.onboardingComplete) {
-        const dest = user.role === "HIRER" ? routes.jobBoard : routes.findJobs;
-        navigation.reset({ index: 0, routes: [{ name: dest }] });
-      } else {
-        navigation.replace(routes.roleType);
+    // Drop any cached role/name from a previous account before re-reading it
+    resetProfile();
+    let navigated = false;
+    const go = (fn: () => void) => {
+      if (!navigated) {
+        navigated = true;
+        fn();
       }
-    } catch {
-      // Backend unreachable — send to onboarding, it will re-sync
-      navigation.replace(routes.roleType);
-    }
+    };
+
+    const resolveDestination = async () => {
+      try {
+        await syncUser();
+      } catch {
+        // best-effort
+      }
+      try {
+        const { user } = await getMe();
+        if (user.role === "HIRER" || user.role === "WORKER") {
+          setRoleType(user.role === "HIRER" ? "employer" : "jobSeeker");
+        }
+        if (user.onboardingComplete) {
+          const dest = user.role === "HIRER" ? routes.jobBoard : routes.findJobs;
+          go(() => navigation.reset({ index: 0, routes: [{ name: dest }] }));
+        } else {
+          go(() => navigation.replace(routes.roleType));
+        }
+      } catch {
+        // Backend unreachable — send to onboarding, it will re-sync
+        go(() => navigation.replace(routes.roleType));
+      }
+    };
+
+    // Cap the wait so a cold/slow backend never leaves login hanging.
+    const tooSlow = new Promise<void>((resolve) => setTimeout(resolve, 8000));
+    await Promise.race([resolveDestination(), tooSlow]);
+    go(() => navigation.replace(routes.roleType));
   };
 
   const handleLogin = async () => {

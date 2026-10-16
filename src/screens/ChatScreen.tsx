@@ -43,7 +43,6 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [disconnected, setDisconnected] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const { connected, subscribe } = useRealtime();
   const lastCreatedAtRef = useRef<string | null>(null);
@@ -69,11 +68,6 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ navigation, route }) => {
     })();
     return () => { cancelled = true; };
   }, [conversationId, getConversationMessages]);
-
-
-  useEffect(() => {
-    setDisconnected(!connected);
-  }, [connected]);
 
   useEffect(() => {
     const unsub = subscribe((ev) => {

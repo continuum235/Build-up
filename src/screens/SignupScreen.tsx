@@ -18,6 +18,7 @@ import { useSignUp, useOAuth, useAuth } from "@clerk/clerk-expo";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import routes, { RootStackParamList } from "../navigation/routes";
 import { useLanguage } from "../context/LanguageContext";
+import { useProfile } from "../context/ProfileContext";
 import { signupSchema } from "../utils/schemas";
 import { useApi } from "../services/api";
 import KeyboardSafeWrapper from "../components/layout/KeyboardSafeWrapper";
@@ -33,12 +34,46 @@ const SignupScreen: React.FC = () => {
   const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
   const { signOut } = useAuth();
   const { syncUser, updateProfile } = useApi();
+  const { resetProfile } = useProfile();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [awaitingVerification, setAwaitingVerification] = useState(false);
+  const [code, setCode] = useState("");
+  const [codeError, setCodeError] = useState<string | undefined>();
+  const [verifying, setVerifying] = useState(false);
+
+  /** Clerk sign-up finished (session created) — activate it and onboard */
+  const finishSignUp = async () => {
+    const sessionId = signUp?.createdSessionId;
+    if (!sessionId) {
+      throw new Error("Sign-up did not create a session");
+    }
+    if (!setActive) {
+      throw new Error("Could not start your session. Please try again.");
+    }
+    await setActive({ session: sessionId });
+    // Make sure no cached profile from a previous account lingers
+    resetProfile();
+    await syncUser().catch(() => {});
+    await updateProfile({ name }).catch(() => {});
+    // New user always goes to onboarding
+    navigation.replace(routes.roleType);
+  };
+
+  /** This Clerk instance verifies email at sign-up — ask for the code */
+  const startEmailVerification = async () => {
+    try {
+      await signUp?.prepareEmailAddressVerification({ strategy: "email_code" });
+    } catch {
+      // the code may already have been sent by signUp.create
+    }
+    setAwaitingVerification(true);
+    setLoading(false);
+  };
 
   const handleSignup = async () => {
     const parse = signupSchema.safeParse({ name, email, password });
@@ -65,13 +100,15 @@ const SignupScreen: React.FC = () => {
       });
 
       if (result.status === "complete") {
-        await setActive({ session: result.createdSessionId });
-        await syncUser().catch(() => {});
-        await updateProfile({ name }).catch(() => {});
-        // New user always goes to onboarding
-        navigation.replace(routes.roleType);
+        await finishSignUp();
+      } else if (
+        result.status === "missing_requirements" &&
+        result.unverifiedFields?.includes("email_address")
+      ) {
+        await startEmailVerification();
       } else {
         alert("Please check your email for a verification code.");
+        setLoading(false);
       }
     } catch (err: unknown) {
       const msg =
@@ -80,8 +117,47 @@ const SignupScreen: React.FC = () => {
           : (err as { errors?: { message: string }[] })?.errors?.[0]?.message ??
             "Signup failed";
       alert(msg);
+      setLoading(false);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    const trimmed = code.trim();
+    if (!trimmed) {
+      setCodeError(t("validation.required"));
+      return;
+    }
+    setVerifying(true);
+    setCodeError(undefined);
+    try {
+      const result = await signUp?.attemptEmailAddressVerification({
+        code: trimmed,
+      });
+      if (result?.status === "complete") {
+        await finishSignUp();
+      } else {
+        setCodeError(t("auth.invalidCode"));
+      }
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : (err as { errors?: { message: string }[] })?.errors?.[0]?.message ??
+            t("auth.invalidCode");
+      setCodeError(msg);
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    try {
+      await signUp?.prepareEmailAddressVerification({ strategy: "email_code" });
+      alert(t("auth.codeResent"));
+    } catch {
+      // ignore — rate limits etc.
     }
   };
 
@@ -93,6 +169,7 @@ const SignupScreen: React.FC = () => {
     setLoading(true);
     try {
       await signOut().catch(() => {});
+      resetProfile();
       const { createdSessionId, setActive: setActiveOAuth } =
         await startOAuthFlow();
       if (createdSessionId && setActiveOAuth) {
@@ -149,77 +226,121 @@ const SignupScreen: React.FC = () => {
             <Text style={styles.headline}>{t("auth.signupHeadline")}</Text>
           </View>
 
-          <View style={styles.socialSection}>
-            <TouchableOpacity
-              style={styles.socialButton}
-              onPress={handleGoogle}
-              disabled={loading}
-            >
-              <Image
-                source={require("../../assets/Google-logo.png")}
-                style={styles.googleIcon}
-              />
-              <Text style={[styles.socialButtonText, { color: "#4285F4" }]}>
-                {t("auth.signupWithGoogle")}
+          {awaitingVerification ? (
+            <View style={styles.inputSection}>
+              <Text style={styles.verifyTitle}>{t("auth.verifyEmailTitle")}</Text>
+              <Text style={styles.verifySubtitle}>
+                {t("auth.verifyEmailSubtitle", { email })}
               </Text>
-            </TouchableOpacity>
-          </View>
 
-          <View style={styles.dividerRow}>
-            <View style={styles.line} />
-            <Text style={styles.orText}>{t("auth.or")}</Text>
-            <View style={styles.line} />
-          </View>
+              <TextInput
+                placeholder={t("auth.emailCodePlaceholder")}
+                value={code}
+                onChangeText={(v) => {
+                  setCode(v);
+                  if (codeError) setCodeError(undefined);
+                }}
+                keyboardType="number-pad"
+                maxLength={6}
+                autoFocus
+                style={styles.codeInput}
+                error={codeError}
+              />
 
-          <View style={styles.inputSection}>
-            <TextInput
-              placeholder={t("auth.fullName")}
-              value={name}
-              onChangeText={(v) => {
-                setName(v);
-                if (errors.name) setErrors((p) => ({ ...p, name: "" }));
-              }}
-              style={styles.input}
-              error={errors.name}
-            />
-            <TextInput
-              placeholder={t("auth.emailPlaceholder")}
-              value={email}
-              onChangeText={(v) => {
-                setEmail(v);
-                if (errors.email) setErrors((p) => ({ ...p, email: "" }));
-              }}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              style={styles.input}
-              error={errors.email}
-            />
-            <TextInput
-              placeholder={t("auth.passwordPlaceholderSignup")}
-              value={password}
-              onChangeText={(v) => {
-                setPassword(v);
-                if (errors.password) setErrors((p) => ({ ...p, password: "" }));
-              }}
-              secureTextEntry
-              style={styles.input}
-              error={errors.password}
-            />
-          </View>
+              <Button
+                title={t("auth.verifyEmailButton")}
+                onPress={handleVerifyCode}
+                loading={verifying}
+                style={styles.submitButton}
+                textStyle={styles.submitButtonText}
+              />
 
-          {loading ? (
-            <ActivityIndicator
-              size="large"
-              color="#965541"
-              style={{ marginVertical: hp("2%") }}
-            />
+              <TouchableOpacity
+                onPress={handleResendCode}
+                disabled={verifying}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Text style={styles.resendLink}>{t("auth.resendCode")}</Text>
+              </TouchableOpacity>
+            </View>
           ) : (
-            <Button
-              title={t("auth.createAccount")}
-              onPress={handleSignup}
-              style={styles.submitButton}
-              textStyle={styles.submitButtonText}
-            />
+            <>
+              <View style={styles.socialSection}>
+                <TouchableOpacity
+                  style={styles.socialButton}
+                  onPress={handleGoogle}
+                  disabled={loading}
+                >
+                  <Image
+                    source={require("../../assets/Google-logo.png")}
+                    style={styles.googleIcon}
+                  />
+                  <Text
+                    style={[styles.socialButtonText, { color: "#4285F4" }]}
+                  >
+                    {t("auth.signupWithGoogle")}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.dividerRow}>
+                <View style={styles.line} />
+                <Text style={styles.orText}>{t("auth.or")}</Text>
+                <View style={styles.line} />
+              </View>
+
+              <View style={styles.inputSection}>
+                <TextInput
+                  placeholder={t("auth.fullName")}
+                  value={name}
+                  onChangeText={(v) => {
+                    setName(v);
+                    if (errors.name) setErrors((p) => ({ ...p, name: "" }));
+                  }}
+                  style={styles.input}
+                  error={errors.name}
+                />
+                <TextInput
+                  placeholder={t("auth.emailPlaceholder")}
+                  value={email}
+                  onChangeText={(v) => {
+                    setEmail(v);
+                    if (errors.email) setErrors((p) => ({ ...p, email: "" }));
+                  }}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  style={styles.input}
+                  error={errors.email}
+                />
+                <TextInput
+                  placeholder={t("auth.passwordPlaceholderSignup")}
+                  value={password}
+                  onChangeText={(v) => {
+                    setPassword(v);
+                    if (errors.password)
+                      setErrors((p) => ({ ...p, password: "" }));
+                  }}
+                  secureTextEntry
+                  style={styles.input}
+                  error={errors.password}
+                />
+              </View>
+
+              {loading ? (
+                <ActivityIndicator
+                  size="large"
+                  color="#965541"
+                  style={{ marginVertical: hp("2%") }}
+                />
+              ) : (
+                <Button
+                  title={t("auth.createAccount")}
+                  onPress={handleSignup}
+                  style={styles.submitButton}
+                  textStyle={styles.submitButtonText}
+                />
+              )}
+            </>
           )}
 
           <Text style={styles.footerTerms}>
@@ -344,6 +465,34 @@ const styles = StyleSheet.create({
     fontSize: wp("4%"),
     borderRadius: wp("3%"),
     padding: wp("4.5%"),
+  },
+  verifyTitle: {
+    color: "#1E1E1E",
+    fontSize: wp("5%"),
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: hp("1%"),
+  },
+  verifySubtitle: {
+    color: "#666",
+    fontSize: wp("3.6%"),
+    textAlign: "center",
+    lineHeight: wp("5.5%"),
+    marginBottom: hp("3%"),
+  },
+  codeInput: {
+    fontSize: wp("5%"),
+    letterSpacing: wp("2%"),
+    textAlign: "center",
+    marginBottom: hp("2%"),
+  },
+  resendLink: {
+    color: "#965541",
+    fontSize: wp("3.6%"),
+    fontWeight: "600",
+    textAlign: "center",
+    marginTop: hp("0.5%"),
+    textDecorationLine: "underline",
   },
   submitButton: {
     backgroundColor: "#965541",

@@ -28,9 +28,9 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const EnterDetailsScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const { profile, setDetails } = useProfile();
+  const { profile, setDetails, setRoleType } = useProfile();
   const { t } = useLanguage();
-  const { updateProfile } = useApi();
+  const { updateProfile, getMe } = useApi();
   const [country] = useState<string>(profile.details.country);
   const [addressLine1, setAddressLine1] = useState<string>(
     profile.details.addressLine1,
@@ -60,8 +60,29 @@ const EnterDetailsScreen: React.FC = () => {
     setSubmitting(true);
 
     try {
+      let dbRole =
+        profile.roleType === "employer"
+          ? "HIRER"
+          : profile.roleType === "jobSeeker" || profile.roleType === "worker"
+            ? "WORKER"
+            : undefined;
+
+      if (!dbRole) {
+        const { user } = await getMe();
+        if (user.role === "HIRER" || user.role === "WORKER") {
+          dbRole = user.role;
+          setRoleType(user.role === "HIRER" ? "employer" : "jobSeeker");
+        }
+      }
+
+      if (!dbRole) {
+        alert("Please choose whether you want to hire or find jobs first.");
+        navigation.navigate(routes.roleType);
+        return;
+      }
+
       await updateProfile({
-        role: profile.roleType === "employer" ? "HIRER" : "WORKER",
+        role: dbRole,
         roleTitle: profile.roleTitle,
         documents: profile.documents,
         languages: profile.languages,
@@ -74,8 +95,7 @@ const EnterDetailsScreen: React.FC = () => {
         onboardingComplete: true,
       });
 
-      const destRoute =
-        profile.roleType === "employer" ? routes.jobBoard : routes.findJobs;
+      const destRoute = dbRole === "HIRER" ? routes.jobBoard : routes.findJobs;
       navigation.reset({
         index: 0,
         routes: [{ name: destRoute }],

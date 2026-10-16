@@ -27,7 +27,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { signOut } = useAuth();
-  const { profile } = useProfile();
+  const { profile, resetProfile } = useProfile();
   const { t } = useLanguage();
   const isEmployer = profile.roleType === "employer";
   const displayName = profile.auth.name || "User";
@@ -132,8 +132,18 @@ const ProfileScreen: React.FC = () => {
               text: "Log out",
               style: "destructive",
               onPress: async () => {
-                await signOut();
-                navigation.reset({ index: 0, routes: [{ name: routes.welcome }] });
+                try {
+                  await signOut();
+                } catch {
+                  // sign-out can fail offline — local state must still clear
+                } finally {
+                  // wipe cached role/name so the next account starts clean
+                  resetProfile();
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: routes.welcome }],
+                  });
+                }
               },
             },
           ]);
