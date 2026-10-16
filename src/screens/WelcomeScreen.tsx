@@ -19,6 +19,7 @@ import { useAuth } from "@clerk/clerk-expo";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import routes, { RootStackParamList } from "../navigation/routes";
 import { useApi } from "../services/api";
+import { useProfile } from "../context/ProfileContext";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -26,6 +27,7 @@ const WelcomeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { isSignedIn, isLoaded } = useAuth();
   const { getMe } = useApi();
+  const { setRoleType } = useProfile();
   const handled = useRef(false);
 
   useEffect(() => {
@@ -36,6 +38,9 @@ const WelcomeScreen: React.FC = () => {
 
     getMe()
       .then(({ user }) => {
+        if (user.role === "HIRER" || user.role === "WORKER") {
+          setRoleType(user.role === "HIRER" ? "employer" : "jobSeeker");
+        }
         if (user.onboardingComplete) {
           const dest = user.role === "HIRER" ? routes.jobBoard : routes.findJobs;
           navigation.reset({ index: 0, routes: [{ name: dest }] });
@@ -48,7 +53,7 @@ const WelcomeScreen: React.FC = () => {
         // send to onboarding anyway. Data will sync when API is back.
         navigation.replace(routes.roleType);
       });
-  }, [isLoaded, isSignedIn, getMe, navigation]);
+  }, [isLoaded, isSignedIn, getMe, navigation, setRoleType]);
 
   if (!isLoaded) {
     return (

@@ -74,13 +74,13 @@ export async function patchUser(req: Request, res: Response) {
   if (updates.role !== undefined) {
     const currentUser = await prisma.user.findUnique({
       where: { clerkId: req.auth!.userId },
-      select: { role: true, onboardingComplete: true },
+      select: { role: true },
     });
 
-    if (currentUser?.role && currentUser.onboardingComplete) {
+    if (currentUser?.role && currentUser.role !== updates.role) {
       return res.status(403).json({
         message:
-          "Your role cannot be changed after onboarding is complete. " +
+          "Your role cannot be changed after it has been selected. " +
           "Please contact support at support@buildup.app to request a role change.",
         code: "ROLE_LOCKED",
       });

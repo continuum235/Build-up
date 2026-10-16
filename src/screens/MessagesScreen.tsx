@@ -19,6 +19,7 @@ import { useApi } from "../services/api";
 import { useRealtime } from "../services/realtime";
 import BottomNavigation from "../components/layout/BottomNavigation";
 import KeyboardSafeWrapper from "../components/layout/KeyboardSafeWrapper";
+import { useProfile } from "../context/ProfileContext";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -45,6 +46,7 @@ function relativeTime(dateStr: string): string {
 const MessagesScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { listConversations } = useApi();
+  const { profile } = useProfile();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const mountedRef = useRef(false);
@@ -82,7 +84,9 @@ const MessagesScreen: React.FC = () => {
 
   const renderItem = ({ item }: { item: Conversation }) => {
     const lastMsg = item.messages[0];
-    const otherName = item.hirer.name || item.worker.name || "Unknown";
+    const otherPerson =
+      profile.roleType === "employer" ? item.worker : item.hirer;
+    const otherName = otherPerson.name || "Unknown";
     return (
       <TouchableOpacity
         style={styles.messageRow}

@@ -26,7 +26,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const EmployerRoleTitleScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const { setRoleTitle } = useProfile();
+  const { setRoleTitle, setRoleType } = useProfile();
   const { language, t } = useLanguage();
   const { professionalRoles } = useJobs();
   const { updateProfile } = useApi();
@@ -49,10 +49,11 @@ const EmployerRoleTitleScreen: React.FC = () => {
       return;
     }
     const title = selectedRole.label.en;
+    setRoleType("employer");
     setRoleTitle(title);
     setSaving(true);
     try {
-      await updateProfile({ roleTitle: title });
+      await updateProfile({ role: "HIRER", roleTitle: title });
     } catch {
       // optimistic
     } finally {

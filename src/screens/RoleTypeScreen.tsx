@@ -19,7 +19,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import routes, { RootStackParamList } from "../navigation/routes";
 import { useProfile } from "../context/ProfileContext";
 import { useLanguage } from "../context/LanguageContext";
-import { useApi } from "../services/api";
+import { useApi, ApiError } from "../services/api";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -35,20 +35,43 @@ const RoleTypeScreen: React.FC = () => {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    getMe()
-      .then(({ user }) => {
-        if (user.role && user.onboardingComplete) {
-          // Role is locked — user should not be here
-          setRoleLocked(true);
-          setLockedRole(user.role as string);
-        }
-      })
-      .catch(() => {
-        // Backend unreachable — allow selection (will enforce server-side)
-      })
-      .finally(() => setChecking(false));
+    let active = true;
+    // Never block the screen for longer than 5s — a cold backend must not
+    // leave the user staring at an empty screen.
+    const tooSlow = new Promise<void>((resolve) => setTimeout(resolve, 5000));
+    Promise.race([
+      getMe()
+        .then(({ user }) => {
+          if (!active) return;
+          if (user.role && user.onboardingComplete) {
+            // Role is locked — user should not be here
+            setRoleLocked(true);
+            setLockedRole(user.role as string);
+          }
+        })
+        .catch(() => {
+          // Backend unreachable — allow selection (will enforce server-side)
+        }),
+      tooSlow,
+    ]).finally(() => {
+      if (active) setChecking(false);
+    });
+    return () => {
+      active = false;
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const showLockedRole = async () => {
+    try {
+      const { user } = await getMe();
+      setLockedRole((user.role as string) ?? null);
+    } catch {
+      setLockedRole(null);
+    }
+    setChecking(false);
+    setRoleLocked(true);
+  };
 
   const handleSelect = async (roleType: string) => {
     setSelectedRole(roleType);
@@ -58,7 +81,14 @@ const RoleTypeScreen: React.FC = () => {
     setSaving(true);
     try {
       await updateProfile({ role: dbRole });
-    } catch {
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 403) {
+        // Role is already set to something else — stop before the user
+        // walks into an onboarding flow that can never be saved.
+        setSaving(false);
+        await showLockedRole();
+        return;
+      }
       // optimistic — data still saved in ProfileContext
     } finally {
       setSaving(false);
@@ -80,7 +110,12 @@ const RoleTypeScreen: React.FC = () => {
   }
 
   if (roleLocked) {
-    const roleLabel = lockedRole === "HIRER" ? "Employer / Hirer" : "Job Seeker / Worker";
+    const roleLabel =
+      lockedRole === "HIRER"
+        ? "Employer / Hirer"
+        : lockedRole === "WORKER"
+          ? "Job Seeker / Worker"
+          : "a BuildUp member";
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" />
