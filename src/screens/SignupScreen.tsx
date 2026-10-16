@@ -20,6 +20,7 @@ import routes, { RootStackParamList } from "../navigation/routes";
 import { useLanguage } from "../context/LanguageContext";
 import { useProfile } from "../context/ProfileContext";
 import { signupSchema } from "../utils/schemas";
+import { endCurrentSession, isSessionExistsError } from "../utils/clerkSession";
 import { useApi } from "../services/api";
 import KeyboardSafeWrapper from "../components/layout/KeyboardSafeWrapper";
 import Button from "../components/ui/Button";
@@ -94,6 +95,11 @@ const SignupScreen: React.FC = () => {
     }
     setLoading(true);
     try {
+      // Clerk throws `session_exists` while another account is signed in, so
+      // the current session must end before a different one can start.
+      await endCurrentSession(signOut);
+      resetProfile();
+
       const result = await signUp.create({
         emailAddress: email,
         password,
@@ -111,6 +117,10 @@ const SignupScreen: React.FC = () => {
         setLoading(false);
       }
     } catch (err: unknown) {
+      if (isSessionExistsError(err)) {
+        alert("Couldn't switch accounts. Please log out and try again.");
+        return;
+      }
       const msg =
         err instanceof Error
           ? err.message
@@ -168,7 +178,7 @@ const SignupScreen: React.FC = () => {
     }
     setLoading(true);
     try {
-      await signOut().catch(() => {});
+      await endCurrentSession(signOut);
       resetProfile();
       const { createdSessionId, setActive: setActiveOAuth } =
         await startOAuthFlow();

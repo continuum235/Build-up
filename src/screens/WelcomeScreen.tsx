@@ -14,7 +14,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useIsFocused } from "@react-navigation/native";
 import { useAuth } from "@clerk/clerk-expo";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import routes, { RootStackParamList } from "../navigation/routes";
@@ -25,6 +25,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const WelcomeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const isFocused = useIsFocused();
   const { isSignedIn, isLoaded } = useAuth();
   const { getMe } = useApi();
   const { setRoleType } = useProfile();
@@ -39,6 +40,10 @@ const WelcomeScreen: React.FC = () => {
 
   useEffect(() => {
     if (!isLoaded || handled.current) return;
+    // Only route from the screen the user is actually looking at: a Welcome
+    // left mounted under Login/Signup must not steal navigation the moment a
+    // new account's session appears.
+    if (!isFocused) return;
     // Not signed in *yet*: don't latch, so a session that finishes restoring
     // a moment later still gets routed here instead of leaving this screen
     // stuck.
@@ -65,7 +70,7 @@ const WelcomeScreen: React.FC = () => {
         // send to onboarding anyway. Data will sync when API is back.
         if (isMounted.current) navigation.replace(routes.roleType);
       });
-  }, [isLoaded, isSignedIn, getMe, navigation, setRoleType]);
+  }, [isLoaded, isFocused, isSignedIn, getMe, navigation, setRoleType]);
 
   if (!isLoaded) {
     return (
