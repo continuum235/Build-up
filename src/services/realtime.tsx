@@ -1,5 +1,5 @@
 import { useAuth } from "@clerk/clerk-expo";
-import { useEffect, useRef, useState, createContext, useContext } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, createContext, useContext } from "react";
 import { AppState } from "react-native";
 
 interface MessageEvent {
@@ -28,15 +28,24 @@ export const RealtimeProvider = ({ children }: { children: React.ReactNode }) =>
   const [connected, setConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<MessageEvent | null>(null);
   const listenersRef = useRef<Set<(ev: MessageEvent) => void>>(new Set());
+  // Latest auth state for callbacks that outlive a render (close/reconnect
+  // handlers), so a signed-out socket never keeps reconnecting.
+  const isSignedInRef = useRef(isSignedIn);
 
-  const subscribe = (callback: (ev: MessageEvent) => void) => {
+  useEffect(() => {
+    isSignedInRef.current = isSignedIn;
+  }, [isSignedIn]);
+
+  // Stable identity: screens list `subscribe` in effect deps.
+  const subscribe = useCallback((callback: (ev: MessageEvent) => void) => {
     listenersRef.current.add(callback);
     return () => {
       listenersRef.current.delete(callback);
     };
-  };
+  }, []);
 
   const scheduleReconnect = () => {
+    if (!isSignedInRef.current) return;
     if (reconnectTimeoutRef.current) return;
     const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
     reconnectAttemptsRef.current++;
@@ -47,6 +56,7 @@ export const RealtimeProvider = ({ children }: { children: React.ReactNode }) =>
   };
 
   const connect = async () => {
+    if (!isSignedInRef.current) return;
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
     const base = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
     const wsUrl = base.replace(/^http/, "ws") + "/ws";
@@ -101,13 +111,15 @@ export const RealtimeProvider = ({ children }: { children: React.ReactNode }) =>
 
   useEffect(() => {
     if (!isSignedIn) {
+      // Closing the socket fires onclose, which clears `connected`; doing it
+      // here instead would be a synchronous setState inside an effect.
+      reconnectAttemptsRef.current = 0;
       if (wsRef.current) {
         try {
           wsRef.current.close();
         } catch {}
         wsRef.current = null;
       }
-      setConnected(false);
       return;
     }
     connect();
@@ -134,8 +146,14 @@ export const RealtimeProvider = ({ children }: { children: React.ReactNode }) =>
     return () => sub.remove();
   }, []);
 
+  // Memoized so consumers don't re-run their effects on every provider render
+  const value = useMemo<RealtimeContextValue>(
+    () => ({ connected, lastMessage, subscribe }),
+    [connected, lastMessage, subscribe],
+  );
+
   return (
-    <RealtimeContext.Provider value={{ connected, lastMessage, subscribe }}>
+    <RealtimeContext.Provider value={value}>
       {children}
     </RealtimeContext.Provider>
   );

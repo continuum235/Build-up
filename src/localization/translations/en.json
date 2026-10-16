@@ -60,7 +60,14 @@
     "location": "Select Location",
     "createAccount": "Create my account",
     "termsPrefix": "By creating an account or signing you agree to our",
-    "termsBold": "Terms and Conditions"
+    "termsBold": "Terms and Conditions",
+    "verifyEmailTitle": "Verify your email",
+    "verifyEmailSubtitle": "We sent a 6-digit code to {{email}}. Enter it below to finish creating your account.",
+    "emailCodePlaceholder": "Enter the 6-digit code",
+    "verifyEmailButton": "Verify & continue",
+    "resendCode": "Didn't get it? Resend code",
+    "codeResent": "A new code has been sent to your email.",
+    "invalidCode": "That code is not valid. Please try again."
   },
   "roleType": {
     "question": "A few quick questions: Who are you?",

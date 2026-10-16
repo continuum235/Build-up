@@ -34,7 +34,7 @@ const LoginScreen: React.FC = () => {
   const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
   const { signOut } = useAuth();
   const { syncUser, getMe } = useApi();
-  const { setRoleType } = useProfile();
+  const { setRoleType, resetProfile } = useProfile();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -43,6 +43,8 @@ const LoginScreen: React.FC = () => {
 
   /** After Clerk auth succeeds, fetch the DB profile and redirect appropriately */
   const handlePostAuth = async () => {
+    // Drop any cached role/name from a previous account before re-reading it
+    resetProfile();
     let navigated = false;
     const go = (fn: () => void) => {
       if (!navigated) {

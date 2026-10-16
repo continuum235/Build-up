@@ -1,9 +1,9 @@
 import "dotenv/config";
-import { clerkMiddleware } from "@clerk/express";
+import { clerkMiddleware, getAuth } from "@clerk/express";
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { authRouter } from "./routes/auth.routes";
 import { engagementRouter } from "./routes/engagement.routes";
 import { hirerRouter } from "./routes/hirer.routes";
@@ -19,9 +19,23 @@ const port = process.env.PORT ?? 3000;
 
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 300,
+  // Higher budget for signed-in users (keyed per user below); anonymous
+  // traffic stays keyed by IP.
+  max: (req) => (getAuth(req).userId ? 600 : 300),
   standardHeaders: true,
   legacyHeaders: false,
+  // JSON body so the app can show a real message instead of a generic error
+  handler: (_req, res) => {
+    res.status(429).json({
+      message: "Too many requests. Please wait a minute and try again.",
+    });
+  },
+  // Key by Clerk user when authenticated: many mobile users share one public
+  // IP (carrier-grade NAT), so an IP-only bucket starves unrelated users.
+  keyGenerator: (req) => {
+    const userId = getAuth(req).userId;
+    return userId ? `user:${userId}` : ipKeyGenerator(req.ip ?? "");
+  },
 });
 
 const _strictLimiter = rateLimit({
@@ -42,8 +56,8 @@ app.use(cors({
     : undefined,
 }));
 app.use(express.json({ limit: "100kb" }));
-app.use(globalLimiter);
 app.use(clerkMiddleware());
+app.use(globalLimiter);
 
 app.get("/health", (_req, res) => {
   res.status(200).json({ status: "ok" });

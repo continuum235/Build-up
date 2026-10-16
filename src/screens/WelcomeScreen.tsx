@@ -29,29 +29,41 @@ const WelcomeScreen: React.FC = () => {
   const { getMe } = useApi();
   const { setRoleType } = useProfile();
   const handled = useRef(false);
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!isLoaded || handled.current) return;
+    // Not signed in *yet*: don't latch, so a session that finishes restoring
+    // a moment later still gets routed here instead of leaving this screen
+    // stuck.
+    if (!isSignedIn) return;
     handled.current = true;
 
-    if (!isSignedIn) return;
+    const routeToDestination = (user: { role: string; onboardingComplete: boolean }) => {
+      if (!isMounted.current) return;
+      if (user.role === "HIRER" || user.role === "WORKER") {
+        setRoleType(user.role === "HIRER" ? "employer" : "jobSeeker");
+      }
+      if (user.onboardingComplete) {
+        const dest = user.role === "HIRER" ? routes.jobBoard : routes.findJobs;
+        navigation.reset({ index: 0, routes: [{ name: dest }] });
+      } else {
+        navigation.replace(routes.roleType);
+      }
+    };
 
     getMe()
-      .then(({ user }) => {
-        if (user.role === "HIRER" || user.role === "WORKER") {
-          setRoleType(user.role === "HIRER" ? "employer" : "jobSeeker");
-        }
-        if (user.onboardingComplete) {
-          const dest = user.role === "HIRER" ? routes.jobBoard : routes.findJobs;
-          navigation.reset({ index: 0, routes: [{ name: dest }] });
-        } else {
-          navigation.replace(routes.roleType);
-        }
-      })
+      .then(({ user }) => routeToDestination(user))
       .catch(() => {
-        // Backend unreachable but user is signed in via Clerk — 
+        // Backend unreachable but user is signed in via Clerk —
         // send to onboarding anyway. Data will sync when API is back.
-        navigation.replace(routes.roleType);
+        if (isMounted.current) navigation.replace(routes.roleType);
       });
   }, [isLoaded, isSignedIn, getMe, navigation, setRoleType]);
 
