@@ -20,6 +20,7 @@ import routes, { RootStackParamList } from "../navigation/routes";
 import { useLanguage } from "../context/LanguageContext";
 import { useProfile } from "../context/ProfileContext";
 import { loginSchema } from "../utils/schemas";
+import { endCurrentSession, isSessionExistsError } from "../utils/clerkSession";
 import { useApi } from "../services/api";
 import KeyboardSafeWrapper from "../components/layout/KeyboardSafeWrapper";
 import Button from "../components/ui/Button";
@@ -101,6 +102,11 @@ const LoginScreen: React.FC = () => {
     }
     setLoading(true);
     try {
+      // Clerk throws `session_exists` while another account is signed in, so
+      // the current session must end before a different one can start.
+      await endCurrentSession(signOut);
+      resetProfile();
+
       const result = await signIn.create({ identifier: email, password });
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
@@ -109,6 +115,10 @@ const LoginScreen: React.FC = () => {
         alert("Additional verification required. Please try again.");
       }
     } catch (err: unknown) {
+      if (isSessionExistsError(err)) {
+        alert("Couldn't switch accounts. Please log out and try again.");
+        return;
+      }
       const msg =
         err instanceof Error
           ? err.message
@@ -127,7 +137,9 @@ const LoginScreen: React.FC = () => {
     }
     setLoading(true);
     try {
-      await signOut().catch(() => {});
+      // Same as email sign-in: a live session blocks a different account
+      await endCurrentSession(signOut);
+      resetProfile();
       const { createdSessionId, setActive: setActiveOAuth } =
         await startOAuthFlow();
       if (createdSessionId && setActiveOAuth) {

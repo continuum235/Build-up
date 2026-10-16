@@ -132,18 +132,27 @@ const ProfileScreen: React.FC = () => {
               text: "Log out",
               style: "destructive",
               onPress: async () => {
+                let signedOut = false;
                 try {
                   await signOut();
+                  signedOut = true;
                 } catch {
-                  // sign-out can fail offline — local state must still clear
-                } finally {
-                  // wipe cached role/name so the next account starts clean
-                  resetProfile();
-                  navigation.reset({
-                    index: 0,
-                    routes: [{ name: routes.welcome }],
-                  });
+                  // sign-out failed (usually offline) — the session is still
+                  // live, so leaving now would bounce straight back in
                 }
+                if (!signedOut) {
+                  Alert.alert(
+                    "Log out failed",
+                    "You appear to be offline. Check your connection and try again.",
+                  );
+                  return;
+                }
+                // wipe cached role/name so the next account starts clean
+                resetProfile();
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: routes.welcome }],
+                });
               },
             },
           ]);
